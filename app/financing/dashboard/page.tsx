@@ -14,7 +14,9 @@ export default function DashboardPage() {
   return (
     <ContentLayout title="Dashboard">
 
-     
+     <div>
+      
+     </div>
     </ContentLayout>
   );
 }
