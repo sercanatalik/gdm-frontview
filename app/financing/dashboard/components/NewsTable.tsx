@@ -71,6 +71,25 @@ export const categoryColors: { [key: string]: string } = {
       category: "Crypto",
       content: "The European Union has proposed a comprehensive new regulatory framework for cryptocurrency assets, in a move that could significantly impact the rapidly evolving crypto market. The proposed regulations aim to provide greater protection for investors while also addressing concerns about financial stability and potential illicit activities. Key aspects of the framework include stricter licensing requirements for crypto exchanges, enhanced transparency measures, and new rules for stablecoin issuers. The proposal has received mixed reactions from the crypto industry, with some praising the move towards regulatory clarity while others express concerns about potential innovation stifling. If approved, these regulations could set a precedent for crypto governance globally and potentially influence similar measures in other jurisdictions."
     },
+    {
+      id: "7",
+      timestamp: "2 hours ago",
+      headline: "Stock Market Reaches New All-Time High",
+      summary: "S&P 500 closes at record levels, driven by strong earnings reports and positive economic data.",
+      category: "Markets",
+      content: "The S&P 500 index has closed at a new all-time high, marking a significant milestone in the current bull market run. This surge has been fueled by a combination of strong corporate earnings reports and encouraging economic data. Technology and financial sectors led the gains, with several major companies beating analyst expectations. The positive momentum in the stock market reflects growing investor confidence in the economic recovery and future growth prospects. However, some market watchers caution about potential overvaluation and the need for continued strong fundamentals to support these elevated levels. The record-breaking close has also reignited discussions about wealth inequality and the disconnect between Wall Street performance and Main Street economic realities."
+    },
+     {
+      id: "8",
+      timestamp: "2 hours ago",
+      headline: "Stock Market Reaches New All-Time High",
+      summary: "S&P 500 closes at record levels, driven by strong earnings reports and positive economic data.",
+      category: "Markets",
+      content: "The S&P 500 index has closed at a new all-time high, marking a significant milestone in the current bull market run. This surge has been fueled by a combination of strong corporate earnings reports and encouraging economic data. Technology and financial sectors led the gains, with several major companies beating analyst expectations. The positive momentum in the stock market reflects growing investor confidence in the economic recovery and future growth prospects. However, some market watchers caution about potential overvaluation and the need for continued strong fundamentals to support these elevated levels. The record-breaking close has also reignited discussions about wealth inequality and the disconnect between Wall Street performance and Main Street economic realities."
+    },
+
+
+
   ]
 export default function NewsTable() {
   const [expandedRows, setExpandedRows] = useState<string[]>([])
@@ -129,6 +148,7 @@ export default function NewsTable() {
           ))}
         </TableBody>
       </Table>
+      
     </div>
   )
 }
