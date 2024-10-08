@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import hsbcLogo from "@/public/hsbc-uk.svg";
+import hsbcLogo from "@/public/hsbc.svg";
 
 export function Sidebar() {
   const sidebar = useSidebar();

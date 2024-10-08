@@ -3,7 +3,7 @@ import { PanelsTopLeft, Home, CreditCard, Percent, ArrowRight } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import Image from "next/image" // Add this import
-import hsbcLogo from "@/public/hsbc-uk.svg";
+import hsbcLogo from "@/public/hsbc.svg";
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -21,8 +21,8 @@ export default function HomePage() {
               <Image
                 src={hsbcLogo} // Replace with your actual logo path
                 alt="GDM Frontview Logo"
-                width={120}
-                height={120} 
+                width={125}
+                height={125} 
                 className="mr-4"
               />
               <div className="flex flex-col items-start">

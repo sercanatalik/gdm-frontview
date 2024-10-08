@@ -15,5 +15,3 @@ export async function GET(request: Request) {
   }
 }
 
-// select sum(cashout) from mv_fo_financing_trades
-// select sum(cashout) from fo_risk where created_at > now() - interval '1 month'
