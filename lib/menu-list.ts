@@ -5,7 +5,8 @@ import {
   Bookmark,
   SquarePen,
   LayoutGrid,
-  LucideIcon
+  LucideIcon,
+  BookOpenText
 } from "lucide-react";
 
 type Submenu = {
@@ -74,22 +75,22 @@ export function getMenuList(pathname: string): Group[] {
         // }
       ]
     },
-    // {
-    //   groupLabel: "Settings",
-    //   menus: [
-    //     {
-    //       href: "/users",
-    //       label: "Users",
-    //       active: pathname.includes("/users"),
-    //       icon: Users
-    //     },
-    //     {
-    //       href: "/account",
-    //       label: "Account",
-    //       active: pathname.includes("/account"),
-    //       icon: Settings
-    //     }
-    //   ]
-    // }
+    {
+      groupLabel: "Settings",
+      menus: [
+        {
+          href: "/swagger",
+          label: "API Docs",
+          active: pathname.includes("/swagger"),
+          icon: BookOpenText
+        },
+        {
+          href: "/account",
+          label: "Account",
+          active: pathname.includes("/account"),
+          icon: Settings
+        }
+      ]
+    }
   ];
 }
