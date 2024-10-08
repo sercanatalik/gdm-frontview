@@ -1,61 +1,68 @@
 import { PanelsTopLeft } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { Menu } from "@/components/admin-panel/menu";
 import { SidebarToggle } from "@/components/admin-panel/sidebar-toggle";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { cn } from "@/lib/utils";
-import { useStore } from "zustand";
+import Image from "next/image";
+import hsbcLogo from "@/public/hsbc-uk.svg";
 
 export function Sidebar() {
-  const { isOpen, getIsOpenState, setIsHover, toggleOpen } = useStore(
-    useSidebar,
-    (state) => ({
-      isOpen: state.isOpen,
-      setIsHover: state.setIsHover,
-      toggleOpen: state.toggleOpen,
-      getIsOpenState: state.getIsOpenState
-    })
-  )!;
+  const sidebar = useSidebar();
+  const [isOpen, setIsOpen] = useState(sidebar.isOpen);
+
+  useEffect(() => {
+    setIsOpen(sidebar.isOpen);
+  }, [sidebar.isOpen]);
+
   if (isOpen === undefined) return null;
 
   return (
     <aside
       className={cn(
         "fixed top-0 left-0 z-20 h-screen -translate-x-full lg:translate-x-0 transition-[width] ease-in-out duration-300",
-        getIsOpenState() === false ? "w-[90px]" : "w-72"
+        isOpen === false ? "w-[90px]" : "w-72"
       )}
     >
-      <SidebarToggle isOpen={isOpen} setIsOpen={toggleOpen} />
+      <SidebarToggle isOpen={isOpen} setIsOpen={sidebar.toggleOpen} />
       <div
-        onMouseEnter={() => setIsHover(true)}
-        onMouseLeave={() => setIsHover(false)}
+        onMouseEnter={() => sidebar.setIsHover(true)}
+        onMouseLeave={() => sidebar.setIsHover(false)}
         className="relative h-full flex flex-col px-3 py-4 overflow-y-auto shadow-md dark:shadow-zinc-800"
       >
         <Button
           className={cn(
             "transition-transform ease-in-out duration-300 mb-1",
-            getIsOpenState() === false ? "translate-x-1" : "translate-x-0"
+            isOpen === false ? "translate-x-1" : "translate-x-0"
           )}
           variant="link"
           asChild
         >
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <PanelsTopLeft className="w-6 h-6 mr-1" />
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+                src={hsbcLogo}
+                alt="HSBC Logo"
+                width={36}
+                height={36}
+                className="mr-2"
+              />
+
             <h1
               className={cn(
                 "font-bold text-lg whitespace-nowrap transition-[transform,opacity,display] ease-in-out duration-300",
-                getIsOpenState() === false
+                isOpen === false
                   ? "-translate-x-96 opacity-0 hidden"
                   : "translate-x-0 opacity-100"
               )}
             >
-              Brand
+              GDM Frontview
             </h1>
           </Link>
         </Button>
-        <Menu isOpen={getIsOpenState()} />
+        <Menu isOpen={isOpen} />
       </div>
     </aside>
   );

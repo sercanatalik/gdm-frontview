@@ -33,9 +33,9 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "",
       menus: [
         {
-          href: "/dashboard",
+          href: "/financing/dashboard",
           label: "Dashboard",
-          active: pathname.includes("/dashboard"),
+          active: pathname.includes("/financing/dashboard"),
           icon: LayoutGrid,
           submenus: []
         }
@@ -46,50 +46,50 @@ export function getMenuList(pathname: string): Group[] {
       menus: [
         {
           href: "",
-          label: "Posts",
-          active: pathname.includes("/posts"),
+          label: "Overrides",
+          active: pathname.includes("/instruments"),
           icon: SquarePen,
           submenus: [
             {
-              href: "/posts",
-              label: "All Posts"
+              href: "/financing/instruments",
+              label: "Instruments"
             },
             {
-              href: "/posts/new",
-              label: "New Post"
+              href: "/financing/trades",
+              label: "Trades"
             }
           ]
         },
-        {
-          href: "/categories",
-          label: "Categories",
-          active: pathname.includes("/categories"),
-          icon: Bookmark
-        },
-        {
-          href: "/tags",
-          label: "Tags",
-          active: pathname.includes("/tags"),
-          icon: Tag
-        }
+        // {
+        //   href: "/categories",
+        //   label: "Categories",
+        //   active: pathname.includes("/categories"),
+        //   icon: Bookmark
+        // },
+        // {
+        //   href: "/tags",
+        //   label: "Tags",
+        //   active: pathname.includes("/tags"),
+        //   icon: Tag
+        // }
       ]
     },
-    {
-      groupLabel: "Settings",
-      menus: [
-        {
-          href: "/users",
-          label: "Users",
-          active: pathname.includes("/users"),
-          icon: Users
-        },
-        {
-          href: "/account",
-          label: "Account",
-          active: pathname.includes("/account"),
-          icon: Settings
-        }
-      ]
-    }
+    // {
+    //   groupLabel: "Settings",
+    //   menus: [
+    //     {
+    //       href: "/users",
+    //       label: "Users",
+    //       active: pathname.includes("/users"),
+    //       icon: Users
+    //     },
+    //     {
+    //       href: "/account",
+    //       label: "Account",
+    //       active: pathname.includes("/account"),
+    //       icon: Settings
+    //     }
+    //   ]
+    // }
   ];
 }
