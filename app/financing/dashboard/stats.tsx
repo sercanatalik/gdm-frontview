@@ -51,12 +51,28 @@ const Stats: React.FC<StatsProps> = () => {
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
-                  <CardHeader>
-                    <CardTitle>Cashout Overview</CardTitle>
+                <Tabs defaultValue="historical">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>
+                   
+                      <TabsList>
+                        <TabsTrigger value="historical">Historical Cashout</TabsTrigger>
+                        <TabsTrigger value="future">Future Cashout</TabsTrigger>
+                      </TabsList>
+                      
+                    
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="pl-2">
-                    <Overview />
+                  <CardContent className="pt-2">
+                  <TabsContent value="historical">
+                      <Overview />
+                    </TabsContent>
+                    <TabsContent value="future">
+                      {/* Add future cashout overview content here */}
+                      <p>Future cashout overview content goes here</p>
+                    </TabsContent>
                   </CardContent>
+                  </Tabs>
                 </Card>
                 <RecentTradesCard />
               </div>

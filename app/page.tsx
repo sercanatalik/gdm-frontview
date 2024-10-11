@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import Image from "next/image" // Add this import
 import hsbcLogo from "@/public/hsbc.svg";
+
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -38,26 +39,7 @@ export default function HomePage() {
           </div>
           {/* Added margin-top to create space */}
           <div className="container flex flex-col items-center gap-4 text-center mt-8 sm:mt-12">
-            <div className="flex flex-col sm:flex-row gap-5">
-              <Button
-                variant="outline"
-                size="lg"
-                asChild // Add this prop to use Link component
-              >
-                <Link href="/financing/dashboard"> {/* Wrap button content with Link */}
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Financing
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" disabled>
-                <Percent className="mr-2 h-5 w-5" />
-                Credit
-              </Button>
-              <Button variant="outline" size="lg" disabled>
-                <ArrowRight className="mr-2 h-5 w-5" />
-                Rates
-              </Button>
-            </div>
+           
           </div>
         </section>
 
