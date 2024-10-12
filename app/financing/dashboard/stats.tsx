@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CashOutCard } from "@/app/financing/dashboard/components/CashOutCard"                     
 import { NotionalCard } from "@/app/financing/dashboard/components/NotionalCard"                     
 import { DailyAccrualCard } from "@/app/financing/dashboard/components/DailyAccrualCard"                     
-import { Overview } from "@/app/financing/dashboard/components/overview"                      
+import { Overview } from "@/app/financing/dashboard/components/Overview"                         
 import { RecentTradesCard } from "@/app/financing/dashboard/components/RecentTradeCard"                     
 import NewsTable from "@/app/financing/dashboard/components/NewsTable"                     
 import { BreakdownByDesk  } from "@/app/financing/dashboard/components/BreakdownByDesk"
@@ -31,13 +31,13 @@ const Stats: React.FC<StatsProps> = () => {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="analytics" disabled>
-                Analytics
+                Structured Credit
               </TabsTrigger>
               <TabsTrigger value="reports" disabled>
-                Reports
+                Flow Credit
               </TabsTrigger>
-              <TabsTrigger value="notifications" disabled>
-                Notifications
+              <TabsTrigger value="notifications" >
+                Securities Financing
               </TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
