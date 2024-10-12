@@ -2,11 +2,11 @@ import {
   Tag,
   Users,
   Settings,
-  Bookmark,
+  Bookmark,ChartArea,
   SquarePen,
   LayoutGrid,
   LucideIcon,
-  BookOpenText
+  BookOpenText,Workflow,LayoutPanelTop
 } from "lucide-react";
 
 type Submenu = {
@@ -37,11 +37,19 @@ export function getMenuList(pathname: string): Group[] {
           href: "/financing/dashboard",
           label: "Dashboard",
           active: pathname.includes("/financing/dashboard"),
-          icon: LayoutGrid,
+          icon: ChartArea,
+          submenus: []
+        },
+        {
+          href: "/financing/workspace",
+          label: "Workspace",
+          active: pathname.includes("/financing/workspace"),
+          icon: LayoutPanelTop,
           submenus: []
         }
       ]
     },
+    
     {
       groupLabel: "Contents",
       menus: [

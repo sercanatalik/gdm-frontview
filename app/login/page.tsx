@@ -3,13 +3,12 @@ import { useState } from "react"
 import { useRouter } from "next/navigation" // Add this import
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import Image from "next/image"
 import hsbcLogo from "@/public/hsbc.svg"
-import { useToast } from "@/hooks/use-toast"
 
-export default function CompactNumericLoginPage() {
+export default function Login() {
+  localStorage.clear()
   const router = useRouter() // Add this line
   const [showPassword, setShowPassword] = useState(false)
   const [userid, setUserId] = useState("")
@@ -61,7 +60,7 @@ export default function CompactNumericLoginPage() {
             className="mr-3"
           />
           <div>
-            <h1 className="text-2xl font-bold">GDM Frontview</h1>
+            <h1 className="text-1xl font-bold text-black ">GDM Frontview</h1>
             <p className="text-xs text-gray-600 font-mono">intuitive frontend solution</p>
           </div>
         </div>

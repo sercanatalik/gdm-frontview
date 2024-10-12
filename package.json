@@ -9,6 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@finos/perspective": "^2.10.1",
+    "@finos/perspective-viewer": "^2.10.1",
+    "@finos/perspective-viewer-d3fc": "^2.10.1",
+    "@finos/perspective-viewer-datagrid": "^2.10.1",
+    "@finos/perspective-workspace": "^2.10.1",
     "@clickhouse/client": "^1.6.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.1",
@@ -66,6 +71,7 @@
     "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {
+    "@finos/perspective-esbuild-plugin": "^2.10.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

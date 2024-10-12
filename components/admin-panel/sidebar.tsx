@@ -9,11 +9,13 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import hsbcLogo from "@/public/hsbc.svg";
+import hsbcDarkLogo from "@/public/hsbc-dark.svg";
+import { useTheme } from "next-themes";
 
 export function Sidebar() {
   const sidebar = useSidebar();
   const [isOpen, setIsOpen] = useState(sidebar.isOpen);
-
+  const { theme } = useTheme();
   useEffect(() => {
     setIsOpen(sidebar.isOpen);
   }, [sidebar.isOpen]);
@@ -43,7 +45,7 @@ export function Sidebar() {
         >
           <Link href="/" className="flex items-center gap-2">
             <Image
-                src={hsbcLogo}
+                src={theme === 'dark' ? hsbcDarkLogo : hsbcLogo}
                 alt="HSBC Logo"
                 width={36}
                 height={36}

@@ -1,5 +1,7 @@
+"use client"
 import Link from "next/link";
 import { MenuIcon, PanelsTopLeft } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 import { Menu } from "@/components/admin-panel/menu";
@@ -11,9 +13,12 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import Image from "next/image";
-import hsbcLogo from "@/public/hsbc-uk.svg";
+import hsbcLogo from "@/public/hsbc.svg";
+import hsbcDarkLogo from "@/public/hsbc-dark.svg";
 
 export function SheetMenu() {
+  const { theme } = useTheme();
+
   return (
     <Sheet>
       <SheetTrigger className="lg:hidden" asChild>
@@ -29,14 +34,13 @@ export function SheetMenu() {
             asChild
           >
             <Link href="/dashboard" className="flex items-center gap-2">
-            <Image
-                src={hsbcLogo}
+              <Image
+                src={theme === 'dark' ? hsbcDarkLogo : hsbcLogo}
                 alt="HSBC Logo"
                 width={24}
                 height={24}
                 className="mr-2"
-              />
-
+              />  
               <SheetTitle className="font-bold text-lg">GDM Frontview</SheetTitle>
             </Link>
           </Button>
