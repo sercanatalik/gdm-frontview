@@ -91,6 +91,7 @@ function Workspace() {
       // Initial data load
       updateData();
       workspaceRef.current.restore(DEFAULT_LAYOUT);
+
       // Set up interval to refresh data every minute
       const intervalId = setInterval(updateData, 60000);
 
@@ -104,7 +105,7 @@ function Workspace() {
    
 
     <div ref={containerRef} style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 0  }}>
-    <WorkspaceMenu/>  
+    <WorkspaceMenu workspaceLayout={DEFAULT_LAYOUT}/>  
         <perspective-workspace
         ref={workspaceRef}
     theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
