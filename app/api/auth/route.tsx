@@ -4,9 +4,9 @@ import { getIronSession } from 'iron-session';
 import { IronSession } from 'iron-session';
 
 // Add this interface to extend IronSession
-interface CustomIronSession extends IronSession {
+interface CustomIronSession extends IronSession<{
   user?: any; // Replace 'any' with a more specific type if possible
-}
+}> {}
 
 // Updated users as a list
 const users = [
@@ -38,4 +38,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
   }
 }
-

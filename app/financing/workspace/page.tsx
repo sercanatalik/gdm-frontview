@@ -7,11 +7,8 @@ import "@finos/perspective-viewer";
 import "@finos/perspective-viewer-datagrid";
 import "@finos/perspective-viewer-d3fc";
 
-import "@finos/perspective-workspace/dist/css/pro-dark.css";
-// import "@finos/perspective-workspace/dist/css/pro.css";
 import "@finos/perspective-viewer/dist/css/themes.css";
-
-
+import { createDatasource } from './datasource';
 declare global {
     namespace JSX {
       interface IntrinsicElements {
@@ -25,39 +22,40 @@ declare global {
 
 const DEFAULT_LAYOUT = {
     master: {
-      widgets: ["Two"],
+      widgets: ["One"],
     },
     detail: {
       main: {
         currentIndex: 0,
         type: "tab-area",
-        widgets: ["One"],
+        widgets: ["Two"],
       },
     },
     viewers: {
-      One: {
-        table: "data",
-        title: "Test Widget I",
-        editable: true,
-        linked: true,
-      },
+      One: { table: "data","plugin":"Datagrid",
+        plugin_config:{"columns":{},"editable":false,"scroll_lock":false},"columns_config":{},"settings":false,"title":"ByDesk","group_by":["desk"],"split_by":[],"columns":["notional_amount"],"filter":[],"sort":[],"expressions":{},"aggregates":{}},
       Two: {
         table: "data",
         title: "Test Widget 2",
-        editable: true,
+        editable: false,
         linked: true,
       },
     },
   };
 
+import { PerspectiveWorker } from '@finos/perspective';
+
+
 function Workspace() {
   const workspaceRef = useRef<any>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [worker, setWorker] = useState<any>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
-   
+    // Dynamically import the appropriate CSS file based on the theme
+    import(`@finos/perspective-workspace/dist/css/pro${theme === 'dark' ? '-dark' : ''}.css`);
 
     // Initialize perspective only on the client-side
     import("@finos/perspective").then((perspective) => {
@@ -78,16 +76,27 @@ function Workspace() {
     resizeObserver.observe(containerRef.current);
   }
 
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
     if (worker && workspaceRef.current) {
-      const datasource = async () => {
-        return await worker.table([{ "a": [1,2,3] }]);
+      const datasource = createDatasource(worker);
+      
+      const updateData = async () => {
+        const table = await datasource();
+        workspaceRef.current.tables.set("data", table);
+        console.log("updated data");
       };
 
-      workspaceRef.current.tables.set("data", Promise.resolve(datasource()));
+      // Initial data load
+      updateData();
       workspaceRef.current.restore(DEFAULT_LAYOUT);
+      // Set up interval to refresh data every minute
+      const intervalId = setInterval(updateData, 60000);
+
+
+      // Clean up interval on component unmount
+      return () => clearInterval(intervalId);
     }
   }, [worker]);
 
@@ -98,7 +107,7 @@ function Workspace() {
     <WorkspaceMenu/>  
         <perspective-workspace
         ref={workspaceRef}
-    theme="Pro Dark"
+    theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
     id="workspace"
     style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 20, bottom: 0}}
 

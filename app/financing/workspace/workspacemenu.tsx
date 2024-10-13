@@ -9,6 +9,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar"
 
+
 // Define the structure for a menu item
 interface MenuItem {
   label: string;
@@ -39,28 +40,46 @@ const menuItems: Menu[] = [
     ],
   },
   {
-    label: 'Edit',
+    label: 'Layouts',
     items: [
-      { label: 'Undo', shortcut: '⌘Z', action: () => console.log('Undo') },
-      { label: 'Redo', shortcut: '⇧⌘Z', action: () => console.log('Redo') },
+      { label: 'Cashout by Desk', action: () => console.log('Undo') },
+      { label: 'Cashout by Colleteral', action: () => console.log('Undo') },
+      { label: 'Cashout by Counterparty', action: () => console.log('Undo') },
       'separator',
-      { label: 'Cut', shortcut: '⌘X', action: () => console.log('Cut') },
-      { label: 'Copy', shortcut: '⌘C', action: () => console.log('Copy') },
-      { label: 'Paste', shortcut: '⌘V', action: () => console.log('Paste') },
+      { label: 'Save Layout', action: () => {
+        console.log('Save Layout');
+      }},
+  
     ],
   },
   {
     label: 'View',
     items: [
-      { label: 'Zoom In', shortcut: '⌘+', action: () => console.log('Zoom in') },
-      { label: 'Zoom Out', shortcut: '⌘-', action: () => console.log('Zoom out') },
+      { label: 'Zoom In', shortcut: '⌘+', action: () => {
+        const currentZoom = parseFloat(document.body.style.zoom) || 1;
+        document.body.style.zoom = `${Math.min(currentZoom + 0.1, 2)}`;
+      }},
+      { label: 'Zoom Out', shortcut: '⌘-', action: () => {
+        const currentZoom = parseFloat(document.body.style.zoom) || 1;
+        document.body.style.zoom = `${Math.max(currentZoom - 0.1, 0.5)}`;
+      }},
       'separator',
-      { label: 'Toggle Fullscreen', action: () => console.log('Toggle fullscreen') },
+      { label: 'Toggle Fullscreen', action: () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      }},
     ],
   },
 ];
 
 export function WorkspaceMenu() {
+ 
+
   return (
     <Menubar className="h-5 min-h-[1rem] items-center">
       {menuItems.map((menu) => (
