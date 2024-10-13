@@ -21,7 +21,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { WorkspaceLayout } from './types'; // Assuming you have a type for the workspace layout
 
 // Define the structure for a menu item
 interface MenuItem {
@@ -37,19 +36,11 @@ interface Menu {
   items: (MenuItem | 'separator')[];
 }
 
-export function WorkspaceMenu({ workspaceLayout }: { workspaceLayout: WorkspaceLayout }) {
+export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string) => void }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [layoutName, setLayoutName] = useState('');
 
-  const saveLayout = () => {
-    if (layoutName.trim()) {
-      const savedLayouts = JSON.parse(localStorage.getItem('workspaceLayouts') || '{}');
-      savedLayouts[layoutName] = workspaceLayout;
-      localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
-      setIsDialogOpen(false);
-      setLayoutName('');
-    }
-  };
+ 
 
   // Create the menu items array
   const menuItems: Menu[] = [
@@ -143,7 +134,7 @@ export function WorkspaceMenu({ workspaceLayout }: { workspaceLayout: WorkspaceL
           />
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setLayoutName('')}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={saveLayout}>Save</AlertDialogAction>
+            <AlertDialogAction onClick={() => saveLayout(layoutName)}>Save</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

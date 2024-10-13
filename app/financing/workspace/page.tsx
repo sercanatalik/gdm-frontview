@@ -101,11 +101,23 @@ function Workspace() {
     }
   }, [worker]);
 
+
+  const saveLayout = async (layoutName: string) => {
+    if (layoutName.trim()) {
+      const savedLayouts = JSON.parse(localStorage.getItem('workspaceLayouts') || '{}');
+      const currentLayout = await workspaceRef.current?.save();
+      savedLayouts[layoutName] = JSON.stringify(currentLayout);
+      localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
+      console.log('Layout saved as', layoutName,savedLayouts[layoutName] );
+    }
+  };
+
+
   return (
    
 
     <div ref={containerRef} style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 0  }}>
-    <WorkspaceMenu workspaceLayout={DEFAULT_LAYOUT}/>  
+    <WorkspaceMenu  saveLayout={saveLayout}/>  
         <perspective-workspace
         ref={workspaceRef}
     theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
