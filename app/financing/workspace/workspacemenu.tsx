@@ -9,6 +9,9 @@ import {
   MenubarSeparator,
   MenubarShortcut,
   MenubarTrigger,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
 } from "@/components/ui/menubar"
 import {
   AlertDialog,
@@ -21,7 +24,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { Save } from 'lucide-react'
+import { Save,FolderOpen } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Pencil, Trash2 } from 'lucide-react'
 
 // Define the structure for a menu item
 interface MenuItem {
@@ -30,6 +35,7 @@ interface MenuItem {
   disabled?: boolean;
   action?: () => void;
   icon?: React.ReactNode;
+  submenu?: MenuItem[];
 }
 
 // Define the structure for a menu
@@ -38,11 +44,45 @@ interface Menu {
   items: (MenuItem | 'separator')[];
 }
 
-export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string) => void }) {
+export function WorkspaceMenu({ saveLayout, loadLayout }: { 
+  saveLayout: (layoutName: string) => void,
+  loadLayout: (layoutName: string) => void 
+}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
   const [layoutName, setLayoutName] = useState('');
+  const [layouts, setLayouts] = useState<Record<string, any>>({});
+  const [selectedLayout, setSelectedLayout] = useState<string | null>(null);
+  const [newLayoutName, setNewLayoutName] = useState('');
 
+  useEffect(() => {
+    const savedLayouts = localStorage.getItem('workspaceLayouts');
+    if (savedLayouts) {
+      setLayouts(JSON.parse(savedLayouts));
+    }
+  }, []);
 
+  const handleRenameLayout = () => {
+    if (selectedLayout && newLayoutName) {
+      const updatedLayouts = { ...layouts };
+      updatedLayouts[newLayoutName] = updatedLayouts[selectedLayout];
+      delete updatedLayouts[selectedLayout];
+      setLayouts(updatedLayouts);
+      localStorage.setItem('workspaceLayouts', JSON.stringify(updatedLayouts));
+      setSelectedLayout(null);
+      setNewLayoutName('');
+    }
+  };
+
+  const handleDeleteLayout = () => {
+    if (selectedLayout) {
+      const updatedLayouts = { ...layouts };
+      delete updatedLayouts[selectedLayout];
+      setLayouts(updatedLayouts);
+      localStorage.setItem('workspaceLayouts', JSON.stringify(updatedLayouts));
+      setSelectedLayout(null);
+    }
+  };
 
   // Create the menu items array
   const menuItems: Menu[] = [
@@ -62,9 +102,31 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
     {
       label: 'Layouts',
       items: [
-        { label: 'Cashout by Desk', action: () => console.log('Undo') },
-        { label: 'Cashout by Colleteral', action: () => console.log('Undo') },
-        // { label: 'Cashout by Counterparty', action: () => console.log('Undo') ('Undo') },
+        { 
+          label: 'Default Views',
+          submenu: [
+            { label: 'Cashout by Counterparty', action: () => console.log('Default View Item 1') },
+            { label: 'Cashout by Instrument', action: () => console.log('Default View Item 2') },
+          ]
+        },
+        'separator',
+        { label: 'User Defined Views',   
+          submenu: [
+            ...(() => {
+              const savedLayouts = localStorage.getItem('workspaceLayouts');
+              if (!savedLayouts) return [];
+              
+              const parsedLayouts = JSON.parse(savedLayouts);
+              
+              return Object.keys(parsedLayouts).map((layoutName) => ({
+                label: layoutName,
+                action: () => loadLayout(layoutName), // Use the loadLayout callback here
+                key: `layout-${layoutName}`,
+              }));
+            })(),
+          ]
+        },
+      
         'separator',
         { 
           label: 'Save Layout', 
@@ -72,19 +134,18 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
           icon: <Save className="h-4 w-4 ml-2" />
         },
         'separator',
-        // Load workspaceLayouts from localStorage
-        ...(() => {
-          const savedLayouts = localStorage.getItem('workspaceLayouts');
-          if (!savedLayouts) return [];
-          
-          const parsedLayouts = JSON.parse(savedLayouts);
-          
-          return Object.keys(parsedLayouts).map((layoutName) => ({
-            label: layoutName,
-            action: () => console.log(`Loading layout: ${layoutName}`),
-            key: `layout-${layoutName}`,
-          }));
-        })(),
+        { 
+          label: 'Manage Layouts', 
+          action: () => setIsManageDialogOpen(true),
+          icon: <FolderOpen className="h-4 w-4 ml-2" />
+        },
+        'separator',
+        { 
+          label: 'Download Layout', 
+          action: () => setIsManageDialogOpen(true),
+          icon: <FolderOpen className="h-4 w-4 ml-2" />
+        },
+  
       ],
     },
     {
@@ -123,6 +184,17 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
               {menu.items.map((item, index) => 
                 item === 'separator' ? (
                   <MenubarSeparator key={`${menu.label}-separator-${index}`} />
+                ) : 'submenu' in item ? (
+                  <MenubarSub key={item.label}>
+                    <MenubarSubTrigger className="text-xs px-1.5 py-0.5">{item.label}</MenubarSubTrigger>
+                    <MenubarSubContent>
+                      {item.submenu?.map((subItem) => (
+                        <MenubarItem key={subItem.label} onClick={subItem.action}>
+                          {subItem.label}
+                        </MenubarItem>
+                      ))}
+                    </MenubarSubContent>
+                  </MenubarSub>
                 ) : (
                   <MenubarItem
                     key={item.label}
@@ -159,6 +231,58 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setLayoutName('')}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => saveLayout(layoutName)}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isManageDialogOpen} onOpenChange={setIsManageDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Manage Layouts</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select a layout to rename or delete:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            {Object.keys(layouts).map((layoutName) => (
+              <div key={layoutName} className="flex items-center justify-between">
+                <span>{layoutName}</span>
+                <div>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSelectedLayout(layoutName);
+                    setNewLayoutName(layoutName);
+                  }}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Rename
+                  </Button>
+                  <Button variant="outline" size="sm" className="ml-2" onClick={() => {
+                    setSelectedLayout(layoutName);
+                    handleDeleteLayout();
+                  }}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {selectedLayout && (
+            <div className="mt-4">
+              <Input
+                value={newLayoutName}
+                onChange={(e) => setNewLayoutName(e.target.value)}
+                placeholder="New layout name"
+              />
+              <div className="mt-2 flex justify-end">
+                <Button variant="outline" onClick={handleRenameLayout}>Rename</Button>
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setSelectedLayout(null);
+              setNewLayoutName('');
+            }}>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

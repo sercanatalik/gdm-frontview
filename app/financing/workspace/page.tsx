@@ -9,6 +9,8 @@ import "@finos/perspective-viewer-d3fc";
 import { useRouter } from 'next/navigation';
 import "@finos/perspective-viewer/dist/css/themes.css";
 import { createDatasource } from './datasource';
+import { loadDefaultLayout } from './defaultLayouts';  
+
 declare global {
     namespace JSX {
       interface IntrinsicElements {
@@ -19,31 +21,6 @@ declare global {
       }
     }
   }
-
-const DEFAULT_LAYOUT = {
-    master: {
-      widgets: ["One"],
-    },
-    detail: {
-      main: {
-        currentIndex: 0,
-        type: "tab-area",
-        widgets: ["Two"],
-      },
-    },
-    viewers: {
-      One: { table: "data","plugin":"Datagrid",
-        plugin_config:{"columns":{},"editable":false,"scroll_lock":false},"columns_config":{},"settings":false,"title":"ByDesk","group_by":["desk"],"split_by":[],"columns":["notional_amount"],"filter":[],"sort":[],"expressions":{},"aggregates":{}},
-      Two: {
-        table: "data",
-        title: "Test Widget 2",
-        editable: false,
-        linked: true,
-      },
-    },
-  };
-
-
 
 function Workspace() {
   const workspaceRef = useRef<any>(null);
@@ -91,7 +68,7 @@ function Workspace() {
 
       // Initial data load
       updateData();
-      workspaceRef.current.restore(DEFAULT_LAYOUT);
+      workspaceRef.current.restore(loadDefaultLayout());
 
       // Set up interval to refresh data every minute
       const intervalId = setInterval(updateData, 60000);
@@ -110,19 +87,25 @@ function Workspace() {
       savedLayouts[layoutName] = JSON.stringify(currentLayout);
       localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
       console.log('Layout saved as', layoutName,savedLayouts[layoutName] );
-      localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
+      localStorage.setItem('workspaceSelectedLayout',layoutName);
+
       router.refresh();
 
 
     }
   };
 
+  const loadLayout = (layoutName: string) => {
+    workspaceRef.current.restore(loadDefaultLayout(layoutName));
+  };  
+    
+
 
   return (
    
 
     <div ref={containerRef} style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 0  }}>
-    <WorkspaceMenu  saveLayout={saveLayout}/>  
+    <WorkspaceMenu  saveLayout={saveLayout} loadLayout={loadLayout}/>  
         <perspective-workspace
         ref={workspaceRef}
     theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
