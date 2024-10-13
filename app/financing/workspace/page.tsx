@@ -109,6 +109,8 @@ function Workspace() {
       savedLayouts[layoutName] = JSON.stringify(currentLayout);
       localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
       console.log('Layout saved as', layoutName,savedLayouts[layoutName] );
+      window.location.reload();
+
     }
   };
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Menubar,
   MenubarContent,
@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
+import { Save } from 'lucide-react'
 
 // Define the structure for a menu item
 interface MenuItem {
@@ -28,6 +29,7 @@ interface MenuItem {
   shortcut?: string;
   disabled?: boolean;
   action?: () => void;
+  icon?: React.ReactNode;
 }
 
 // Define the structure for a menu
@@ -40,7 +42,7 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [layoutName, setLayoutName] = useState('');
 
- 
+
 
   // Create the menu items array
   const menuItems: Menu[] = [
@@ -62,9 +64,27 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
       items: [
         { label: 'Cashout by Desk', action: () => console.log('Undo') },
         { label: 'Cashout by Colleteral', action: () => console.log('Undo') },
-        { label: 'Cashout by Counterparty', action: () => console.log('Undo') },
+        { label: 'Cashout by Counterparty', action: () => console.log('Undo') ('Undo') },
         'separator',
-        { label: 'Save Layout', action: () => setIsDialogOpen(true) },
+        { 
+          label: 'Save Layout', 
+          action: () => setIsDialogOpen(true),
+          icon: <Save className="h-4 w-4 ml-2" />
+        },
+        'separator',
+        // Load workspaceLayouts from localStorage
+        ...(() => {
+          const savedLayouts = localStorage.getItem('workspaceLayouts');
+          if (!savedLayouts) return [];
+          
+          const parsedLayouts = JSON.parse(savedLayouts);
+          
+          return Object.keys(parsedLayouts).map((layoutName) => ({
+            label: layoutName,
+            action: () => console.log(`Loading layout: ${layoutName}`),
+            key: `layout-${layoutName}`,
+          }));
+        })(),
       ],
     },
     {
@@ -92,6 +112,7 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
     },
   ];
 
+
   return (
     <>
       <Menubar className="h-5 min-h-[1rem] items-center">
@@ -107,10 +128,13 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
                     key={item.label}
                     disabled={item.disabled}
                     onClick={item.action}
-                    className="text-xs"
+                    className="text-xs flex items-center justify-between"
                   >
-                    {item.label}
-                    {item.shortcut && <MenubarShortcut className="text-xs ml-auto">{item.shortcut}</MenubarShortcut>}
+                    <span>{item.label}</span>
+                    <div className="flex items-center">
+                      {item.shortcut && <MenubarShortcut className="text-xs mr-2">{item.shortcut}</MenubarShortcut>}
+                      {item.icon}
+                    </div>
                   </MenubarItem>
                 )
               )}
