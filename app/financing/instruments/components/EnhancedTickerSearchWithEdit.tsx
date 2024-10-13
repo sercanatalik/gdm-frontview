@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Columns } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface TickerData {
   id: string
@@ -131,8 +133,8 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/instruments/${selectedTicker}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/instruments?name=${selectedTicker}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -152,6 +154,15 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add this helper function to format currency values
+  const formatCurrencyValue = (key: string, value: any, currency: string) => {
+    const currencyFields = ['price', 'face_value', 'coupon'];
+    if (currencyFields.includes(key)) {
+      return `${value} ${currency}`;
+    }
+    return value;
   };
 
   return (
@@ -182,18 +193,25 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
                 {isLoading ? (
                   <p>Loading...</p>
                 ) : (
-                  <ul>
+                  <div className="space-y-2">
                     {tickerData.map((ticker) => (
-                      <li key={ticker.id} className="mb-2">
-                        <Button
-                          variant="link"
-                          onClick={() => handleSelectTicker(ticker.id)}
-                        >
-                          {ticker.id} - {ticker.name} 
-                        </Button>
-                      </li>
+                      <Card
+                        key={ticker.id}
+                        className="cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => handleSelectTicker(ticker.id)}
+                      >
+                        <CardHeader className="p-3 pb-0">
+                          <CardTitle className="text-medium">{ticker.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-2">
+                          <div className="font-sm">{ticker.id}</div>
+                          <div className="text-sm text-gray-500">
+                            {ticker.region} | {ticker.issuer}
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -215,19 +233,25 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
                         <TableCell className="font-medium">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableCell>
                         <TableCell>
                           {isEditMode ? (
-                            <Input
-                              type={typeof value === 'boolean' ? 'checkbox' : 'text'}
-                              value={editedData[key as keyof TickerData] ?? value?.toString()}
-                              checked={typeof value === 'boolean' ? editedData[key as keyof TickerData] ?? value : undefined}
-                              onChange={(e) => handleEditChange(key as keyof TickerData, e.target.type === 'checkbox' ? e.target.checked : e.target.value)}
-                            />
+                            typeof value === 'boolean' ? (
+                              <Checkbox
+                                checked={editedData[key as keyof TickerData] as boolean ?? value as boolean}
+                                onCheckedChange={(checked) => handleEditChange(key as keyof TickerData, checked)}
+                              />
+                            ) : (
+                              <Input
+                                type="text"
+                                value={editedData[key as keyof TickerData] ?? value?.toString()}
+                                onChange={(e) => handleEditChange(key as keyof TickerData, e.target.value)}
+                              />
+                            )
                           ) : (
                             key === 'is_callable' || key === 'is_puttable' || key === 'is_convertible' ? (
                               <Badge variant={value ? "default" : "secondary"}>
                                 {value ? "Yes" : "No"}
                               </Badge>
                             ) : (
-                              value?.toString() || 'N/A'
+                              formatCurrencyValue(key, value?.toString() || 'N/A', selectedTickerData.currency)
                             )
                           )}
                         </TableCell>
@@ -261,4 +285,3 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
     </div>
   )
 }
-

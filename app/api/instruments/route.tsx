@@ -107,7 +107,7 @@ export async function PUT(request: Request) {
     const setClause = Object.entries(updatedInstrument)
       .map(([key, value]) => `${key} = {${key}:String}`)
       .join(', ');
-
+    console.log(setClause);
     const query = `
       ALTER TABLE fo_instrument
       UPDATE ${setClause}
@@ -115,8 +115,9 @@ export async function PUT(request: Request) {
     `;
 
     await client.query({
-      query,
+      query,query_params:{'name':name},
       format: 'JSONEachRow',
+      
     
     });
 

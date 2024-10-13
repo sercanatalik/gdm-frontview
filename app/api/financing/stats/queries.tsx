@@ -1,7 +1,7 @@
 import { createClient } from '@clickhouse/client';
 
 
-export type Measure = 'cashout' | 'dailyaccrual' | 'accrual' | 'cashoutbymonth' | 'recenttrades' | 'countrecenttrades';
+export type Measure = 'cashout' | 'dailyaccrual' | 'accrual' | 'cashoutbymonth' | 'recenttrades' | 'countrecenttrades' | 'notional';
 
 
 const client = createClient({
@@ -11,7 +11,7 @@ const client = createClient({
 });
 
 
-export async function fetchMeasureTotal(measure: Measure) {
+export async function fetchMeasureTotal(measure: Measure, filter: any) {
 
     /**
      * @swagger
@@ -50,9 +50,13 @@ export async function fetchMeasureTotal(measure: Measure) {
     let result: any;
     let data: any;
 
+    filter = JSON.parse(filter);
+    
     switch (measure) {
+
         case 'cashout':
-            query = 'SELECT sum(notional_amount) AS total FROM mv_fo_financing_trades';
+            query = `SELECT sum(notional_amount) AS total FROM mv_fo_financing_trades where desk = '${filter.desk}'`;
+            console.log(query);
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
@@ -60,7 +64,7 @@ export async function fetchMeasureTotal(measure: Measure) {
             data = await result.json();
             const totalCashout = data[0].total || 0;
 
-            query = "SELECT sum(notional_amount) AS last_month_cashout FROM mv_fo_financing_trades WHERE trade_date > now() - interval '1 month'"
+            query = `SELECT sum(notional_amount) AS last_month_cashout FROM mv_fo_financing_trades WHERE trade_date > now() - interval '1 month' and desk = '${filter.desk}'`;
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
@@ -77,10 +81,13 @@ export async function fetchMeasureTotal(measure: Measure) {
             };
 
             return data;
+        
+            
+            
 
 
         case 'dailyaccrual':
-            query = 'SELECT sum(accrual_daily) AS total FROM fo_risk';
+            query = 'SELECT sum(accrual_daily) AS total FROM fo_risk where desk = \'${filter.desk}\'';
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
@@ -107,7 +114,7 @@ export async function fetchMeasureTotal(measure: Measure) {
                     formatDateTime(toStartOfMonth(trade_date), '%b') AS month,
                     round(sum(notional_amount) / 1000000, 2) AS monthly_cashout,
                     round(sum(sum(notional_amount)) OVER (ORDER BY toStartOfMonth(trade_date)) / 1000000, 2) AS cumulative_cashout
-                FROM mv_fo_financing_trades
+                FROM mv_fo_financing_trades where desk = '${filter.desk}'
                 GROUP BY toStartOfMonth(trade_date)
                 ORDER BY toStartOfMonth(trade_date)
             `;
@@ -128,7 +135,8 @@ export async function fetchMeasureTotal(measure: Measure) {
                     i.sector as sector,
                     SUM(notional_amount) as notional,
                     MAX(trade_date) as latest_trade_date
-                FROM mv_fo_financing_trades 
+                FROM mv_fo_financing_trades  
+                WHERE desk = '${filter.desk}'
                 GROUP BY counterparty, sector
                 ORDER BY latest_trade_date DESC 
                 LIMIT 150
@@ -147,7 +155,8 @@ export async function fetchMeasureTotal(measure: Measure) {
             query = `
                 SELECT 
                     COUNT(*) as count
-                FROM mv_fo_financing_trades 
+                FROM mv_fo_financing_trades     
+                WHERE desk = '${filter.desk}'
                 WHERE trade_date >= now() - INTERVAL 30 DAY
             `;
             result = await client.query({
@@ -171,8 +180,8 @@ export async function fetchMeasureTotal(measure: Measure) {
     // ... handle the result
 }
 
-export function fetchFinancingStats(measure: Measure) {
-    const data = Promise.resolve(fetchMeasureTotal(measure));
+export function fetchFinancingStats(measure: Measure, filter: any) {
+    const data = Promise.resolve(fetchMeasureTotal(measure, filter));
     return data;
     // Function implementation
 }

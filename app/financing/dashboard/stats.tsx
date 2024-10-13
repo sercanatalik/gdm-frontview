@@ -1,5 +1,7 @@
+'use client'
 import { Tabs } from '@/components/ui/tabs';
 import React from 'react';
+import { useState } from 'react';
 
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"   
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +19,8 @@ interface StatsProps {
 }
 
 const Stats: React.FC<StatsProps> = () => {
+  const [selectedDesk, setSelectedDesk] = useState<string>('sip');
+
   return (
     <div className="hidden flex-col md:flex">
 
@@ -27,26 +31,30 @@ const Stats: React.FC<StatsProps> = () => {
 
             </div>
           </div>
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics" disabled>
-                Structured Credit
-              </TabsTrigger>
-              <TabsTrigger value="reports" disabled>
-                Flow Credit
-              </TabsTrigger>
-              <TabsTrigger value="notifications" >
-                Securities Financing
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview" className="space-y-4">
+          <Tabs 
+            defaultValue="sip" 
+            className="space-y-4"
+            onValueChange={(value) => setSelectedDesk(value)}
+          >
+            <div className="flex justify-between items-center">
+              <TabsList>
+                <TabsTrigger value="Commodities">Structured Index Products</TabsTrigger>
+                <TabsTrigger value="Securities Financing">Securities Financing</TabsTrigger>
+              </TabsList>
+              <Tabs >
+                <TabsList>
+                  <TabsTrigger value="fx" disabled>Structured Credit </TabsTrigger>
+                  <TabsTrigger value="em" disabled> Flow Credit</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <TabsContent value={selectedDesk} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <CashOutCard />
-                <NotionalCard />
+                <CashOutCard filter={{desk:selectedDesk}}/>
+                <NotionalCard filter={{desk:selectedDesk}}/>
                 <DailyAccrualCard />
 
-                <CashOutCard />
+                <CashOutCard filter={{desk:selectedDesk}}/>
 
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -101,11 +109,11 @@ const Stats: React.FC<StatsProps> = () => {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <CashOutCard />
-                <NotionalCard />
+                <CashOutCard filter={{desk:selectedDesk}} />
+                <NotionalCard     />
                 <DailyAccrualCard />
 
-                <CashOutCard />
+                <CashOutCard filter={{desk:selectedDesk}} />
 
               </div>
 

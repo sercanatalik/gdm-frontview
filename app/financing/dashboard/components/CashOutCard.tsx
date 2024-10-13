@@ -5,17 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Landmark,Loader2 } from "lucide-react";
 
 
-export function CashOutCard() {
+export function CashOutCard({filter}: {filter: any}) {
   const [amount, setAmount] = useState(0); // Initial value set to 1000
   const [monthOnMonthChange, setMonthOnMonthChange] = useState(0); // Example value, replace with actual calculation or prop
   const [isLoading, setIsLoading] = useState(true); // Add this line
-
-
+  
+  
   useEffect(() => {
     const fetchCashOutAmount = async () => {
       setIsLoading(true); // Add this line
       try {
-        const response = await fetch("/api/financing/stats?measure=cashout");
+        
+        const response = await fetch(`/api/financing/stats?measure=cashout&filter=${JSON.stringify(filter)}`);
         if (!response.ok) {
           throw new Error("Failed to fetch cash out amount");
         }
