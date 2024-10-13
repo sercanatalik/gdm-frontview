@@ -8,7 +8,7 @@ import "@finos/perspective-viewer-datagrid";
 import "@finos/perspective-viewer-d3fc";
 import { useRouter } from 'next/navigation';
 import "@finos/perspective-viewer/dist/css/themes.css";
-import { createDatasource } from './datasource';
+import { fetchDataSource, streamDataSource } from './datasource';
 import { loadDefaultLayout } from './defaultLayouts';  
 
 declare global {
@@ -58,24 +58,26 @@ function Workspace() {
 
   useEffect(() => {
     if (worker && workspaceRef.current) {
-      const datasource = createDatasource(worker);
+      const datasource = fetchDataSource(worker);
       
       const updateData = async () => {
         const table = await datasource();
         workspaceRef.current.tables.set("data", table);
-        console.log("updated data");
       };
 
       // Initial data load
       updateData();
       workspaceRef.current.restore(loadDefaultLayout());
 
+      // const streamData = streamDataSource(worker);
+      // streamData();
+
       // Set up interval to refresh data every minute
-      const intervalId = setInterval(updateData, 60000000);
+      // const intervalId = setInterval(updateData, 60000000);
 
 
       // Clean up interval on component unmount
-      return () => clearInterval(intervalId);
+      // return () => clearInterval(intervalId);
     }
   }, [worker]);
 
