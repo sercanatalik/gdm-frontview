@@ -58,12 +58,12 @@ async function runSelectQuery() {
             rows: number;
             // Add other properties as needed
         }
-        const results = await resultSet.json()
+        const results = await resultSet.json() as { data: Array<{ latestUpdate: string }> };
         const latestUpdate = results.data[0].latestUpdate;
 
         return {
             data: results.data,
-            meta: results.meta,
+            meta: 'meta' in results ? results.meta : undefined,
             latestUpdate: latestUpdate
         };
     } catch (error) {

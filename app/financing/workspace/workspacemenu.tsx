@@ -64,7 +64,7 @@ export function WorkspaceMenu({ saveLayout }: { saveLayout: (layoutName: string)
       items: [
         { label: 'Cashout by Desk', action: () => console.log('Undo') },
         { label: 'Cashout by Colleteral', action: () => console.log('Undo') },
-        { label: 'Cashout by Counterparty', action: () => console.log('Undo') ('Undo') },
+        // { label: 'Cashout by Counterparty', action: () => console.log('Undo') ('Undo') },
         'separator',
         { 
           label: 'Save Layout', 
