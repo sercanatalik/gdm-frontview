@@ -21,7 +21,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ title }: NavbarProps) {
-  const [isChatboxOpen, setIsChatboxOpen] = useState(false);
+  const [isChatboxOpen, setIsChatboxOpen] = useState(true);
 
   const toggleChatbox = () => {
     setIsChatboxOpen(!isChatboxOpen);
@@ -49,9 +49,9 @@ export function Navbar({ title }: NavbarProps) {
       </Breadcrumb>
           </div>
           <div className="flex flex-1 items-center justify-end">
-            <Button onClick={toggleChatbox} variant="outline" size="sm">
-              Ask AI
-              <MessageCircle className="ml-2 h-4 w-4" />
+            <Button onClick={toggleChatbox} variant="outline" size="icon"  className="rounded-full w-8 h-8 bg-background mr-2">
+           
+              <MessageCircle className="ml-1 h-4 w-4" />
             </Button>
             <ModeToggle />
             <UserNav />
