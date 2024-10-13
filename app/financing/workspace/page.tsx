@@ -6,7 +6,7 @@ import "@finos/perspective-workspace";
 import "@finos/perspective-viewer";
 import "@finos/perspective-viewer-datagrid";
 import "@finos/perspective-viewer-d3fc";
-
+import { useRouter } from 'next/navigation';
 import "@finos/perspective-viewer/dist/css/themes.css";
 import { createDatasource } from './datasource';
 declare global {
@@ -43,12 +43,13 @@ const DEFAULT_LAYOUT = {
     },
   };
 
-import { PerspectiveWorker } from '@finos/perspective';
 
 
 function Workspace() {
   const workspaceRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
 
   const [worker, setWorker] = useState<any>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -109,7 +110,9 @@ function Workspace() {
       savedLayouts[layoutName] = JSON.stringify(currentLayout);
       localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
       console.log('Layout saved as', layoutName,savedLayouts[layoutName] );
-      window.location.reload();
+      localStorage.setItem('workspaceLayouts', JSON.stringify(savedLayouts));
+      router.refresh();
+
 
     }
   };
