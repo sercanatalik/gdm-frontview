@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { Save,FolderOpen } from 'lucide-react'
+import { Save,FolderOpen,Download } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2 } from 'lucide-react'
 
@@ -44,9 +44,10 @@ interface Menu {
   items: (MenuItem | 'separator')[];
 }
 
-export function WorkspaceMenu({ saveLayout, loadLayout }: { 
+export function WorkspaceMenu({ saveLayout, loadLayout, downloadLayout }: { 
   saveLayout: (layoutName: string) => void,
-  loadLayout: (layoutName: string) => void 
+  loadLayout: (layoutName: string) => void,
+  downloadLayout: () => void,
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
@@ -139,12 +140,7 @@ export function WorkspaceMenu({ saveLayout, loadLayout }: {
           action: () => setIsManageDialogOpen(true),
           icon: <FolderOpen className="h-4 w-4 ml-2" />
         },
-        'separator',
-        { 
-          label: 'Download Layout', 
-          action: () => setIsManageDialogOpen(true),
-          icon: <FolderOpen className="h-4 w-4 ml-2" />
-        },
+     
   
       ],
     },
@@ -238,7 +234,13 @@ export function WorkspaceMenu({ saveLayout, loadLayout }: {
       <AlertDialog open={isManageDialogOpen} onOpenChange={setIsManageDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Manage Layouts</AlertDialogTitle>
+            <AlertDialogTitle className="flex justify-between items-center">
+              Manage Layouts
+              <Button variant="outline" size="sm" onClick={downloadLayout}>
+                <Download className="h-4 w-4 mr-2" />
+                Download All Layouts
+              </Button>
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Select a layout to rename or delete:
             </AlertDialogDescription>

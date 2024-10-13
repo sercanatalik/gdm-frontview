@@ -71,7 +71,7 @@ function Workspace() {
       workspaceRef.current.restore(loadDefaultLayout());
 
       // Set up interval to refresh data every minute
-      const intervalId = setInterval(updateData, 60000);
+      const intervalId = setInterval(updateData, 60000000);
 
 
       // Clean up interval on component unmount
@@ -98,14 +98,30 @@ function Workspace() {
   const loadLayout = (layoutName: string) => {
     workspaceRef.current.restore(loadDefaultLayout(layoutName));
   };  
-    
+
+  const downloadLayout = () => {
+    const savedLayouts = localStorage.getItem('workspaceLayouts');
+    if (savedLayouts) {
+      const blob = new Blob([savedLayouts], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'workspaceLayouts.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };  
+
+
 
 
   return (
    
 
     <div ref={containerRef} style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 0  }}>
-    <WorkspaceMenu  saveLayout={saveLayout} loadLayout={loadLayout}/>  
+    <WorkspaceMenu  saveLayout={saveLayout} loadLayout={loadLayout} downloadLayout={downloadLayout} />  
         <perspective-workspace
         ref={workspaceRef}
     theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
