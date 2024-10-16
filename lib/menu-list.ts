@@ -6,7 +6,7 @@ import {
   SquarePen,
   LayoutGrid,
   LucideIcon,
-  BookOpenText,Workflow,LayoutPanelTop
+  BookOpenText,Workflow,LayoutPanelTop,ShoppingBasket
 } from "lucide-react";
 
 type Submenu = {
@@ -66,6 +66,10 @@ export function getMenuList(pathname: string): Group[] {
             {
               href: "/financing/trades",
               label: "Trades"
+            },
+            {
+              href: "/etf",
+              label: "Index"
             }
           ]
         },
