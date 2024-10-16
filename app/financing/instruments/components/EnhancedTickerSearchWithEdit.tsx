@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Columns } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
+import EditableSelect from "@/components/ui/editable-select"
 
 interface TickerData {
   id: string
@@ -51,6 +52,8 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
   // Add new state for edit mode
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<Partial<TickerData>>({});
+
+  const [isinOptions, setIsinOptions] = useState<string[]>([]);
 
   useEffect(() => {
     if (instrumentId) {
@@ -165,6 +168,20 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
     return value;
   };
 
+  // Add new function to fetch ISIN options
+  const fetchIsinOptions = async (input: string) => {
+    try {
+      const response = await fetch(`/api/isin-options?search=${encodeURIComponent(input)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch ISIN options');
+      }
+      const data = await response.json();
+      setIsinOptions(data);
+    } catch (error) {
+      console.error("Failed to fetch ISIN options:", error);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* New top row with search input */}
@@ -233,7 +250,14 @@ export default function TickerSearch({ instrumentId }: TickerSearchProps) {
                         <TableCell className="font-medium">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableCell>
                         <TableCell>
                           {isEditMode ? (
-                            typeof value === 'boolean' ? (
+                            key === 'isin' ? (
+                              <EditableSelect
+                                value={editedData.isin ?? value?.toString()}
+                                onChange={(newValue) => handleEditChange('isin', newValue)}
+                                onInputChange={fetchIsinOptions}
+                                options={isinOptions}
+                              />
+                            ) : typeof value === 'boolean' ? (
                               <Checkbox
                                 checked={editedData[key as keyof TickerData] as boolean ?? value as boolean}
                                 onCheckedChange={(checked) => handleEditChange(key as keyof TickerData, checked)}
