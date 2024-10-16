@@ -13,6 +13,7 @@ type Submenu = {
   href: string;
   label: string;
   active?: boolean;
+  icon?: LucideIcon;
 };
 
 type Menu = {
@@ -61,15 +62,18 @@ export function getMenuList(pathname: string): Group[] {
           submenus: [
             {
               href: "/financing/instruments",
-              label: "Instruments"
+              label: "Instruments",
+              icon: ShoppingBasket
             },
             {
               href: "/financing/trades",
-              label: "Trades"
+              label: "Trades",
+              icon: ShoppingBasket
             },
             {
               href: "/etf",
-              label: "Index"
+              label: "Index",
+              icon: ShoppingBasket
             }
           ]
         },

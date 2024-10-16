@@ -32,6 +32,7 @@ type Submenu = {
   href: string;
   label: string;
   active?: boolean;
+  icon?: LucideIcon;
 };
 
 interface CollapseMenuButtonProps {
@@ -102,7 +103,7 @@ export function CollapseMenuButton({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-        {submenus.map(({ href, label, active }, index) => (
+        {submenus.map(({ href, label, active, icon: SubIcon }, index) => (
           <Button
             key={index}
             variant={
@@ -115,7 +116,11 @@ export function CollapseMenuButton({
           >
             <Link href={href}>
               <span className="mr-4 ml-2">
-                <Dot size={18} />
+                {SubIcon ? (
+                  <SubIcon size={16} />
+                ) : (
+                  <Dot size={18} />
+                )}
               </span>
               <p
                 className={cn(
@@ -170,7 +175,7 @@ export function CollapseMenuButton({
           {label}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {submenus.map(({ href, label, active }, index) => (
+        {submenus.map(({ href, label, active, icon: SubIcon }, index) => (
           <DropdownMenuItem key={index} asChild>
             <Link
               className={`cursor-pointer ${
@@ -179,6 +184,11 @@ export function CollapseMenuButton({
               }`}
               href={href}
             >
+              {SubIcon ? (
+                <SubIcon size={18} className="mr-2" />
+              ) : (
+                <Dot size={18} className="mr-2" />
+              )}
               <p className="max-w-[180px] truncate">{label}</p>
             </Link>
           </DropdownMenuItem>
