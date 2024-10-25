@@ -1,4 +1,4 @@
-import { createClient } from '@clickhouse/client';
+import { createClient, QueryResult } from '@clickhouse/client';
 
 
 export type Measure = 'cashout' | 'dailyaccrual' | 'accrual' | 'projectedaccrual' |'cashoutbymonth' | 'recenttrades' | 'countrecenttrades' | 'notional' | 'desk' | 'trader' |'portfolio' | 'book' |'counterparty' ;
@@ -54,8 +54,8 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
      */
 
     let query: string;
-    let result: any;
-    let data: any;
+    let result: QueryResult;
+    let data: Record<string, unknown>;
     let whereClause = '';
 
     // Parse filter if it's not null, otherwise set it to an empty object
@@ -91,10 +91,10 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
                 query,
                 format: 'JSONEachRow',
             });
-            data = await result.json();
+            data = await result.json() as { total: number }[];
             data = {
                 message: 'notional financing information',
-                amount: data[0].total || 0,
+                amount: data[0]?.total || 0,
                 lastMonthAmount: 0,
                 monthOnMonthChange: 0
             };
@@ -194,30 +194,7 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
                 data: data
             };
 
-        // case 'countrecenttrades':
-        //     query = `
-        //         SELECT 
-        //             COUNT(*) as count
-        //         FROM mv_fo_financing_trades     
-        //         WHERE desk = '${filter.desk}'
-        //         WHERE trade_date >= now() - INTERVAL 30 DAY
-        //     `;
-        //     result = await client.query({
-        //         query,
-        //         format: 'JSONEachRow',
-        //     });
-        //     data = await result.json();
-        //     return {
-        //         message: 'Count of trades in the last 30 days',
-        //         data: data[0].count
-        //     };
-        
-
-        // case 'accrual':
-        //     // TODO: Implement accrual query
-        //     throw new Error('Accrual measure not implemented yet');
-        // default:
-        //     throw new Error(`Invalid measure: ${measure}`);
+       
     }
 
     // ... handle the result

@@ -125,7 +125,7 @@ const Stats: React.FC<StatsProps> = () => {
                   </CardHeader>
                   <CardContent>
               
-                      <BreakdownByDesk />  
+                      <BreakdownByDesk filter={{desk:selectedDesk}} />  
                   
                    </CardContent>
                 </Card>

@@ -9,7 +9,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { ResponsiveContainer } from "recharts"
 import { Card } from "@/components/ui/card"
 
 const chartData = [
@@ -45,7 +44,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function BreakdownByDesk() {
+export function BreakdownByDesk(filter: {desk: string}) {
+  
   const totalVisitors = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.visitors, 0)
   }, [])
