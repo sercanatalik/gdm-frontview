@@ -1,7 +1,7 @@
 import { createClient } from '@clickhouse/client';
 
 
-export type Measure = 'cashout' | 'dailyaccrual' | 'accrual' | 'cashoutbymonth' | 'recenttrades' | 'countrecenttrades' | 'notional';
+export type Measure = 'cashout' | 'dailyaccrual' | 'accrual' | 'projectedaccrual' |'cashoutbymonth' | 'recenttrades' | 'countrecenttrades' | 'notional' | 'desk' | 'trader' |'portfolio' | 'book' |'counterparty' ;
 
 
 const client = createClient({
@@ -11,8 +11,16 @@ const client = createClient({
 });
 
 
-export async function fetchMeasureTotal(measure: Measure, filter: any) {
+// 
+// totalNotionalAmount	39539527.03
+// totalDailyAccrual	4121.18
+// totalCashout	819598.01
+// totalEad	15815810.81
+// totalProjectedAccrual	733577.18
+// totalPastAccrual	431502.32
+// 
 
+export async function fetchMeasureTotal(measure: Measure, filter: any) {
     /**
      * @swagger
      * /api/financing/stats:
@@ -45,49 +53,58 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
      *         description: Internal server error
      */
 
-
     let query: string;
     let result: any;
     let data: any;
+    let whereClause = '';
 
-    filter = JSON.parse(filter);
+    // Parse filter if it's not null, otherwise set it to an empty object
+    filter = filter ? JSON.parse(filter) : {};
+    
+    // Add WHERE clause if filter.desk is present
+    if (filter.desk) {
+        whereClause = ` WHERE hmsDesk = '${filter.desk}'`;
+    }
     
     switch (measure) {
-
         case 'cashout':
-            query = `SELECT sum(notional_amount) AS total FROM mv_fo_financing_trades where desk = '${filter.desk}'`;
-            console.log(query);
+            query = `SELECT sum(totalCashout) AS total FROM risk_agg FINAL${whereClause}`;
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
             });
             data = await result.json();
-            const totalCashout = data[0].total || 0;
-
-            query = `SELECT sum(notional_amount) AS last_month_cashout FROM mv_fo_financing_trades WHERE trade_date > now() - interval '1 month' and desk = '${filter.desk}'`;
-            result = await client.query({
-                query,
-                format: 'JSONEachRow',
-            });
-            data = await result.json();
-            const lastMonthCashout = data[0].last_month_cashout || 0;
-
-            let change = totalCashout - lastMonthCashout;
+            
             data = {
                 message: 'Cashout financing information',
-                amount: totalCashout,
-                lastMonthAmount: lastMonthCashout,
-                monthOnMonthChange: change
+                amount: data[0].total || 0,
+                lastMonthAmount: 0,
+                monthOnMonthChange: 0
             };
 
             return data;
+
+
+        case 'notional':
+            query = `SELECT sum(totalNotionalAmount) AS total FROM risk_agg FINAL${whereClause}`;
+            result = await client.query({
+                query,
+                format: 'JSONEachRow',
+            });
+            data = await result.json();
+            data = {
+                message: 'notional financing information',
+                amount: data[0].total || 0,
+                lastMonthAmount: 0,
+                monthOnMonthChange: 0
+            };
+
+            return data;
+    
         
-            
-            
-
-
         case 'dailyaccrual':
-            query = 'SELECT sum(accrual_daily) AS total FROM fo_risk where desk = \'${filter.desk}\'';
+            query = `SELECT sum(totalDailyAccrual) AS total FROM risk_agg FINAL${whereClause}`;
+            console.log(query);
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
@@ -108,15 +125,41 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
 
             return data;
 
+        case 'projectedaccrual':
+            query = `SELECT sum(totalProjectedAccrual) AS total FROM risk_agg FINAL${whereClause}`;
+            result = await client.query({
+                query,
+                format: 'JSONEachRow',
+            });
+            data = await result.json(); 
+            console.log(data);
+            data = {
+                message: 'Accrual  financing information',
+                amount: data[0].total || 0,
+                lastMonthAmount: 0,
+                monthOnMonthChange: 0
+            };
+
+            return data;
+
+        case 'desk':
+            query = `SELECT DISTINCT hmsDesk FROM risk_view FINAL`;
+            result = await client.query({
+                query,
+                format: 'JSONEachRow',
+            });
+            data = await result.json();
+            return data;
+
         case 'cashoutbymonth':
             query = `
                 SELECT
-                    formatDateTime(toStartOfMonth(trade_date), '%b') AS month,
-                    round(sum(notional_amount) / 1000000, 2) AS monthly_cashout,
-                    round(sum(sum(notional_amount)) OVER (ORDER BY toStartOfMonth(trade_date)) / 1000000, 2) AS cumulative_cashout
-                FROM mv_fo_financing_trades where desk = '${filter.desk}'
-                GROUP BY toStartOfMonth(trade_date)
-                ORDER BY toStartOfMonth(trade_date)
+                    formatDateTime(toStartOfMonth(tradeDt), '%b') AS month,
+                    round(sum(notionalAmount) / 1000000, 2) AS monthlyCashout,
+                    round(sum(sum(notionalAmount)) OVER (ORDER BY toStartOfMonth(tradeDt)) / 1000000, 2) AS cumulativeCashout
+                FROM risk_view ${whereClause}
+                GROUP BY toStartOfMonth(tradeDt)
+                ORDER BY toStartOfMonth(tradeDt)
             `;
             result = await client.query({
                 query,
@@ -132,49 +175,49 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
             query = `
                 SELECT 
                     counterparty,
-                    i.sector as sector,
-                    SUM(notional_amount) as notional,
-                    MAX(trade_date) as latest_trade_date
-                FROM mv_fo_financing_trades  
-                WHERE desk = '${filter.desk}'
+                    cpSector as sector,
+                    SUM(notionalAmount) / 1e6 as notional,
+                    MAX(tradeDt) as latest_trade_date
+                FROM risk_view ${whereClause}  
                 GROUP BY counterparty, sector
                 ORDER BY latest_trade_date DESC 
                 LIMIT 150
             `;
+            console.log(query);
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
             });
             data = await result.json();
             return {
-                message: 'Recent trades grouped by counter party',
+                message: 'Recent trades grouped by counter party (notional in millions)',
                 data: data
             };
 
-        case 'countrecenttrades':
-            query = `
-                SELECT 
-                    COUNT(*) as count
-                FROM mv_fo_financing_trades     
-                WHERE desk = '${filter.desk}'
-                WHERE trade_date >= now() - INTERVAL 30 DAY
-            `;
-            result = await client.query({
-                query,
-                format: 'JSONEachRow',
-            });
-            data = await result.json();
-            return {
-                message: 'Count of trades in the last 30 days',
-                data: data[0].count
-            };
+        // case 'countrecenttrades':
+        //     query = `
+        //         SELECT 
+        //             COUNT(*) as count
+        //         FROM mv_fo_financing_trades     
+        //         WHERE desk = '${filter.desk}'
+        //         WHERE trade_date >= now() - INTERVAL 30 DAY
+        //     `;
+        //     result = await client.query({
+        //         query,
+        //         format: 'JSONEachRow',
+        //     });
+        //     data = await result.json();
+        //     return {
+        //         message: 'Count of trades in the last 30 days',
+        //         data: data[0].count
+        //     };
         
 
-        case 'accrual':
-            // TODO: Implement accrual query
-            throw new Error('Accrual measure not implemented yet');
-        default:
-            throw new Error(`Invalid measure: ${measure}`);
+        // case 'accrual':
+        //     // TODO: Implement accrual query
+        //     throw new Error('Accrual measure not implemented yet');
+        // default:
+        //     throw new Error(`Invalid measure: ${measure}`);
     }
 
     // ... handle the result

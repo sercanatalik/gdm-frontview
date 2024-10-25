@@ -1,25 +1,52 @@
 'use client'
 import { Tabs } from '@/components/ui/tabs';
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"   
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CashOutCard } from "@/app/financing/dashboard/components/CashOutCard"                     
 import { NotionalCard } from "@/app/financing/dashboard/components/NotionalCard"                     
-import { DailyAccrualCard } from "@/app/financing/dashboard/components/DailyAccrualCard"                     
+import { DailyAccrualCard } from "@/app/financing/dashboard/components/DailyAccrualCard"     
+import { ProjectedAccrualCard } from "@/app/financing/dashboard/components/ProjectedAccrualCard"     
 import { Overview } from "@/app/financing/dashboard/components/Overview"                         
 import { RecentTradesCard } from "@/app/financing/dashboard/components/RecentTradeCard"                     
 import NewsTable from "@/app/financing/dashboard/components/NewsTable"                     
 import { BreakdownByDesk  } from "@/app/financing/dashboard/components/BreakdownByDesk"
 
+interface Desk {
+  hmsDesk: string;
+}
 
 interface StatsProps {
   // Add any props you need here
 }
 
 const Stats: React.FC<StatsProps> = () => {
-  const [selectedDesk, setSelectedDesk] = useState<string>('sip');
+  const [selectedDesk, setSelectedDesk] = useState<string>('Commodities');
+  const [desks, setDesks] = useState<Desk[]>([]);
+  
+  useEffect(() => {
+    const fetchDesks = async () => {
+      try {
+        const response = await fetch('/api/financing/stats?measure=desk');
+        if (!response.ok) {
+          throw new Error('Failed to fetch desks');
+        }
+        const data: Desk[] = await response.json();
+        
+        setDesks(data);
+        // Set the default selected desk to the first one in the list
+        if (data.length > 0) {
+          setSelectedDesk(data[0].hmsDesk);
+        }
+      } catch (error) {
+        console.error('Error fetching desks:', error);
+      }
+    };
+
+    fetchDesks();
+  }, []);
 
   return (
     <div className="hidden flex-col md:flex">
@@ -32,29 +59,26 @@ const Stats: React.FC<StatsProps> = () => {
             </div>
           </div>
           <Tabs 
-            defaultValue="sip" 
+            defaultValue={selectedDesk} 
             className="space-y-4"
             onValueChange={(value) => setSelectedDesk(value)}
           >
             <div className="flex justify-between items-center">
               <TabsList>
-                <TabsTrigger value="Commodities">Structured Index Products</TabsTrigger>
-                <TabsTrigger value="Securities Financing">Securities Financing</TabsTrigger>
+                {desks.map((desk) => (
+                  <TabsTrigger key={desk.hmsDesk} value={desk.hmsDesk}>
+                    {desk.hmsDesk}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-              <Tabs >
-                <TabsList>
-                  <TabsTrigger value="fx" disabled>Structured Credit </TabsTrigger>
-                  <TabsTrigger value="em" disabled> Flow Credit</TabsTrigger>
-                </TabsList>
-              </Tabs>
+             
             </div>
             <TabsContent value={selectedDesk} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <CashOutCard filter={{desk:selectedDesk}}/>
                 <NotionalCard filter={{desk:selectedDesk}}/>
-                <DailyAccrualCard />
-
-                <CashOutCard filter={{desk:selectedDesk}}/>
+                <DailyAccrualCard filter={{desk:selectedDesk}}/>
+                <ProjectedAccrualCard filter={{desk:selectedDesk}}/>
 
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

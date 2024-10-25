@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Landmark,Loader2 } from "lucide-react";
 
 
-export function DailyAccrualCard({filter}: {filter: any}) {
+export function ProjectedAccrualCard({filter}: {filter: any}) {
   const [amount, setAmount] = useState(0); // Initial value set to 1000
   const [monthOnMonthChange, setMonthOnMonthChange] = useState(0); // Example value, replace with actual calculation or prop
   const [isLoading, setIsLoading] = useState(true); // Add this line
@@ -16,7 +16,7 @@ export function DailyAccrualCard({filter}: {filter: any}) {
       setIsLoading(true); // Add this line
       try {
         
-        const response = await fetch(`/api/financing/stats?measure=dailyaccrual&filter=${JSON.stringify(filter)}`);
+        const response = await fetch(`/api/financing/stats?measure=projectedaccrual&filter=${JSON.stringify(filter)}`);
         if (!response.ok) {
           throw new Error("Failed to fetch daily accrual amount");
         }
@@ -38,7 +38,7 @@ export function DailyAccrualCard({filter}: {filter: any}) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Daily Accrual</CardTitle>
+        <CardTitle className="text-sm font-medium">Projected Accrual</CardTitle>
         <Landmark />
       </CardHeader>
       <CardContent>
