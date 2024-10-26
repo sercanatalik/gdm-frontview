@@ -12,8 +12,7 @@ import { ProjectedAccrualCard } from "@/app/financing/dashboard/components/Proje
 import { Overview } from "@/app/financing/dashboard/components/Overview"                         
 import { RecentTradesCard } from "@/app/financing/dashboard/components/RecentTradeCard"                     
 import NewsTable from "@/app/financing/dashboard/components/NewsTable"                     
-import { BreakdownByDesk  } from "@/app/financing/dashboard/components/BreakdownByDesk"
-
+import FinancingBreakdownChart from "@/app/financing/dashboard/components/FinancingBreakdownChart"
 interface Desk {
   hmsDesk: string;
 }
@@ -112,31 +111,22 @@ const Stats: React.FC<StatsProps> = () => {
 
                 <Card className="col-span-5">
                   <CardHeader>
-                    <CardTitle>Headlines on Exposure</CardTitle>
+                    <CardTitle>Exposure Highlights</CardTitle>
                   </CardHeader>
                   <CardContent className="pl-5">
 
                     <NewsTable />    </CardContent>
                 </Card>
 
-                <Card className="col-span-2">
-                  <CardHeader>
-                    <CardTitle>Breakdown by Desk</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-              
-                      <BreakdownByDesk filter={{desk:selectedDesk}} />  
-                  
-                   </CardContent>
-                </Card>
+              <FinancingBreakdownChart filter={{desk:selectedDesk}} />
 
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <CashOutCard filter={{desk:selectedDesk}} />
-                <NotionalCard     />
-                <DailyAccrualCard />
-
+                <NotionalCard filter={{desk:selectedDesk}}/>
+                <DailyAccrualCard filter={{desk:selectedDesk}}/>
+                
                 <CashOutCard filter={{desk:selectedDesk}} />
 
               </div>
