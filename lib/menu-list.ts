@@ -66,8 +66,8 @@ export function getMenuList(pathname: string): Group[] {
               icon: ShoppingBasket
             },
             {
-              href: "/financing/trades",
-              label: "Trades",
+              href: "/financing/overrides",
+              label: "Overrides",
               icon: ShoppingBasket
             },
             {
