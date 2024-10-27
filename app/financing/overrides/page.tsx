@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import OverrideCard from "@/app/financing/overrides/overridecard";
 
 export default function FinancingOverridesPage() {
   const [search, setSearch] = useState('');
@@ -14,6 +16,7 @@ export default function FinancingOverridesPage() {
   const [selectedTab, setSelectedTab] = useState('ref_instruments');
   const [selectedId, setSelectedId] = useState(null);
   const [overrides, setOverrides] = useState([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const topTabs = [
     { id: 'ref_instruments', label: 'Instruments' },
@@ -65,6 +68,7 @@ export default function FinancingOverridesPage() {
 
   return (
     <ContentLayout title="Financing Overrides">
+      
       <Tabs defaultValue={topTabs[0].id}>
         <TabsList className="mb-4">
           {topTabs.map((tab) => (
@@ -118,9 +122,17 @@ export default function FinancingOverridesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <Button onClick={handleAddOverride} disabled={!selectedId}>
-                      Add New Override
-                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={() => setIsDialogOpen(true)} disabled={!selectedId}>
+                          Add New Override
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="w-full max-w-[90vw] max-h-[90vh] h-full overflow-auto">
+                        <DialogTitle>Add New Override</DialogTitle>
+                        <OverrideCard selectedId={selectedId} tableName={selectedTab} />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   {overrides.length > 0 ? (
                     <ScrollArea className="h-[calc(100vh-300px)]">
