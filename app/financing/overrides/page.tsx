@@ -9,7 +9,7 @@ import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import OverrideCard from "@/app/financing/overrides/overridecard";
-
+import Compare from '@/app/financing/overrides/compare';
 export default function FinancingOverridesPage() {
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -146,8 +146,14 @@ export default function FinancingOverridesPage() {
                           Add New Override
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="w-full max-w-[90vw] max-h-[90vh] h-full overflow-auto">
+                      <DialogContent 
+                        className="w-full max-w-[90vw] max-h-[90vh] h-full overflow-auto"
+                        aria-describedby="dialog-description"
+                      >
                         <DialogTitle>Add New Override</DialogTitle>
+                        <div id="dialog-description" className="sr-only">
+                          Form to add a new override for the selected item
+                        </div>
                         <OverrideCard selectedId={selectedId} tableName={selectedTab} />
                       </DialogContent>
                     </Dialog>
@@ -158,12 +164,17 @@ export default function FinancingOverridesPage() {
                         {overrides.map((override, index) => (
                           <Card key={index} className="p-2 text-sm">
                             <CardContent className="p-0">
-                              {Object.entries(override).map(([key, value]) => (
+                              {/* {Object.entries(override).map(([key, value]) => (
                                 <div key={key} className="flex justify-between py-1">
                                   <span className="font-medium">{key}:</span>
                                   <span>{String(value).substring(0, 40)}</span>
                                 </div>
-                              ))}
+                              ))} */}
+                              <div> <span className="font-medium">id:</span><span>{override.id}</span></div>
+                              <div> <span className="font-medium">type:</span><span>{override.type}</span></div>
+                              <div> <span className="font-medium">comments:</span><span>{override.comments}</span></div>
+                              
+                              <div><Compare  hideSummary={true} hideUnchanged={true} obj1={JSON.parse(override.previousValue)} obj2={JSON.parse(override.newValue)} /></div>
                             </CardContent>
                           </Card>
                         ))}

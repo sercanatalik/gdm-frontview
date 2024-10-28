@@ -166,8 +166,11 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
               defaultValue="form"
               className="w-full h-full flex flex-col"
               aria-label="Override data views"
-              aria-describedby="override-card-description"
             >
+              {/* Add this hidden description element */}
+              <div id="override-card-description" className="sr-only">
+                Form and code views for managing override data
+              </div>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="form" className="flex items-center justify-center">
                   <FileInput className="w-4 h-4 mr-2" />

@@ -46,49 +46,22 @@ export function getMenuList(pathname: string): Group[] {
           label: "Workspace",
           active: pathname.includes("/financing/workspace"),
           icon: LayoutPanelTop,
-          submenus: []
+        
         }
       ]
     },
     
     {
-      groupLabel: "Contents",
+      groupLabel: "Refdata",
       menus: [
         {
           href: "",
           label: "Overrides",
-          active: pathname.includes("/instruments"),
+          active: pathname.includes("/financing/overrides"),
           icon: SquarePen,
-          submenus: [
-            {
-              href: "/financing/instruments",
-              label: "Instruments",
-              icon: ShoppingBasket
-            },
-            {
-              href: "/financing/overrides",
-              label: "Overrides",
-              icon: ShoppingBasket
-            },
-            {
-              href: "/etf",
-              label: "Index",
-              icon: ShoppingBasket
-            }
-          ]
+         
         },
-        // {
-        //   href: "/categories",
-        //   label: "Categories",
-        //   active: pathname.includes("/categories"),
-        //   icon: Bookmark
-        // },
-        // {
-        //   href: "/tags",
-        //   label: "Tags",
-        //   active: pathname.includes("/tags"),
-        //   icon: Tag
-        // }
+      
       ]
     },
     {

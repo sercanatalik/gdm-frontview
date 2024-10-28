@@ -52,8 +52,8 @@ export async function GET(request: Request) {
     
     query += ' LIMIT 100';
 
-    console.log('Query:', query);
-    console.log('Params:', params);
+    // console.log('Query:', query);
+    // console.log('Params:', params);
     
     const result = await client.query({
       query,
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
 
     const trades: Trade[] = await result.json();
 
-    console.log('Number of trades found:', trades.length);
+    // console.log('Number of trades found:', trades.length);
 
     return NextResponse.json(trades, { status: 200 });
   } catch (error) {

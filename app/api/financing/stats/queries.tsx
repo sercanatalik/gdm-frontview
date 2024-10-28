@@ -104,7 +104,7 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
         
         case 'dailyaccrual':
             query = `SELECT sum(totalDailyAccrual) AS total FROM risk_agg FINAL${whereClause}`;
-            console.log(query);
+            // console.log(query);
             result = await client.query({
                 query,
                 format: 'JSONEachRow',
@@ -132,7 +132,7 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
                 format: 'JSONEachRow',
             });
             data = await result.json(); 
-            console.log(data);
+            // console.log(data);
             data = {
                 message: 'Accrual  financing information',
                 amount: data[0].total || 0,
@@ -183,7 +183,7 @@ export async function fetchMeasureTotal(measure: Measure, filter: any) {
                 ORDER BY latest_trade_date DESC 
                 LIMIT 150
             `;
-            console.log(query);
+            // console.log(query);
             result = await client.query({
                 query,
                 format: 'JSONEachRow',

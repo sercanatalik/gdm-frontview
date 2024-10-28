@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         });
         const versionData = await versionResult.json();
         const newVersion = Number(versionData[0].current_version) + 1;
-        console.log('newVersion', newVersion);
+        // console.log('newVersion', newVersion);
 
         // Update insert query to use proper value escaping
         const query = `

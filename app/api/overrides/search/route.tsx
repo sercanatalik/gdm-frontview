@@ -18,12 +18,12 @@ const client = createClient({
 export async function POST(request: NextRequest) {
     try {
         const { table, searchText } = await request.json();
-        
+
         if (!table || !searchText) {
             return NextResponse.json({ error: 'Table and searchText are required' }, { status: 400 });
         }
 
-        
+
         // Define table-specific search columns
         const tableSearchColumns = {
             ref_instruments: ['region', 'isin', 'name'],
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
         // Get the search columns for the specified table
         const searchColumns = tableSearchColumns[table as keyof typeof tableSearchColumns];
-        console.log(searchColumns);
+        // console.log(searchColumns);
         if (!searchColumns) {
             return NextResponse.json({ error: 'Invalid table specified' }, { status: 400 });
         }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             WHERE ${whereClause}
             LIMIT 100
         `;
-        console.log(query);
+
 
         const result = await client.query({
             query,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         });
 
         const data = await result.json();
-       
+
 
         return NextResponse.json({ data });
     } catch (error) {
