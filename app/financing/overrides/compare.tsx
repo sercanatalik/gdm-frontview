@@ -12,7 +12,15 @@ type DiffResult = {
   unchanged: string[];
 };
 
-export default function Compare({ obj1, obj2 }: { obj1: Record<string, any>, obj2: Record<string, any> }) {
+export default function Compare({ 
+  obj1, 
+  obj2, 
+  onDifferencesCalculated 
+}: { 
+  obj1: Record<string, any>, 
+  obj2: Record<string, any>,
+  onDifferencesCalculated?: (differences: DiffResult) => void 
+}) {
   const compareObjects = (a: Record<string, any>, b: Record<string, any>): DiffResult => {
     const allKeys = [...new Set([...Object.keys(a), ...Object.keys(b)])];
     
@@ -36,6 +44,11 @@ export default function Compare({ obj1, obj2 }: { obj1: Record<string, any>, obj
 
   const differences = compareObjects(obj1, obj2);
   
+  // Call the callback when differences are calculated
+  React.useEffect(() => {
+    onDifferencesCalculated?.(differences);
+  }, [differences, onDifferencesCalculated]);
+
   const formatValue = (value: any): string => {
     if (value === undefined) return 'undefined';
     return typeof value === 'string' ? `"${value}"` : String(value);

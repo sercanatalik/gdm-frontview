@@ -1,18 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTheme } from 'next-themes';
 
-
-// import JsonView from '@uiw/react-json-view';
-// import JsonViewEditor from '@uiw/react-json-view/editor';
 import { JsonViewer } from '@textea/json-viewer'
 // import JsonViewEditor from '@uiw/react-json-view/editor';
 import { Button } from '@/components/ui/button';
-
 import { FileInput, Code } from 'lucide-react';
 import Compare from './compare';
-import { JsonViewerOnChange } from '@textea/json-viewer';
 
 // Add this helper function at the top of the file, outside of the component
 const applyValue = (obj: any, path: string[], value: any): any => {
@@ -33,11 +27,12 @@ interface OverrideCardProps {
 }
 
 const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) => {
-  // const { theme } = useTheme();
+  // const { data: session } = useSession();
   const [overrideData, setOverrideData] = useState<any>(null);
   const [originalData, setOriginalData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [differences, setDifferences] = useState<DiffResult | null>(null);
   // const jsonViewTheme = theme === 'light' ? lightTheme : darkTheme;
 
   useEffect(() => {
@@ -50,10 +45,10 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
           throw new Error('Failed to fetch override data');
         }
         const data = await response.json();
-      
+
         setOverrideData(data);
         setOriginalData(data);
-       
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -66,9 +61,33 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
     }
   }, [selectedId, tableName]);
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Saving changes:', overrideData);
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/overrides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          newValue: JSON.stringify(overrideData),
+          previousValue: JSON.stringify(originalData),
+          updatedAt: new Date().toISOString(),
+          updatedBy: 'ataliks',
+          type: tableName,
+          id: selectedId,
+          comments:  'No changes to save',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save override data');
+      }
+
+      // Update originalData after successful save
+      setOriginalData(overrideData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    }
   };
 
   const handleReset = () => {
@@ -98,23 +117,41 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
     ));
   };
 
-  const updateOverrideData = (path: string[], oldValue: any, newValue: any) => {
+  const updateOverrideData = (path: (string | number)[], oldValue: any, newValue: any) => {
     setOverrideData((prevData: any) => applyValue(prevData, path, newValue));
   };
 
-  return (
+  // Return loading state if data isn't ready
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Return error state if there's an error
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  return (overrideData && originalData && (
     <div className="w-full h-full max-w-7xl mx-auto flex flex-col">
       {/* Top row with save and reset buttons */}
       <div className="mb-4 flex justify-end space-x-2">
         <Button
           onClick={handleReset} className='outline bg-gray-500'
-        
+
         >
           Reset
         </Button>
         <Button
           onClick={handleSave}
-        className='outline'
+          className='outline'
         >
           Save
         </Button>
@@ -125,9 +162,9 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
         {/* Left column with existing Card component */}
         <div className="w-2/3 pr-4">
           <Card className="w-full h-full">
-            <Tabs 
-              defaultValue="form" 
-              className="w-full h-full flex flex-col" 
+            <Tabs
+              defaultValue="form"
+              className="w-full h-full flex flex-col"
               aria-label="Override data views"
               aria-describedby="override-card-description"
             >
@@ -170,16 +207,22 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
         </div>
 
         {/* Right column with dummy content */}
-        <div className="w-1/3 pl-1 h-full">   
+        <div className="w-1/3 pl-1 h-full">
           {overrideData && originalData && (
-            <Compare 
-              obj1={originalData} 
-              obj2={overrideData} 
+            <Compare
+              obj1={originalData}
+              obj2={overrideData}
+              // onDifferencesCalculated={(diffs) => {
+              //   setDifferences(diffs);
+
+              // }}
             />
-          )}
+          )} 
+        </div>
         </div>
       </div>
-    </div>
+    
+    )
   );
 };
 

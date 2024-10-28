@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         // Define table-specific search columns
         const tableSearchColumns = {
             ref_instruments: ['region', 'isin', 'name'],
-            overrides: ['id', 'override', 'summary'],
+            overrides: ['id', 'previousValue', 'newValue', 'comments'],
             trades: ['id'],
             ref_counterparty: ['id', 'name']
         };

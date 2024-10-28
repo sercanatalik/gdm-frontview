@@ -24,6 +24,29 @@ export default function FinancingOverridesPage() {
     { id: 'ref_counterparties', label: 'Counterparties' },
   ];
 
+  const refreshData = async () => {
+    // Refetch search results if there's a search term
+    if (search.trim()) {
+      try {
+        const response = await axios.post('/api/overrides/search', { searchText: search, table: selectedTab });
+        setSearchResults(response.data.data);
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+      }
+    }
+
+    // Refetch overrides if there's a selected ID
+    if (selectedId) {
+      try {
+        const response = await axios.post('/api/overrides/search', { searchText: selectedId, table: 'overrides' });
+        setOverrides(response.data.data);
+      } catch (error) {
+        console.error('Error fetching overrides:', error);
+        setOverrides([]);
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (search.trim()) {
@@ -35,6 +58,7 @@ export default function FinancingOverridesPage() {
         }
       } else {
         setSearchResults([]);
+        setSelectedId(null); // Clear selectedId when search is empty
       }
     };
 
@@ -43,28 +67,14 @@ export default function FinancingOverridesPage() {
   }, [search, selectedTab]);
 
   useEffect(() => {
-    const fetchOverrides = async () => {
-      if (selectedId) {
-        try {
-          const response = await axios.post('/api/overrides/search', { searchText: selectedId, table: 'overrides' });
-    
-          setOverrides(response.data.data);
-        } catch (error) {
-          console.error('Error fetching overrides:', error);
-          setOverrides([]);
-        }
-      } else {
-        setOverrides([]);
-      }
-    };
-
-    fetchOverrides();
+    if (selectedId) {
+      refreshData();
+    } else {
+      setOverrides([]);
+    }
   }, [selectedId, selectedTab]);
 
-  const handleAddOverride = () => {
-    // TODO: Implement the logic to add a new override
-    console.log("Add new override for:", selectedTab, selectedId);
-  };
+ 
 
   return (
     <ContentLayout title="Financing Overrides">
@@ -122,7 +132,15 @@ export default function FinancingOverridesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <Dialog 
+                      open={isDialogOpen} 
+                      onOpenChange={(open) => {
+                        setIsDialogOpen(open);
+                        if (!open) {
+                          refreshData();
+                        }
+                      }}
+                    >
                       <DialogTrigger asChild>
                         <Button onClick={() => setIsDialogOpen(true)} disabled={!selectedId}>
                           Add New Override
@@ -143,7 +161,7 @@ export default function FinancingOverridesPage() {
                               {Object.entries(override).map(([key, value]) => (
                                 <div key={key} className="flex justify-between py-1">
                                   <span className="font-medium">{key}:</span>
-                                  <span>{String(value)}</span>
+                                  <span>{String(value).substring(0, 40)}</span>
                                 </div>
                               ))}
                             </CardContent>
