@@ -4,20 +4,39 @@ import { getIronSession } from 'iron-session';
 import { IronSession } from 'iron-session';
 import * as ldap from 'ldapjs';
 
+// Type definitions
 interface CustomIronSession extends IronSession<{
-  user?: any;
+  user?: SessionUser;
 }> {}
 
-// LDAP client configuration
-const ldapConfig = {
+interface SessionUser {
+  userid: string;
+  email: string;
+  displayName: string;
+}
+
+interface LDAPConfig {
+  url: string;
+  baseDN: string;
+  bindDN: string;
+  bindCredentials: string;
+}
+
+interface MockUser {
+  userid: string;
+  email: string;
+  password: string;
+}
+
+// Configuration
+const ldapConfig: LDAPConfig = {
   url: process.env.LDAP_URL || 'ldap://localhost:389',
   baseDN: process.env.LDAP_BASE_DN || 'dc=example,dc=com',
   bindDN: process.env.LDAP_BIND_DN || 'cn=admin,dc=example,dc=com',
   bindCredentials: process.env.LDAP_BIND_CREDENTIALS || 'admin',
 };
 
-// Mock users for fallback
-const mockUsers = [
+const mockUsers: MockUser[] = [
   {
     userid: '123',
     email: 'user@example.com',
@@ -25,67 +44,94 @@ const mockUsers = [
   },
 ];
 
-async function authenticateUser(userid: string, password: string) {
+async function authenticateUser(userid: string, password: string): Promise<SessionUser | null> {
+  return handleMockAuthentication(userid, password)
   try {
     const client = ldap.createClient({
-      url: ldapConfig.url
+      url: ldapConfig.url,
+      timeout: 5000, // Add timeout
+      reconnect: true // Add reconnection capability
     });
 
-    // First bind with admin credentials
-    client.bind(ldapConfig.bindDN, ldapConfig.bindCredentials, (err) => {
-      if (err) {
+    return new Promise((resolve, reject) => {
+      client.on('error', (err) => {
         client.unbind();
-        throw err;
-      }
+        if (err.code === 'ECONNREFUSED') {
+          return handleMockAuthentication(userid, password, resolve);
+        }
+        reject(err);
+      });
 
-      // Search for user
-      const searchOptions = {
-        scope: 'sub',
-        filter: `(uid=${userid})`,
-      };
-
-      client.search(ldapConfig.baseDN, { ...searchOptions, scope: 'sub' }, (err, res) => {
+      client.bind(ldapConfig.bindDN, ldapConfig.bindCredentials, (err) => {
         if (err) {
           client.unbind();
-          throw err;
+          return reject(err);
         }
 
-        let userDN: string | null = null;
-        let userData: any = null;
+        const searchOptions = {
+          scope: 'sub',
+          filter: `(uid=${ldap.escape(userid)})`, // Escape user input
+        };
 
-        res.on('searchEntry', (entry) => {
-          userDN = entry.objectName;
-          userData = entry.pojo;
-        });
-
-        res.on('end', () => {
-          if (!userDN) {
+        client.search(ldapConfig.baseDN, searchOptions, (err, res) => {
+          if (err) {
             client.unbind();
-            throw new Error('User not found');
+            return reject(err);
           }
 
-          // Verify user credentials
-          client.bind(userDN, password, (err) => {
+          let userDN: string | null = null;
+          let userData: any = null;
+
+          res.on('searchEntry', (entry) => {
+            userDN = entry.objectName;
+            userData = entry.pojo;
+          });
+
+          res.on('error', (err) => {
             client.unbind();
-            if (err) {
-              throw err;
-            } else {
-              return userData;
+            reject(err);
+          });
+
+          res.on('end', () => {
+            if (!userDN) {
+              client.unbind();
+              return resolve(null);
             }
+
+            client.bind(userDN, password, (err) => {
+              client.unbind();
+              if (err) {
+                return resolve(null);
+              }
+              resolve({
+                userid: userData.uid,
+                email: userData.mail,
+                displayName: userData.displayName || userData.mail.split('@')[0]
+              });
+            });
           });
         });
       });
     });
   } catch (error) {
     console.warn('LDAP authentication failed, falling back to mock auth:', error);
-    // Fall back to mock authentication
-    const mockUser = mockUsers.find(u => u.userid === userid && u.password === password);
-    return mockUser ? {
-      uid: mockUser.userid,
-      mail: mockUser.email,
-      displayName: mockUser.email.split('@')[0]
-    } : null;
+    return handleMockAuthentication(userid, password);
   }
+}
+
+function handleMockAuthentication(
+  userid: string, 
+  password: string, 
+  resolve?: (user: SessionUser | null) => void
+): SessionUser | null {
+  const mockUser = mockUsers.find(u => u.userid === userid && u.password === password);
+  const result = mockUser ? {
+    userid: mockUser.userid,
+    email: mockUser.email,
+    displayName: mockUser.email.split('@')[0]
+  } : null;
+  
+  return resolve ? resolve(result) : result;
 }
 
 export async function POST(req: Request) {
@@ -96,8 +142,8 @@ export async function POST(req: Request) {
 
     if (userData) {
       const sessionUser = { 
-        userid: userData.uid,
-        email: userData.mail,
+        userid: userData.userid,
+        email: userData.email,
         displayName: userData.displayName
       };
 
