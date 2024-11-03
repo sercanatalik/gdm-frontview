@@ -118,7 +118,7 @@ const Stats: React.FC<StatsProps> = () => {
                     <NewsTable />    </CardContent>
                 </Card>
 
-              <FinancingBreakdownChart filter={{desk:selectedDesk}} />
+              <FinancingBreakdownChart desk={selectedDesk} />
 
               </div>
 

@@ -10,7 +10,7 @@ import BreakDownPieChart from "./BreakDownPieChart"
 
 
 
-export default function FinancingBreakdownChart(filter: {desk: string}) {
+export default function FinancingBreakdownChart(_filter: {desk: string}) {
   return (
     <Card className="col-span-2 h-full flex flex-col">
       <CardHeader>

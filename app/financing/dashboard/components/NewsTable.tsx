@@ -14,6 +14,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import React from "react"
 
 export interface NewsItem {
   id: string
@@ -156,9 +157,8 @@ export default function NewsTable() {
         </TableHeader>
         <TableBody>
           {currentItems.map((item) => (
-            <>
+            <React.Fragment key={item.id}>
               <TableRow 
-                key={item.id} 
                 className="cursor-pointer"
                 onClick={() => toggleRow(item.id)}
               >
@@ -188,7 +188,7 @@ export default function NewsTable() {
                   </TableCell>
                 </TableRow>
               )}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>

@@ -10,9 +10,14 @@ export default function FinancingLayout({
   const pathname = usePathname()
   const showSidebar = pathname !== '/financing/workspace'
 
-  return showSidebar ? (
-    <AdminPanelLayout>{children}</AdminPanelLayout>
-  ) : (
-    <>{children}</>
+  // Force client-side rendering to avoid hydration mismatch
+  return (
+    <>
+      {showSidebar ? (
+        <AdminPanelLayout>{children}</AdminPanelLayout>
+      ) : (
+        children
+      )}
+    </>
   );
 }

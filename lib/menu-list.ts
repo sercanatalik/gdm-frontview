@@ -55,7 +55,7 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "Refdata",
       menus: [
         {
-          href: "",
+          href: "/financing/overrides",
           label: "Overrides",
           active: pathname.includes("/financing/overrides"),
           icon: SquarePen,
