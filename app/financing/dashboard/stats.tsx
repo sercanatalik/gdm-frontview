@@ -12,7 +12,7 @@ import NewsTable from "@/app/financing/dashboard/components/NewsTable"
 import FinancingBreakdownChart from "@/app/financing/dashboard/components/FinancingBreakdownChart"
 
 import { StatsCard ,StatsData}   from "@/app/financing/dashboard/components/StatsCard"
-import { DollarSign,Landmark,Banknote } from 'lucide-react';
+import { DollarSign,Landmark,Banknote,History } from 'lucide-react';
 
 
 
@@ -20,65 +20,76 @@ interface Desk {
   hmsDesk: string;
 }
 
-interface StatsProps {
-  // Add any props you need here
-}
-
 interface StatsQuery {
-  key: StatsData;
- 
+  notionalCcy: number;
+  accrualDaily: number;
+  accrualProjected: number;
 }
 
-const Stats: React.FC<StatsProps> = () => {
-  const [selectedDesk, setSelectedDesk] = useState<string>('Commodities');
+const Stats: React.FC = () => {
+  const [isLoading, setIsLoading] = useState({
+    desks: true,
+    stats: true
+  });
+  const [selectedDesk, setSelectedDesk] = useState<string>('');
   const [desks, setDesks] = useState<Desk[]>([]);
-  const [isLoadingDesks, setIsLoadingDesks] = useState(true);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-
   const [stats, setStats] = useState<StatsQuery | null>(null);
 
-  useEffect(() => {
-    const fetchDesks = async () => {
-      setIsLoadingDesks(true);
-      try {
-        const response = await fetch('/api/financing/stats?measure=desk');
-        if (!response.ok) {
-          throw new Error('Failed to fetch desks');
-        }
-        const data: Desk[] = await response.json();
+  const fetchDesks = async () => {
+    try {
+      const response = await fetch('/api/financing/stats?measure=desk');
+      if (!response.ok) throw new Error('Failed to fetch desks');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching desks:', error);
+      return [];
+    }
+  };
 
-        setDesks(data);
-        // Set the default selected desk to the first one in the list
-        if (data.length > 0) {
-          setSelectedDesk(data[0].hmsDesk);
-        }
-        setIsLoadingDesks(false);
-      } catch (error) {
-        console.error('Error fetching desks:', error);
+  const fetchStats = async (desk: string) => {
+    try {
+      const response = await fetch(`/api/financing/stats?measure=stats&filter={"desk":"${desk}"}`);
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const initializeDesks = async () => {
+      setIsLoading(prev => ({ ...prev, desks: true }));
+      const data = await fetchDesks();
+      setDesks(data);
+      if (data.length > 0) {
+        setSelectedDesk(data[0].hmsDesk);
       }
+      setIsLoading(prev => ({ ...prev, desks: false }));
     };
 
-    fetchDesks();
+    initializeDesks();
   }, []);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setIsLoadingStats(true);
-      try {
-        const response = await fetch(`/api/financing/stats?measure=stats&filter={"desk":"${selectedDesk}"}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch stats');
-        }
-        const data: StatsQuery = await response.json();
-        setStats(data);
-        
-      } catch (error) {
-        console.error('Error fetching desks:', error);
-      }
-      setIsLoadingStats(false);
+    if (!selectedDesk) return;
+
+    const loadStats = async () => {
+      setIsLoading(prev => ({ ...prev, stats: true }));
+      const data = await fetchStats(selectedDesk);
+      setStats(data);
+      setIsLoading(prev => ({ ...prev, stats: false }));
     };
-    fetchStats();
+
+    loadStats();
   }, [selectedDesk]);
+
+  const statsCards = [
+    { label: "Total Cashout", icon: <DollarSign />, value: stats?.notionalCcy },
+    { label: "Daily Accrual", icon: <Landmark />, value: stats?.accrualDaily },
+    { label: "Projected Accrual", icon: <Banknote />, value: stats?.accrualProjected },
+    { label: "Past Accrual", icon: <History />, value: stats?.accrualPast }
+  ];
 
   return (
     <div className="hidden flex-col md:flex">
@@ -90,11 +101,11 @@ const Stats: React.FC<StatsProps> = () => {
 
           </div>
         </div>
-        {!isLoadingDesks ? (
+        {!isLoading.desks ? (
           <Tabs
             defaultValue={selectedDesk}
             className="space-y-4"
-            onValueChange={(value) => setSelectedDesk(value)}
+            onValueChange={setSelectedDesk}
           >
             <div className="flex justify-between items-center">
               <TabsList>
@@ -108,11 +119,15 @@ const Stats: React.FC<StatsProps> = () => {
             </div>
             <TabsContent value={selectedDesk} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatsCard  label="Total Cashout" icon={<DollarSign />} data={stats?.notionalCcy ?? '-'} isLoading={isLoadingStats} />  
-                <StatsCard  label="Daily Accrual" icon={<Landmark />} data={stats?.accrualDaily ?? '-'} isLoading={isLoadingStats} />  
-                <StatsCard  label="Projected Accrual" icon={<Banknote />} data={stats?.accrualProjected ?? '-'} isLoading={isLoadingStats} />  
-                
-
+                {statsCards.map((card, index) => (
+                  <StatsCard
+                    key={index}
+                    label={card.label}
+                    icon={card.icon}
+                    data={card.value ?? '-'}
+                    isLoading={isLoading.stats}
+                  />
+                ))}
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
