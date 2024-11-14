@@ -62,21 +62,24 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
   }, [selectedId, tableName]);
 
   const handleSave = async () => {
+   
+    const payload = JSON.stringify({
+      newValue: JSON.stringify(overrideData),
+      previousValue: JSON.stringify(originalData),
+      updatedAt: new Date().toISOString(),
+      updatedBy: 'ataliks',
+      type: tableName,
+      id: selectedId,
+      comments:  'No changes to save',
+      table: tableName,
+    });
     try {
       const response = await fetch('/api/overrides', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          newValue: JSON.stringify(overrideData),
-          previousValue: JSON.stringify(originalData),
-          updatedAt: new Date().toISOString(),
-          updatedBy: 'ataliks',
-          type: tableName,
-          id: selectedId,
-          comments:  'No changes to save',
-        }),
+        body: payload
       });
 
       if (!response.ok) {

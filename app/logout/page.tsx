@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { motion } from "framer-motion"
-
+import { Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { motion } from 'framer-motion'; // <--- Added import
 
 export default function LogoutPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false); // <--- Added state and useEffect dependency
 
   useEffect(() => {
     const performLogout = async () => {
@@ -25,36 +25,22 @@ export default function LogoutPage() {
     };
 
     performLogout();
-  }, [router]);
-
-  return  <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+  }, [router, loading]); // <--- Added dependency on loading state
+    <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
   <Card className="w-[300px] h-[300px] flex flex-col items-center justify-center space-y-4 text-center">
-    <motion.div
-      animate={{
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        duration: 2,
-        ease: "easeInOut",
-        repeat: Infinity,
-      }}
-    >
+        <div className="loader-container">
       <Loader2 className="h-16 w-16 animate-spin text-primary" />
-    </motion.div>
+        </div>
     <motion.h2
       className="text-2xl font-semibold text-primary"
-      animate={{
-        opacity: [1, 0.5, 1],
-      }}
-      transition={{
-        duration: 2,
-        ease: "easeInOut",
-        repeat: Infinity,
-      }}
-    >
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+        >
       Loading...
     </motion.h2>
     <p className="text-muted-foreground">Please wait while we prepare your content</p>
   </Card>
-</div>;
+    </div>
+  );
 }
