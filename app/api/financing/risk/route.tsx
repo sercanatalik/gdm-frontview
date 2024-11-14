@@ -1,74 +1,34 @@
 import { createClient } from '@clickhouse/client';
+import { NextResponse } from 'next/server';
 
-async function createMaterializedView() {
-    const client = createClient({
-        url: process.env.CLICKHOUSE_HOST || 'http://localhost:8123',
-        username: process.env.CLICKHOUSE_USER || 'default',
-        password: process.env.CLICKHOUSE_PASSWORD || '',
-    });
-
-    try {
-        // Assuming you have tables: table1, table2, and table3
-        const query = `
-        CREATE MATERIALIZED VIEW IF NOT EXISTS mv_fo_financing_trades
-    ENGINE = ReplacingMergeTree()
-    ORDER BY (t.id)
-    POPULATE
-    AS SELECT
-        t.*,
-        h.*,
-        c.*,
-        i.*
-    FROM
-        fo_trades_trs t
-    JOIN fo_hms h ON t.book = h.book
-    JOIN fo_counterparty c ON t.counterparty = c.name
-    JOIN fo_instrument i ON t.underlying_asset = i.isin
-    `;
-
-        await client.exec({ query });
-
-
-        console.log('Materialized view created successfully');
-    } catch (error) {
-        console.error('Error creating materialized view:', error);
-    } finally {
-        await client.close();
-    }
+interface RiskResults {
+    data: Array<{ latestUpdate: string }>;
+    meta?: any[];
 }
 
-createMaterializedView();
-
-async function runSelectQuery() {
-    const client = createClient({
+const createClickHouseClient = () => {
+    return createClient({
         url: process.env.CLICKHOUSE_HOST || 'http://localhost:8123',
         username: process.env.CLICKHOUSE_USER || 'default',
         password: process.env.CLICKHOUSE_PASSWORD || '',
     });
+};
+
+async function fetchRiskData(): Promise<RiskResults> {
+    const client = createClickHouseClient();
 
     try {
-        const query = `
-     SELECT *,max(i.updated_at) OVER () as latestUpdate  FROM mv_fo_financing_trades
-    `;
+        const query = `SELECT * FROM risk_view final`;
         const resultSet = await client.query({ query });
-        interface RiskResults {
-            updated_at: string;
-            data: any[];
-            meta: any[];
-            rows: number;
-            // Add other properties as needed
-        }
-        const results = await resultSet.json() as { data: Array<{ latestUpdate: string }> };
-        const latestUpdate = results.data[0].latestUpdate;
+        const results = await resultSet.json() as RiskResults;
 
         return {
             data: results.data,
             meta: 'meta' in results ? results.meta : undefined,
-            latestUpdate: latestUpdate
         };
     } catch (error) {
-        console.error('Error running SELECT query:', error);
-        throw error;
+        console.error('Error fetching risk data:', error);
+        throw new Error('Failed to fetch risk data');
     } finally {
         await client.close();
     }
@@ -78,11 +38,11 @@ async function runSelectQuery() {
  * @swagger
  * /api/financing/risk:
  *   get:
- *     summary: Retrieve financing trade data
- *     description: Fetches data from the mv_fo_financing_trades materialized view in ClickHouse and includes the latest instrument update timestamp
+ *     summary: Retrieve financing risk data
+ *     description: Fetches risk data from ClickHouse risk_view
  *     responses:
  *       200:
- *         description: Successful response with trade data and latest instrument update
+ *         description: Successfully retrieved risk data
  *         content:
  *           application/json:
  *             schema:
@@ -93,36 +53,26 @@ async function runSelectQuery() {
  *                   items:
  *                     type: object
  *                     properties:
- *                       // Add properties based on your actual data structure
- *                       id:
+ *                       latestUpdate:
  *                         type: string
- *                       // ... other properties ...
+ *                         format: date-time
  *                 meta:
  *                   type: object
- *                   // Add meta properties
- *                 latestInstrumentUpdate:
- *                   type: string
- *                   format: date-time
  *       500:
  *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
  */
 export async function GET() {
     try {
-        const results = await runSelectQuery();
-        return new Response(JSON.stringify(results), {
-            headers: { 'Content-Type': 'application/json' },
-        });
+        const results = await fetchRiskData();
+        return NextResponse.json(results);
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        console.error('API Error:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            }
+        );
     }
 }
