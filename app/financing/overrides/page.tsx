@@ -162,19 +162,18 @@ export default function FinancingOverridesPage() {
                     <ScrollArea className="h-[calc(100vh-300px)]">
                       <div className="space-y-2">
                         {overrides.map((override, index) => (
-                          <Card key={index} className="p-2 text-sm">
+                          <Card 
+                            key={index} 
+                            className={`p-2 text-sm ${!override.isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
                             <CardContent className="p-0">
-                              {/* {Object.entries(override).map(([key, value]) => (
-                                <div key={key} className="flex justify-between py-1">
-                                  <span className="font-medium">{key}:</span>
-                                  <span>{String(value).substring(0, 40)}</span>
-                                </div>
-                              ))} */}
                               <div> <span className="font-medium">id:</span><span>{override.id}</span></div>
                               <div> <span className="font-medium">type:</span><span>{override.type}</span></div>
                               <div> <span className="font-medium">comments:</span><span>{override.comments}</span></div>
-                              
-                              <div><Compare  hideSummary={true} hideUnchanged={true} obj1={JSON.parse(override.previousValue)} obj2={JSON.parse(override.newValue)} /></div>
+                              {override.isActive === false && (
+                                <div><span className="font-medium text-destructive">Status:</span><span> Inactive</span></div>
+                              )}
+                              <div><Compare hideSummary={true} hideUnchanged={true} obj1={JSON.parse(override.previousValue)} obj2={JSON.parse(override.newValue)} /></div>
                             </CardContent>
                           </Card>
                         ))}

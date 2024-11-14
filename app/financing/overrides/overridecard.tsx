@@ -97,6 +97,40 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
     setOverrideData(originalData);
   };
 
+  const handleDisable = async () => {
+    const payload = JSON.stringify({
+      newValue: JSON.stringify({ ...overrideData, isActive: false }),
+      previousValue: JSON.stringify(originalData),
+      updatedAt: new Date().toISOString(),
+      updatedBy: 'ataliks',
+      type: tableName,
+      id: selectedId,
+      comments: 'Disabled override',
+      table: tableName,
+    });
+
+    try {
+      const response = await fetch('/api/overrides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: payload
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to disable override');
+      }
+
+      // Update both states after successful save
+      const updatedData = { ...overrideData, isActive: false };
+      setOverrideData(updatedData);
+      setOriginalData(updatedData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to disable override');
+    }
+  };
+
   const renderFormFields = () => {
     if (!overrideData) return null;
 
@@ -147,8 +181,14 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
       {/* Top row with save and reset buttons */}
       <div className="mb-4 flex justify-end space-x-2">
         <Button
-          onClick={handleReset} className='outline bg-gray-500'
-
+          onClick={handleDisable}
+          className="outline bg-red-500 hover:bg-red-600"
+        >
+          Disable
+        </Button>
+        <Button
+          onClick={handleReset} 
+          className='outline bg-gray-500'
         >
           Reset
         </Button>
@@ -170,16 +210,27 @@ const OverrideCard: React.FC<OverrideCardProps> = ({ selectedId, tableName }) =>
               className="w-full h-full flex flex-col"
               aria-label="Override data views"
             >
-              {/* Add this hidden description element */}
-              <div id="override-card-description" className="sr-only">
-                Form and code views for managing override data
+              {/* Update the description ID to be more unique */}
+              <div id="override-tabs-content-description" className="sr-only">
+                Choose between form and code views to manage and edit override data
               </div>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="form" className="flex items-center justify-center">
+              <TabsList 
+                className="grid w-full grid-cols-2"
+                aria-describedby="override-tabs-content-description"
+              >
+                <TabsTrigger 
+                  value="form" 
+                  className="flex items-center justify-center"
+                  aria-label="Switch to form view"
+                >
                   <FileInput className="w-4 h-4 mr-2" />
                   Form View
                 </TabsTrigger>
-                <TabsTrigger value="code" className="flex items-center justify-center">
+                <TabsTrigger 
+                  value="code" 
+                  className="flex items-center justify-center"
+                  aria-label="Switch to code view"
+                >
                   <Code className="w-4 h-4 mr-2" />
                   Code View
                 </TabsTrigger>

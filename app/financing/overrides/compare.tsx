@@ -79,9 +79,8 @@ export default function Compare({
 
     return (
         !hideSummary && !hideUnchanged && (
-            <Card >
-
-                <CardContent >
+            <Card>
+                <CardContent aria-label="Object comparison results">
                     <ScrollArea className="h-full w-full rounded-md p-1">
                         {renderDiffSection('Added', differences.added, 'bg-green-500')}
                         {renderDiffSection('Removed', differences.removed, 'bg-red-500')}
@@ -102,11 +101,9 @@ export default function Compare({
             </Card>
         )
         || (hideSummary && (
-            <div>
-            {renderDiffSection('Modified', differences.modified, 'bg-orange-500')}
+            <div role="region" aria-label="Modified items comparison">
+                {renderDiffSection('Modified', differences.modified, 'bg-orange-500')}
             </div>
         ))
-    
-
     )
 }
