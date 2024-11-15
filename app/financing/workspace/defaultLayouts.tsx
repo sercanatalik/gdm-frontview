@@ -1,23 +1,70 @@
 export const SYSTEM_LAYOUT = {
     sizes: [0.25, 0.75],
-    detail: { "main": { type: "tab-area", widgets: ["DESK_FILTER"], "currentIndex": 0 } }, mode: "globalFilters",
-    master: { widgets: ["PERSPECTIVE_GENERATED_ID_5", "PERSPECTIVE_GENERATED_ID_6"], sizes: [0.5, 0.5] }, 
-    viewers: { "PERSPECTIVE_GENERATED_ID_5": 
-        { version: "2.10.1", "plugin": "Datagrid", "plugin_config": { "columns": {}, "editable": false, "scroll_lock": false },
-         "columns_config": {}, "settings": false, "theme": "Pro Light", "title": null, "group_by": [], "split_by": [], 
-         "columns": ["t.id", "trade_id", "counterparty", "t.book", "trade_date", "effective_date", "t.maturity_date", "underlying_asset", "notional_amount", "t.currency", "payment_frequency", "total_return_receiver", "total_return_payer", "financing_rate", "financing_spread", "initial_price", "is_cleared", "clearing_house", "collateral_type", "termination_date", "termination_price", "status", "created_at", "t.updated_at", "h.id", "balance_sheet", "trader", "desk", "portfolio", "h.book", "h.region", "bookGuid", "updatedAt", "c.id", "c.name", "c.region", "c.country", "c.sector", "c.industry", "c.rating", "c.updated_at", "i.id", "isin", "cusip", "sedol", "i.name", "issuer", "i.region", "i.country", "i.sector", "i.industry", "i.currency", "issue_date", "i.maturity_date", "coupon", "coupon_frequency", "yield_to_maturity", "price", "face_value", "i.rating", "is_callable", "is_puttable", "is_convertible", "i.updated_at", "latestUpdate"], "filter": [], "sort": [], "expressions": {}, "aggregates": {}, "master": true, "table": "data", "linked": false, "selectable": "" }, "PERSPECTIVE_GENERATED_ID_6": { version: "2.10.1", "plugin": "Datagrid", "plugin_config": { "columns": {}, "editable": false, "scroll_lock": false }, "columns_config": {}, "settings": false, "theme": "Pro Light", "title": null, "group_by": [], "split_by": [], "columns": ["t.id", "trade_id", "counterparty", "t.book", "trade_date", "effective_date", "t.maturity_date", "underlying_asset", "notional_amount", "t.currency", "payment_frequency", "total_return_receiver", "total_return_payer", "financing_rate", "financing_spread", "initial_price", "is_cleared", "clearing_house", "collateral_type", "termination_date", "termination_price", "status", "created_at", "t.updated_at", "h.id", "balance_sheet", "trader", "desk", "portfolio", "h.book", "h.region", "bookGuid", "updatedAt", "c.id", "c.name", "c.region", "c.country", "c.sector", "c.industry", "c.rating", "c.updated_at", "i.id", "isin", "cusip", "sedol", "i.name", "issuer", "i.region", "i.country", "i.sector", "i.industry", "i.currency", "issue_date", "i.maturity_date", "coupon", "coupon_frequency", "yield_to_maturity", "price", "face_value", "i.rating", "is_callable", "is_puttable", "is_convertible", "i.updated_at", "latestUpdate"], "filter": [], "sort": [], "expressions": {}, "aggregates": {}, "master": true, "table": "data", "linked": false, "selectable": "" }, "PERSPECTIVE_GENERATED_ID_7": { version: "2.10.1", "plugin": "Datagrid", "plugin_config": { "columns": {}, "editable": false, "scroll_lock": false }, "columns_config": {}, "settings": false, "theme": "Pro Light", "title": null, "group_by": [], "split_by": [], "columns": ["t.id", "trade_id", "counterparty", "t.book", "trade_date", "effective_date", "t.maturity_date", "underlying_asset", "notional_amount", "t.currency", "payment_frequency", "total_return_receiver", "total_return_payer", "financing_rate", "financing_spread", "initial_price", "is_cleared", "clearing_house", "collateral_type", "termination_date", "termination_price", "status", "created_at", "t.updated_at", "h.id", "balance_sheet", "trader", "desk", "portfolio", "h.book", "h.region", "bookGuid", "updatedAt", "c.id", "c.name", "c.region", "c.country", "c.sector", "c.industry", "c.rating", "c.updated_at", "i.id", "isin", "cusip", "sedol", "i.name", "issuer", "i.region", "i.country", "i.sector", "i.industry", "i.currency", "issue_date", "i.maturity_date", "coupon", "coupon_frequency", "yield_to_maturity", "price", "face_value", "i.rating", "is_callable", "is_puttable", "is_convertible", "i.updated_at", "latestUpdate"], "filter": [], "sort": [], "expressions": {}, "aggregates": {}, "master": false, "table": "data", "linked": false 
+    detail: {
+        main: {
+            type: "tab-area",
+            widgets: ["PERSPECTIVE_GENERATED_ID_1"],
+            currentIndex: 0
+        }
+    },
+    mode: "globalFilters",
+    master: {
+        widgets: ["PERSPECTIVE_GENERATED_ID_0"],
+        sizes: [1]
+    },
+    viewers: {
+        PERSPECTIVE_GENERATED_ID_0: {
+            version: "2.10.1",
+            plugin: "Datagrid",
+            plugin_config: {
+                columns: {},
+                editable: false,
+                scroll_lock: false
+            },
+            columns_config: {},
+            settings: false,
+            theme: "Pro Light",
+            title: "DeskFilter",
+            group_by: ["hmsDesk"],
+            split_by: [],
+            columns: ["cashOut", "ead"],
+            filter: [],
+            sort: [],
+            expressions: {},
+            aggregates: {},
+            master: true,
+            table: "data",
+            linked: false,
+            selectable: ""
         },
-        "DESK_FILTER":{"version":"2.10.1","plugin":"Datagrid","plugin_config":{"columns":{},"editable":false,"scroll_lock":false},"columns_config":{},"settings":true,"theme":"Pro Light","title":null,"group_by":["hmsDesk"],"split_by":[],"columns":["cashOut","ead"],"filter":[],"sort":[],"expressions":{},"aggregates":{}}
-
-    
+        PERSPECTIVE_GENERATED_ID_1: {
+            version: "2.10.1",
+            plugin: "Datagrid",
+            plugin_config: {
+                columns: {},
+                editable: false,
+                scroll_lock: false
+            },
+            columns_config: {},
+            settings: false,
+            theme: "Pro Light",
+            title: "ByTrader",
+            group_by: ["hmsTrader", "instrumentSector"],
+            split_by: [],
+            columns: ["accrualDaily", "accrualProjected", "accrualPast", "cashOut", "marginFixed"],
+            filter: [["hmsDesk", "==", "Commodities"]],
+            sort: [],
+            expressions: {},
+            aggregates: {
+                marginFixed: "avg"
+            },
+            master: false,
+            table: "data",
+            linked: false
+        }
     }
 }
 
-
-
-
-
-// {"version":"2.10.1","plugin":"Datagrid","plugin_config":{"columns":{},"editable":false,"scroll_lock":false},"columns_config":{},"settings":true,"theme":"Pro Light","title":"Risk","group_by":["hmsTrader"],"split_by":[],"columns":["accrualPast","cashOut","margin","fxSpot","marginFixed","spread","ead"],"filter":[["hmsDesk","==","Commodities"]],"sort":[],"expressions":{},"aggregates":{}}
 
 
 
