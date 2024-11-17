@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import "@finos/perspective-viewer/dist/css/themes.css";
 import { fetchDataSource, streamDataSource } from './datasource';
 import { loadDefaultLayout } from './defaultLayouts';  
+import { table } from 'console';
 
 declare global {
     namespace JSX {
@@ -25,6 +26,7 @@ declare global {
 function Workspace() {
   const workspaceRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [eventId, setEventId] = useState<number>(0);
   const router = useRouter();
 
 
@@ -61,25 +63,33 @@ function Workspace() {
       const datasource = fetchDataSource(worker);
       
       const updateData = async () => {
-        const table = await datasource();
-        workspaceRef.current.tables.set("data", table);
+        const { table, eventId } = await datasource();
+        setEventId(eventId);
+        workspaceRef.current.tables.set("risk_view", table);
+        console.log('eventId', eventId);
       };
-
-      // Initial data load
-      updateData();
       workspaceRef.current.restore(loadDefaultLayout());
 
-      // const streamData = streamDataSource(worker);
-      // streamData();
-
-      // Set up interval to refresh data every minute
-      // const intervalId = setInterval(updateData, 60000000);
-
-
-      // Clean up interval on component unmount
-      // return () => clearInterval(intervalId);
+      updateData();
+  
     }
   }, [worker]);
+
+
+  useEffect(() => {
+    if (worker && workspaceRef.current) {
+    const datasource = streamDataSource(eventId,worker);
+    const streamData = async () => {
+        const row  = await datasource();
+       
+        // workspaceRef.current.tables.update("risk_view", row);
+      };
+
+      streamData();
+
+    }
+    
+  }, [eventId,worker]);
 
 
   const saveLayout = async (layoutName: string) => {

@@ -1,28 +1,32 @@
-import { createClient } from '@clickhouse/client';
+import { getClickHouseClient } from '@/lib/clickhouse-wrap'
 import { NextResponse } from 'next/server';
 
 interface RiskResults {
-    data: Array<{ latestUpdate: string }>;
+    data: Array<{ 
+       
+    }>;
     meta?: any[];
 }
 
-const createClickHouseClient = () => {
-    return createClient({
-        url: process.env.CLICKHOUSE_HOST || 'http://localhost:8123',
-        username: process.env.CLICKHOUSE_USER || 'default',
-        password: process.env.CLICKHOUSE_PASSWORD || '',
-    });
-};
 
-async function fetchRiskData(): Promise<RiskResults> {
-    const client = createClickHouseClient();
+async function fetchRiskData(fromEventId?: number): Promise<RiskResults> {
+    const client = getClickHouseClient();
 
     try {
-        const query = `SELECT * FROM risk_view final`;
+        // First get the max eventId if fromEventId is not provided
+      
+        // Get records with eventId greater than the provided/initial eventId
+        const query = `
+            SELECT *
+            FROM risk_view final
+            ORDER BY eventId ASC
+            LIMIT 100`;
+       
         const resultSet = await client.query({ query });
         const results = await resultSet.json() as RiskResults;
-
+        
         return {
+            
             data: results.data,
             meta: 'meta' in results ? results.meta : undefined,
         };
@@ -48,22 +52,25 @@ async function fetchRiskData(): Promise<RiskResults> {
  *             schema:
  *               type: object
  *               properties:
+ *                 eventId:
+ *                   type: integer
+ *                   description: The latest event ID from the risk view
  *                 data:
  *                   type: array
  *                   items:
  *                     type: object
- *                     properties:
- *                       latestUpdate:
- *                         type: string
- *                         format: date-time
+ *                     
  *                 meta:
- *                   type: object
+ *                   type: array
+ *                   description: Optional metadata from the query
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const results = await fetchRiskData();
+        const { searchParams } = new URL(request.url);
+        const fromEventId = searchParams.get('fromEventId');
+        const results = await fetchRiskData(fromEventId ? parseInt(fromEventId) : undefined);
         return NextResponse.json(results);
     } catch (error) {
         console.error('API Error:', error);

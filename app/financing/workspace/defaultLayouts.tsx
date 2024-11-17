@@ -33,7 +33,7 @@ export const SYSTEM_LAYOUT = {
             expressions: {},
             aggregates: {},
             master: true,
-            table: "data",
+            table: "risk_view",
             linked: false,
             selectable: ""
         },
@@ -59,7 +59,7 @@ export const SYSTEM_LAYOUT = {
                 marginFixed: "avg"
             },
             master: false,
-            table: "data",
+            table: "risk_view",
             linked: false
         }
     }
