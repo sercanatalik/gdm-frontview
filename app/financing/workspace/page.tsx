@@ -27,6 +27,7 @@ function Workspace() {
   const workspaceRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [eventId, setEventId] = useState<number>(0);
+
   const router = useRouter();
 
 
@@ -78,11 +79,14 @@ function Workspace() {
 
   useEffect(() => {
     if (worker && workspaceRef.current) {
-    const datasource = streamDataSource(eventId,worker);
+    
+    
     const streamData = async () => {
-        const row  = await datasource();
-       
-        // workspaceRef.current.tables.update("risk_view", row);
+      
+
+      const datasource = streamDataSource(eventId,workspaceRef.current);
+      await datasource();
+      
       };
 
       streamData();

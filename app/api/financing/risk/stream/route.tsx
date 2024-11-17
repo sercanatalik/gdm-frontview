@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
             query += ` WHERE eventId > ${lastEventId}`;
           }
 
-          query += ' ORDER BY eventId ASC LIMIT 100';
+          query += ' ORDER BY eventId ASC LIMIT 1000';
          
           
           try {
@@ -38,21 +38,15 @@ export async function GET(request: NextRequest) {
               clickhouse_settings: {
                 wait_end_of_query: 1,
                
+               
               }
             });
 
             for await (const row of resultSet.stream()) {
-              // Parse the row if it's a string
-             
-              for (const x in row) {
-                const parsedRow = JSON.parse(row[x].text);
-                lastEventId = Math.max(lastEventId, parsedRow.eventId);
-                const data = encoder.encode(`data: ${JSON.stringify(parsedRow)}\n\n`);
-                controller.enqueue(data);
-              }
-              // lastEventId = Math.max(lastEventId, parsedRow.eventId);
-              // const data = encoder.encode(`data: ${JSON.stringify(parsedRow)}\n\n`);
-              // controller.enqueue(data);
+              const parsedRow = JSON.parse(row[0].text) as RiskViewRow;
+              const data = encoder.encode(`data: ${JSON.stringify(parsedRow)}\n\n`);
+              console.log('data', data);
+              controller.enqueue(data);
             }
 
             await new Promise(resolve => setTimeout(resolve, 5000));

@@ -1,4 +1,4 @@
-import { PerspectiveWorker } from '@finos/perspective';
+import { PerspectiveWorker, Table as PerspectiveTable, Workspace as PerspectiveWorkspace } from '@finos/perspective';
 
 // Add global variable declaration at the top
 let currentEventId: number;
@@ -10,30 +10,30 @@ export const fetchDataSource = (worker: PerspectiveWorker) => async () => {
         ? data.data[data.data.length - 1].eventId 
         : '0';
     return {
-        table: await worker.table(data.data),
+        table: await worker.table(data.data,{ index: "id" }),
         eventId: currentEventId
     };
 };
 
-interface StreamRow {
-  eventId: number;
-  [key: string]: any;  // for other dynamic fields
-}
 
-export const streamDataSource = (eventId: number, worker: PerspectiveWorker) => async () => {
+export const streamDataSource = (eventId: number, workspace: PerspectiveWorkspace) => async () => {
     const url = `/api/financing/risk/stream?lastUpdate=${encodeURIComponent(eventId)}`
     console.log('url', url);
+    
+    // Add delay before creating new EventSource
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+    
     const eventSource = new EventSource(url);
-
+    const table = await workspace.getTable("risk_view");
     eventSource.onopen = () => {
         console.log('SSE Connection opened', url);
     };
     
     eventSource.onmessage = async (event) => {
         try {
-            const row = JSON.parse(event.data) as StreamRow;
-            console.log('row', row);
-            await worker.table.update(row);
+            const row = JSON.parse(event.data) ;
+            await table.update([row]);
+            
         } catch (e) {
             console.error('Failed to parse event data:', event.data, e);
         }
