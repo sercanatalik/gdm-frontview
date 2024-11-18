@@ -26,7 +26,7 @@ declare global {
 function Workspace() {
   const workspaceRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [eventId, setEventId] = useState<number>(0);
+  const [eventId, setEventId] = useState<number>(null);
 
   const router = useRouter();
 
@@ -83,14 +83,14 @@ function Workspace() {
     
     const streamData = async () => {
       
-
       const datasource = streamDataSource(eventId,workspaceRef.current);
       await datasource();
       
       };
+      if (eventId) {
 
       streamData();
-
+      }
     }
     
   }, [eventId,worker]);

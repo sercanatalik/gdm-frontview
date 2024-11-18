@@ -18,12 +18,10 @@ export const fetchDataSource = (worker: PerspectiveWorker) => async () => {
 
 export const streamDataSource = (eventId: number, workspace: PerspectiveWorkspace) => async () => {
     const url = `/api/financing/risk/stream?lastUpdate=${encodeURIComponent(eventId)}`
-    console.log('url', url);
     
-    // Add delay before creating new EventSource
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
     
     const eventSource = new EventSource(url);
+    
     const table = await workspace.getTable("risk_view");
     eventSource.onopen = () => {
         console.log('SSE Connection opened', url);
@@ -33,6 +31,8 @@ export const streamDataSource = (eventId: number, workspace: PerspectiveWorkspac
         try {
             const row = JSON.parse(event.data) ;
             await table.update([row]);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+
             
         } catch (e) {
             console.error('Failed to parse event data:', event.data, e);

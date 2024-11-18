@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
             for await (const row of resultSet.stream()) {
               const parsedRow = JSON.parse(row[0].text) as RiskViewRow;
               const data = encoder.encode(`data: ${JSON.stringify(parsedRow)}\n\n`);
-              console.log('data', data);
+             
               controller.enqueue(data);
             }
 
