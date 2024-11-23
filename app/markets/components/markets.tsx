@@ -16,15 +16,18 @@ const loadPerspective = async () => {
 import { useSidebar } from "@/hooks/use-sidebar";
 
 interface MarketData {
-  instrument: string;
-  price: number;
-  timestamp: string;
+  key: string;
+  px: {
+    price: number;
+    spread: number;
+    timestamp: string;
+  };
 }
 
 
 
 // Update component signature to accept props
-export default function Markets({  }: MarketsProps) {
+export default function Markets() {
   const [table, setTable] = useState<Table | null>(null);
   const viewerRef = useRef<HTMLPerspectiveViewerElement>(null);
   const [sidebarWidth, setSidebarWidth] = useState(100);
@@ -38,6 +41,8 @@ export default function Markets({  }: MarketsProps) {
     instrument: 'string',
     price: 'float',
     timestamp: 'datetime',
+    key: 'string',
+    px: 'object',
   };
 
 
@@ -64,7 +69,8 @@ export default function Markets({  }: MarketsProps) {
         
       eventSource.onmessage = (event) => {
         const data: MarketData = JSON.parse(event.data);
-        // console.log(data);
+        console.log(data);
+        newTable.update([{instrument: data.key, price: data.px.price, spread: data.px.spread, timestamp: data.px.timestamp}]);
         // newTable.update([{instrument: data.instrument, price: data.price, timestamp: data.timestamp}]);
       };
 

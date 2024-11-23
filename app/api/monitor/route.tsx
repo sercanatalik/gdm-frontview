@@ -1,42 +1,59 @@
 import { Redis } from 'ioredis';
 import { NextResponse } from 'next/server';
 
-// Initialize Redis client
+// Define interface for price data
+interface PriceData {
+  [key: string]: string;
+}
+
+// Initialize Redis client with error handling
 const redis = new Redis({
-  host: 'localhost',
-  port: 6379,
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  retryStrategy: (times) => Math.min(times * 50, 2000),
+});
+
+redis.on('error', (error) => {
+  console.error('Redis connection error:', error);
 });
 
 export async function GET() {
   const encoder = new TextEncoder();
 
-  let cleanup: (() => void) | undefined;
+  let cleanup: (() => Promise<void>) | undefined;
   const stream = new ReadableStream({
     async start(controller) {
       try {
         const subscriber = redis.duplicate();
-        
-        // First, get all existing keys with "price"
-        const keys = await redis.keys('price:*');
-        for (const key of keys) {
-            const data = await redis.get(key);  
-            if (data) {
-                const pdata = 'data: ' + JSON.stringify({key:key, px:data})+'\n\n';
-               
-                controller.enqueue(encoder.encode(pdata));
-            }
-        }
 
-        // Enable keyspace notifications for all events
+        // Helper function to format and send data
+        const sendPriceData = async (key: string) => {
+          const data = await redis.hgetall(key);
+          if (data && Object.keys(data).length > 0) {
+            const label = key.split(':')[1];
+            const message = {
+              key: label,
+              px: data as PriceData,
+              timestamp: Date.now(),
+            };
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+          }
+        };
+
+        // Initial data load
+        const keys = await redis.keys('price:*');
+        await Promise.all(keys.map(sendPriceData));
+
+        // Setup Redis subscription
         await subscriber.config('SET', 'notify-keyspace-events', 'KEA');
-        await subscriber.psubscribe('__keyspace@0__:price:');
+        await subscriber.psubscribe('__keyspace@0__:price:*');
 
         subscriber.on('pmessage', async (_pattern, channel, message) => {
           try {
-            const key = channel.split(':')[1];
-            const px = await redis.get(key);
-            const pdata = 'data: ' + JSON.stringify({key:key, px:px}) + '\n\n';
-            controller.enqueue(encoder.encode(pdata));
+            const key = channel.split('__:')[1];
+            if (key) {
+              await sendPriceData(key);
+            }
           } catch (error) {
             console.error('Error processing message:', error);
           }
@@ -47,11 +64,10 @@ export async function GET() {
           controller.error(error);
         });
 
-        cleanup = () => {
+        cleanup = async () => {
           try {
-            subscriber.punsubscribe();
-            subscriber.quit();
-           
+            await subscriber.punsubscribe();
+            await subscriber.quit();
             console.log('Cleanup complete');
           } catch (error) {
             console.error('Cleanup error:', error);
@@ -62,16 +78,15 @@ export async function GET() {
         controller.error(error);
       }
     },
-    cancel() {
-      if (cleanup) cleanup();
+    async cancel() {
+      if (cleanup) await cleanup();
     }
   });
 
-  // Return SSE response
   return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
     },
   });
