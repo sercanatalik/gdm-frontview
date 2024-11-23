@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import type { IPerspectiveViewerElement, HTMLPerspectiveViewerElement } from '@finos/perspective-viewer';
 import { Table } from '@finos/perspective';
+import '@finos/perspective-viewer/dist/css/pro.css';
+
 
 const loadPerspective = async () => {
   await import("@finos/perspective-viewer");
   await import("@finos/perspective-viewer-datagrid");
   await import("@finos/perspective-viewer-d3fc");
-  await import('@finos/perspective-viewer/dist/css/pro.css');
+  
   return await import('@finos/perspective');
 };
 import { useSidebar } from "@/hooks/use-sidebar";
