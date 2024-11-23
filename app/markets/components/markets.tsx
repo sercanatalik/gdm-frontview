@@ -8,7 +8,7 @@ const loadPerspective = async () => {
   await import("@finos/perspective-viewer");
   await import("@finos/perspective-viewer-datagrid");
   await import("@finos/perspective-viewer-d3fc");
-  await import('@finos/perspective-viewer/dist/css/themes.css');
+  await import('@finos/perspective-viewer/dist/css/pro.css');
   return await import('@finos/perspective');
 };
 import { useSidebar } from "@/hooks/use-sidebar";
@@ -92,13 +92,10 @@ export default function Markets({  }: MarketsProps) {
     });
   }, [worker]);
 
- 
-
   return (
-    
       <perspective-viewer ref={viewerRef} class="perspective-viewer" 
       id="workspace"
-      style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: sidebarWidth}}
+      style={{ position: 'absolute', width: '80%', height: '100%', top: 0, left: sidebarWidth}}
       ></perspective-viewer>
 
   );
