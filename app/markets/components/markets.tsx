@@ -10,11 +10,10 @@ const loadPerspective = async () => {
   await import("@finos/perspective-viewer");
   await import("@finos/perspective-viewer-datagrid");
   await import("@finos/perspective-viewer-d3fc");
-  
   return await import('@finos/perspective');
 };
-import { useSidebar } from "@/hooks/use-sidebar";
 
+import { useSidebar } from "@/hooks/use-sidebar";
 
 interface MarketData {
   instrument: string;
