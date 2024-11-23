@@ -2,10 +2,13 @@
 
 # dependencies
 /node_modules
+/perspective-workspace
+/perspective-viewer
+/node_modules/*
 /.pnp
 .pnp.js
 .yarn/install-state.gz
-
+ 
 # testing
 /coverage
 
