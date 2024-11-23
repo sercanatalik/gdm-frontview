@@ -67,7 +67,7 @@ function Workspace() {
         const { table, eventId } = await datasource();
         setEventId(eventId);
         workspaceRef.current.tables.set("risk_view", table);
-        console.log('eventId', eventId);
+        // console.log('eventId', eventId);
       };
       workspaceRef.current.restore(loadDefaultLayout());
 

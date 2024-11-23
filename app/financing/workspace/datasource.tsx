@@ -1,4 +1,5 @@
-import { PerspectiveWorker, Table as PerspectiveTable, Workspace as PerspectiveWorkspace } from '@finos/perspective';
+import { PerspectiveWorker, Table as PerspectiveTable } from '@finos/perspective';
+import type { Workspace as PerspectiveWorkspace } from '@finos/perspective-viewer';
 
 // Add global variable declaration at the top
 let currentEventId: number;
