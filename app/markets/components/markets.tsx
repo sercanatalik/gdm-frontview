@@ -1,109 +1,123 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import type { IPerspectiveViewerElement, HTMLPerspectiveViewerElement } from '@finos/perspective-viewer';
+import type { HTMLPerspectiveViewerElement } from '@finos/perspective-viewer';
 import { Table } from '@finos/perspective';
 import '@finos/perspective-viewer/dist/css/pro.css';
-
-
-const loadPerspective = async () => {
-  await import("@finos/perspective-viewer");
-  await import("@finos/perspective-viewer-datagrid");
-  await import("@finos/perspective-viewer-d3fc");
-  return await import('@finos/perspective');
-};
-
 import { useSidebar } from "@/hooks/use-sidebar";
 
 interface MarketData {
   key: string;
   px: {
-    price: number;
+    last: number;
     spread: number;
-    timestamp: string;
+    timestamp: Date;
+    bid: number;
+    ask: number;
+    yest: number;
   };
 }
 
+interface TableSchema {
+  instrument: string;
+  last: number;
+  spread: number;
+  timestamp: Date;
+}
 
+const loadPerspective = async () => {
+  await Promise.all([
+    import("@finos/perspective-viewer") as any,
+    import("@finos/perspective-viewer-datagrid") as any,
+    import("@finos/perspective-viewer-d3fc") as any
+  ]);
+  return import('@finos/perspective');
+};
 
-// Update component signature to accept props
 export default function Markets() {
   const [table, setTable] = useState<Table | null>(null);
+  const [worker, setWorker] = useState<Worker | null>(null);
   const viewerRef = useRef<HTMLPerspectiveViewerElement>(null);
-  const [sidebarWidth, setSidebarWidth] = useState(100);
+  const { isOpen } = useSidebar();
+  const sidebarWidth = isOpen ? 300 : 120;
 
-  const sidebar = useSidebar();
-  const isSidebarOpen = sidebar.isOpen;
-
-
-  const [worker, setWorker] = useState<any>(null);
   const schema = {
     instrument: 'string',
-    price: 'float',
+    last: 'float',
+    bid: 'float',
+    ask: 'float',
+    spread: 'float',
+    yest: 'float',
     timestamp: 'datetime',
-    key: 'string',
-    px: 'object',
   };
-
-
-  useEffect(() => {
-    setSidebarWidth(isSidebarOpen ? 300 : 120);
-  }, [isSidebarOpen]);
 
   useEffect(() => {
     loadPerspective().then((perspective) => {
-      const w = perspective.default.shared_worker();
-      setWorker(w);
+      setWorker(perspective.default.shared_worker());
     });
   }, []);
 
   useEffect(() => {
-    if (!worker) return;
-    
-    worker.table(schema).then(newTable => {
-        
-      setTable(newTable);
-      
-      // Set up SSE connection
-      const eventSource = new EventSource('/api/monitor');
-        
-      eventSource.onmessage = (event) => {
-        const data: MarketData = JSON.parse(event.data);
-        console.log(data);
-        newTable.update([{instrument: data.key, price: data.px.price, spread: data.px.spread, timestamp: data.px.timestamp}]);
-        // newTable.update([{instrument: data.instrument, price: data.price, timestamp: data.timestamp}]);
-      };
+    if (!worker || !viewerRef.current) return;
 
-      eventSource.onerror = (error) => {
-        console.error('SSE Error:', error);
-        eventSource.close();
-      };
+    const setupTable = async () => {
+      try {
+        const newTable = await worker.table(schema,{index: "instrument"});
+        setTable(newTable);
 
-      // Configure perspective viewer using the ref instead of querySelector
-      if (viewerRef.current) {
-        viewerRef.current.load(newTable);
-        viewerRef.current.restore({
+        const eventSource = new EventSource('/api/monitor');
+        
+        eventSource.onmessage = (event) => {
+          const data: MarketData = JSON.parse(event.data);
+          newTable.update<TableSchema>([{
+            instrument: data.key,
+            last: data.px.last,
+            bid: data.px.bid,
+            ask: data.px.ask,
+            spread: data.px.spread,
+            yest: data.px.yest,
+            timestamp: new Date(data.px.timestamp)
+          }]);
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('SSE Error:', error);
+          eventSource.close();
+        };
+
+        await viewerRef.current?.load(newTable);
+        await viewerRef.current?.restore({
           plugin: 'datagrid',
-          columns: ['instrument', 'price', 'timestamp'],
+          columns: ['instrument', 'last','bid', 'ask', 'spread','yest', 'timestamp'],
           aggregates: {
-            price: 'last',
+          
           },
           sort: [['timestamp', 'desc']],
         });
-      }
 
-      return () => {
-        eventSource.close();
-        newTable.delete();
-      };
-    });
+        return () => {
+          eventSource.close();
+          newTable.delete();
+        };
+      } catch (error) {
+        console.error('Error setting up perspective table:', error);
+      }
+    };
+
+    setupTable();
   }, [worker]);
 
   return (
-      <perspective-viewer ref={viewerRef} class="perspective-viewer" 
-      id="workspace"
-      style={{ position: 'absolute', width: '80%', height: '100%', top: 0, left: sidebarWidth}}
-      ></perspective-viewer>
-
+    <perspective-viewer
+      ref={viewerRef}
+      className="perspective-viewer"
+      style={{
+        position: 'absolute',
+        width: '80%',
+        height: '100%',
+        top: 0,
+        left: sidebarWidth
+      }}
+    />
   );
 }
