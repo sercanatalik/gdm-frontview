@@ -6,6 +6,7 @@ import {
   SquarePen,
   LayoutGrid,
   LucideIcon,
+  Radical,
   BookOpenText,Workflow,LayoutPanelTop,ShoppingBasket
 } from "lucide-react";
 
@@ -32,7 +33,7 @@ type Group = {
 export function getMenuList(pathname: string): Group[] {
   return [
     {
-      groupLabel: "",
+      groupLabel: "Financing",
       menus: [
         {
           href: "/financing/dashboard",
@@ -48,6 +49,19 @@ export function getMenuList(pathname: string): Group[] {
           icon: LayoutPanelTop,
         
         }
+      ]
+    },
+    {
+      groupLabel: "Markets",
+      menus: [
+        {
+          href: "/markets/bonds",
+          label: "Bonds",
+          active: pathname.includes("/markets/bonds"),
+          icon: Radical,
+          submenus: []
+        },
+    
       ]
     },
     

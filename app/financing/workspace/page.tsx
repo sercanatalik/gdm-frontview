@@ -11,7 +11,7 @@ import "@finos/perspective-viewer/dist/css/themes.css";
 import { fetchDataSource, streamDataSource } from './datasource';
 import { loadDefaultLayout } from './defaultLayouts';  
 import { table } from 'console';
-
+import TopNavigation from './topnavigation';
 declare global {
     namespace JSX {
       interface IntrinsicElements {
@@ -137,12 +137,13 @@ function Workspace() {
    
 
     <div ref={containerRef} style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 0  }}>
-    <WorkspaceMenu  saveLayout={saveLayout} loadLayout={loadLayout} downloadLayout={downloadLayout} />  
+    {/* <WorkspaceMenu  saveLayout={saveLayout} loadLayout={loadLayout} downloadLayout={downloadLayout} />   */}
+        <TopNavigation />
         <perspective-workspace
         ref={workspaceRef}
     theme={theme === 'dark' ? "Pro Dark" : "Pro Light"}
     id="workspace"
-    style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 20, bottom: 0}}
+    style={{ position: 'absolute', width: '100%', height: '100%', right: 0, top: 50, bottom: 0}}
 
   />
 
