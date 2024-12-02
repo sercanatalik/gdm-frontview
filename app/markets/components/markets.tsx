@@ -8,15 +8,27 @@ import { useSidebar } from "@/hooks/use-sidebar";
 
 interface MarketData {
   key: string;
-  px: {
-    last: number;
-    spread: number;
-    timestamp: Date;
-    bid: number;
-    ask: number;
-    yest: number;
-  };
+  sym: string;
+  last: number;
+  spread: number;
+  timestamp: string;
+  bid: number;
+  ask: number;
+  yest: number;
+  indexSpread: number;
+  indexYield: number;
+  indexDuration: number;
+  indexDv01: number;
+  duration: number;
+  dtm: number;
+  price: number;
+  ytm: number;
+  zSpread: number;
+  dv01: number;
+
 }
+
+
 
 interface TableSchema {
   instrument: string;
@@ -42,13 +54,23 @@ export default function Markets() {
   const sidebarWidth = isOpen ? 300 : 120;
 
   const schema = {
-    instrument: 'string',
+    sym: 'string',
     last: 'float',
     bid: 'float',
     ask: 'float',
     spread: 'float',
     yest: 'float',
-    timestamp: 'datetime',
+    timestamp: 'string',
+    duration: 'float',
+    dtm: 'float',
+    price: 'float',
+    ytm: 'float',
+    zSpread: 'float',
+    dv01: 'float',
+    indexSpread: 'float',
+    indexYield: 'float',
+    indexDuration: 'float',
+    indexDv01: 'float',
   };
 
   useEffect(() => {
@@ -62,21 +84,18 @@ export default function Markets() {
 
     const setupTable = async () => {
       try {
-        const newTable = await worker.table(schema,{index: "instrument"});
+        const newTable = await worker.table(schema, { index: "sym" });
         setTable(newTable);
 
         const eventSource = new EventSource('/api/monitor');
-        
+
         eventSource.onmessage = (event) => {
           const data: MarketData = JSON.parse(event.data);
+          
+        
           newTable.update<TableSchema>([{
-            instrument: data.key,
-            last: data.px.last,
-            bid: data.px.bid,
-            ask: data.px.ask,
-            spread: data.px.spread,
-            yest: data.px.yest,
-            timestamp: new Date(data.px.timestamp)
+            ...data,
+            timestamp: data.timestamp
           }]);
         };
 
@@ -88,9 +107,9 @@ export default function Markets() {
         await viewerRef.current?.load(newTable);
         await viewerRef.current?.restore({
           plugin: 'datagrid',
-          columns: ['instrument', 'last','bid', 'ask', 'spread','yest', 'timestamp'],
+          columns: ['sym', 'price', 'ytm', 'zSpread', 'dv01', 'duration', 'timestamp'],
           aggregates: {
-          
+
           },
           sort: [['timestamp', 'desc']],
         });

@@ -27,36 +27,37 @@ export async function GET() {
         const subscriber = redis.duplicate();
 
         // Helper function to format and send data
-        const sendPriceData = async (key: string) => {
+        const publishData = async (key: string) => {
           const data = await redis.hgetall(key);
           if (data && Object.keys(data).length > 0) {
-            const label = key.split(':')[1];
-            const message = {
-              key: label,
-              px: data as PriceData,
-              timestamp: Date.now(),
-            };
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+           
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
           }
         };
 
         // Initial data load
-        const keys = await redis.keys('price:*');
-        await Promise.all(keys.map(sendPriceData));
+        // const keys = await redis.keys('price:*');
+        // await Promise.all(keys.map(sendPriceData));
 
         // Setup Redis subscription
         await subscriber.config('SET', 'notify-keyspace-events', 'KEA');
-        await subscriber.psubscribe('__keyspace@0__:price:*');
+        await subscriber.psubscribe('__keyspace@0__:valuation:*');
 
         subscriber.on('pmessage', async (_pattern, channel, message) => {
-          try {
-            const key = channel.split('__:')[1];
-            if (key) {
-              await sendPriceData(key);
-            }
-          } catch (error) {
-            console.error('Error processing message:', error);
+          // console.log('pmessage', channel, message)
+          const key = channel.split('__:')[1];
+          if (key) {
+            await publishData(key);
           }
+          
+          //   try {
+          //     const key = channel.split('__:')[1];
+          //     if (key) {
+          //       await sendPriceData(key);
+          //     }
+          //   } catch (error) {
+            // console.error('Error processing message:', error);
+          // }
         });
 
         subscriber.on('error', (error) => {
