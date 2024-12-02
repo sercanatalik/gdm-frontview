@@ -97,6 +97,29 @@ const BasketOverridesPage = () => {
         }
     };
 
+    const downloadSampleCSV = () => {
+        // Create headers from schema
+        
+        // Create a sample row
+        const headers = [
+            "sym","weight","category","name","model","description","ticker"
+        ].join(',');
+
+        // Combine headers and sample row
+        const csvContent = `${headers}\n`;
+        
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sample_basket_override.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    };
+
     return (
         <>
         <div className="relative">
@@ -107,13 +130,22 @@ const BasketOverridesPage = () => {
                 accept=".csv"
                 className="hidden"
             />
-            <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute top-4 right-10"
-                size="sm"
-            >
-                Upload CSV
-            </Button>
+            <div className="absolute top-4 right-10 flex gap-2">
+                <Button
+                    onClick={downloadSampleCSV}
+                    size="sm"
+                    variant="outline"
+                >
+                    Download Sample
+                </Button>
+                <Button
+                    onClick={() => fileInputRef.current?.click()}
+                                        size="sm"
+                    variant="outline"
+                >
+                    Upload CSV
+                </Button>
+            </div>
             </div>
             <div>
             <BasketGrid data={data} /> 
