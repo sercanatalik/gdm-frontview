@@ -70,9 +70,16 @@ export function getMenuList(pathname: string): Group[] {
       menus: [
         {
           href: "/financing/overrides",
-          label: "Overrides",
+          label: "Instruments",
           active: pathname.includes("/financing/overrides"),
           icon: SquarePen,
+         
+        },
+        {
+          href: "/baskets/overrides",
+          label: "Custom Baskets",
+          active: pathname.includes("/baskets/overrides"),
+          icon: ShoppingBasket,
          
         },
       
