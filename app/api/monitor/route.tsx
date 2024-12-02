@@ -6,58 +6,74 @@ interface PriceData {
   [key: string]: string;
 }
 
-// Initialize Redis client with error handling
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  retryStrategy: (times) => Math.min(times * 50, 2000),
-});
+// Memoize Redis connections
+let globalRedis: Redis | null = null;
+let globalSubscriber: Redis | null = null;
 
-redis.on('error', (error) => {
-  console.error('Redis connection error:', error);
-});
+function getRedisClient() {
+  if (!globalRedis) {
+    globalRedis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+      maxRetriesPerRequest: 3, // Add retry limit
+      enableReadyCheck: false, // Disable ready check for better performance
+    });
+    
+    globalRedis.on('error', (error) => {
+      console.error('Redis connection error:', error);
+    });
+  }
+  return globalRedis;
+}
+
+function getSubscriber() {
+  if (!globalSubscriber) {
+    globalSubscriber = getRedisClient().duplicate();
+  }
+  return globalSubscriber;
+}
 
 export async function GET() {
+  // Pre-initialize encoder
   const encoder = new TextEncoder();
+  const BATCH_SIZE = 50; // For batch processing
 
+  // Pre-encode newline
+  const NEWLINE = encoder.encode('\n\n');
+  
   let cleanup: (() => Promise<void>) | undefined;
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const subscriber = redis.duplicate();
+        const redis = getRedisClient();
+        const subscriber = getSubscriber();
 
-        // Helper function to format and send data
+        // Optimized data publishing
         const publishData = async (key: string) => {
           const data = await redis.hgetall(key);
           if (data && Object.keys(data).length > 0) {
-           
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+            // Combine encoding operations
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}`));
+            controller.enqueue(NEWLINE);
           }
         };
 
-        // Initial data load
-        // const keys = await redis.keys('price:*');
-        // await Promise.all(keys.map(sendPriceData));
+        // Setup Redis subscription with error handling
+        await subscriber.config('SET', 'notify-keyspace-events', 'KEA')
+          .catch(error => console.error('Failed to set keyspace events:', error));
+          
+        await subscriber.psubscribe('__keyspace@0__:valuation:*')
+          .catch(error => console.error('Failed to subscribe:', error));
 
-        // Setup Redis subscription
-        await subscriber.config('SET', 'notify-keyspace-events', 'KEA');
-        await subscriber.psubscribe('__keyspace@0__:valuation:*');
-
+        // Optimized message handling
         subscriber.on('pmessage', async (_pattern, channel, message) => {
-          // console.log('pmessage', channel, message)
           const key = channel.split('__:')[1];
           if (key) {
-            await publishData(key);
+            await publishData(key).catch(error => 
+              console.error('Error publishing data:', error)
+            );
           }
-          
-          //   try {
-          //     const key = channel.split('__:')[1];
-          //     if (key) {
-          //       await sendPriceData(key);
-          //     }
-          //   } catch (error) {
-            // console.error('Error processing message:', error);
-          // }
         });
 
         subscriber.on('error', (error) => {
@@ -79,8 +95,16 @@ export async function GET() {
         controller.error(error);
       }
     },
+
+    // Improved cleanup
     async cancel() {
-      if (cleanup) await cleanup();
+      if (cleanup) {
+        await cleanup();
+        // Don't close global connections, just unsubscribe
+        if (globalSubscriber) {
+          await globalSubscriber.punsubscribe().catch(console.error);
+        }
+      }
     }
   });
 
