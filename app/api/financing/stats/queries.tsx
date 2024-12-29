@@ -35,7 +35,7 @@ class QueryBuilder {
         (SELECT MAX(r.asOfDate) FROM risk_f_mv FINAL) as latest_date,
         (SELECT dateAdd(day, -1, MAX(r.asOfDate)) FROM risk_f_mv FINAL) as prev_date
       SELECT 
-        r.asOfDate,
+        r.asOfDate as asOfDate,
         SUM(collateralAmount) as collateralAmount,
         SUM(accrualDaily) as accrualDaily,
         SUM(accrualProjected) as accrualProjected,
@@ -82,20 +82,21 @@ class QueryBuilder {
 // Data processor class
 class DataProcessor {
   static processStatsData(statsData: StatsData[]): ProcessedStats {
+    console.log(statsData)
     const latest = statsData.find(d => 
-      new Date(d.asOfDate) >= new Date(Math.max(...statsData.map(d => new Date(d.asOfDate))))) || {};
+      new Date(d.asOfDate) >= new Date(Math.max(...statsData.map(d => new Date(d.asOfDate))))) || {} as StatsData;
     const previous = statsData.find(d => 
-      new Date(d.asOfDate) <= new Date(Math.min(...statsData.map(d => new Date(d.asOfDate))))) || {};
+      new Date(d.asOfDate) <= new Date(Math.min(...statsData.map(d => new Date(d.asOfDate))))) || {} as StatsData;
 
-    return ['fundingAmount', 'accrualDaily', 'accrualProjected', 'accrualRealised'].reduce((acc, key) => {
+    return ['collateralAmount', 'accrualDaily', 'accrualProjected', 'accrualRealised'].reduce((acc, key) => {
       acc[key] = {
         current: latest[key as keyof StatsData] || 0,
         previous: previous[key as keyof StatsData] || 0,
         change: (latest[key as keyof StatsData] || 0) - (previous[key as keyof StatsData] || 0),
-        currentDate: latest.asOfDate,
-        previousDate: previous.asOfDate,
+        currentDate: latest.asOfDate || '',
+        previousDate: previous.asOfDate || '',
         numDays: Math.ceil(
-          (new Date(latest.asOfDate).getTime() - new Date(previous.asOfDate).getTime()) / 
+          (new Date(latest.asOfDate || 0).getTime() - new Date(previous.asOfDate || 0).getTime()) / 
           (1000 * 60 * 60 * 24)
         ),
       };
@@ -121,6 +122,7 @@ const measureHandlers = {
   stats: async (conditions: string[]) => {
     console.log(QueryBuilder.getQuery('stats', conditions))
     const data = await QueryExecutor.execute(QueryBuilder.getQuery('stats', conditions));
+    console.log(data)
     return DataProcessor.processStatsData(data);
   },
   desk: async (whereClause: string) => 
@@ -142,7 +144,6 @@ export async function fetchMeasureTotal(measure: Measure, filter: string | null)
   const parsedFilter: Filter = filter ? JSON.parse(filter) : {};
   const conditions = parsedFilter.desk ? [`hmsbook_desk = '${parsedFilter.desk}'`] : [];
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
   const handler = measureHandlers[measure];
   if (!handler) throw new Error(`Unsupported measure: ${measure}`);
   
