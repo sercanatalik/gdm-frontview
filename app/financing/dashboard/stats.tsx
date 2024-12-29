@@ -17,7 +17,7 @@ import { DollarSign,Landmark,Banknote,History } from 'lucide-react';
 
 
 interface Desk {
-  hmsBook: string;
+  hmsbook_desk: string;
 }
 
 interface StatsQuery {
@@ -80,7 +80,7 @@ const Stats: React.FC = () => {
       const data = await fetchDesks();
       setDesks(data);
       if (data.length > 0) {
-        setSelectedDesk(data[0].hmsBook);
+        setSelectedDesk(data[0].hmsbook_desk);
       }
       setIsLoading(prev => ({ ...prev, desks: false }));
     };
@@ -94,6 +94,7 @@ const Stats: React.FC = () => {
     const loadStats = async () => {
       setIsLoading(prev => ({ ...prev, stats: true }));
       const data = await fetchStats(selectedDesk);
+      console.log(data)
       setStats(data);
       setIsLoading(prev => ({ ...prev, stats: false }));
     };
@@ -159,8 +160,8 @@ const Stats: React.FC = () => {
             <div className="flex justify-between items-center">
               <TabsList>
                 {desks.map((desk) => (
-                  <TabsTrigger key={desk.hmsBook} value={desk.hmsBook}>
-                    {desk.hmsBook}
+                  <TabsTrigger key={desk.hmsbook_desk} value={desk.hmsbook_desk}>
+                    {desk.hmsbook_desk}
                   </TabsTrigger>
                 ))}
               </TabsList>
