@@ -17,13 +17,30 @@ import { DollarSign,Landmark,Banknote,History } from 'lucide-react';
 
 
 interface Desk {
-  hmsDesk: string;
+  hmsBook: string;
 }
 
 interface StatsQuery {
-  notionalCcy: number;
-  accrualDaily: number;
-  accrualProjected: number;
+  notionalCcy: {
+    current: number;
+    previous: number;
+    change: number;
+  };
+  accrualDaily: {
+    current: number;
+    previous: number;
+    change: number;
+  };
+  accrualProjected: {
+    current: number;
+    previous: number;
+    change: number;
+  };
+  accrualRealised: {
+    current: number;
+    previous: number;
+    change: number;
+  };
 }
 
 const Stats: React.FC = () => {
@@ -63,7 +80,7 @@ const Stats: React.FC = () => {
       const data = await fetchDesks();
       setDesks(data);
       if (data.length > 0) {
-        setSelectedDesk(data[0].hmsDesk);
+        setSelectedDesk(data[0].hmsBook);
       }
       setIsLoading(prev => ({ ...prev, desks: false }));
     };
@@ -85,10 +102,42 @@ const Stats: React.FC = () => {
   }, [selectedDesk]);
 
   const statsCards = [
-    { label: "Total Cashout", icon: <DollarSign />, value: stats?.notionalCcy },
-    { label: "Daily Accrual", icon: <Landmark />, value: stats?.accrualDaily },
-    { label: "Projected Accrual", icon: <Banknote />, value: stats?.accrualProjected },
-    { label: "Past Accrual", icon: <History />, value: stats?.accrualPast }
+    { 
+      label: "Total Cashout", 
+      icon: <DollarSign />, 
+      data: stats?.notionalCcy ? {
+        current: stats.notionalCcy.current,
+        previous: stats.notionalCcy.previous,
+        change: stats.notionalCcy.change
+      } : { current: 0, previous: 0, change: 0 }
+    },
+    { 
+      label: "Daily Accrual", 
+      icon: <Landmark />, 
+      data: stats?.accrualDaily ? {
+        current: stats.accrualDaily.current,
+        previous: stats.accrualDaily.previous,
+        change: stats.accrualDaily.change
+      } : { current: 0, previous: 0, change: 0 }
+    },
+    { 
+      label: "Projected Accrual", 
+      icon: <Banknote />, 
+      data: stats?.accrualProjected ? {
+        current: stats.accrualProjected.current,
+        previous: stats.accrualProjected.previous,
+        change: stats.accrualProjected.change
+      } : { current: 0, previous: 0, change: 0 }
+    },
+    { 
+      label: "Past Accrual", 
+      icon: <History />, 
+      data: stats?.accrualRealised ? {
+        current: stats.accrualRealised.current,
+        previous: stats.accrualRealised.previous,
+        change: stats.accrualRealised.change
+      } : { current: 0, previous: 0, change: 0 }
+    }
   ];
 
   return (
@@ -110,8 +159,8 @@ const Stats: React.FC = () => {
             <div className="flex justify-between items-center">
               <TabsList>
                 {desks.map((desk) => (
-                  <TabsTrigger key={desk.hmsDesk} value={desk.hmsDesk}>
-                    {desk.hmsDesk}
+                  <TabsTrigger key={desk.hmsBook} value={desk.hmsBook}>
+                    {desk.hmsBook}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -124,7 +173,7 @@ const Stats: React.FC = () => {
                     key={index}
                     label={card.label}
                     icon={card.icon}
-                    data={card.value ?? '-'}
+                    data={card.data}
                     isLoading={isLoading.stats}
                   />
                 ))}

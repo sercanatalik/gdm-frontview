@@ -1,4 +1,4 @@
-import { getClickHouseClient } from '@/lib/clickhouse-wrap'
+import { client } from '@/lib/clickhouse-wrap'
 import { NextResponse } from 'next/server';
 
 interface RiskResults {
@@ -10,7 +10,6 @@ interface RiskResults {
 
 
 async function fetchRiskData(fromEventId?: number): Promise<RiskResults> {
-    const client = getClickHouseClient();
 
     try {
         // First get the max eventId if fromEventId is not provided

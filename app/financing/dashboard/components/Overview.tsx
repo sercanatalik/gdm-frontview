@@ -23,7 +23,7 @@ export  function Overview() {
           throw new Error('Network response was not ok')
         }
         const result = await response.json()
-        console.log(result)
+        // console.log(result)
         setData(result.data)
       } catch (error) {
         console.error("Failed to fetch data:", error)
@@ -62,7 +62,7 @@ export  function Overview() {
           tickFormatter={(value) => `$${value}`}
         />
         <Bar
-          dataKey="monthly_cashout"
+          dataKey="monthlyCashout"
           fill="currentColor"
           radius={[4, 4, 0, 0]}
           className="fill-primary"

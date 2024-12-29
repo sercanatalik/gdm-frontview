@@ -12,44 +12,44 @@ interface Filter {
 const QUERIES = {
   stats: (conditions: string[]) => `
     WITH 
-      (SELECT MAX(asOfDate) FROM risk_view FINAL) as latest_date,
-      (SELECT dateAdd(day, -1, MAX(asOfDate)) FROM risk_view FINAL) as prev_date
+      (SELECT MAX(r.asOfDate) FROM risk_f_mv FINAL) as latest_date,
+      (SELECT dateAdd(day, -1, MAX(r.asOfDate)) FROM risk_f_mv FINAL) as prev_date
     SELECT 
-      asOfDate,
-      SUM(notionalCcy) as notionalCcy,
+      r.asOfDate,
+      SUM(collateralAmount) as collateralAmount,
       SUM(accrualDaily) as accrualDaily,
       SUM(accrualProjected) as accrualProjected,
-      SUM(accrualPast) as accrualPast
-    FROM risk_view FINAL 
-    WHERE asOfDate IN (latest_date, prev_date) ${conditions.length ? 'AND ' + conditions.join(' AND ') : ''}
-    GROUP BY asOfDate`,
+      SUM(accrualRealised) as accrualRealised
+    FROM risk_f_mv FINAL 
+    WHERE r.asOfDate IN (latest_date, prev_date) ${conditions.length ? 'AND ' + conditions.join(' AND ') : ''}
+    GROUP BY r.asOfDate`,
 
-  desk: () => `SELECT DISTINCT hmsDesk FROM risk_view FINAL`,
+  desk: () => `SELECT DISTINCT hmsBook FROM risk_f_mv FINAL`,
 
   cashoutbymonth: (whereClause: string) => `
     SELECT
-      formatDateTime(toStartOfMonth(trade_dt), '%b') AS month,
-      round(sum(notionalCcy) / 1000000, 2) AS monthlyCashout,
-      round(sum(sum(notionalCcy)) OVER (ORDER BY toStartOfMonth(trade_dt)) / 1000000, 2) AS cumulativeCashout
-    FROM risk_view FINAL ${whereClause}
-    GROUP BY toStartOfMonth(trade_dt)
-    ORDER BY toStartOfMonth(trade_dt)
+      formatDateTime(toStartOfMonth(tradeDt), '%b') AS month,
+      round(sum(fundingAmount) / 1000000, 2) AS monthlyCashout,
+      round(sum(sum(fundingAmount)) OVER (ORDER BY toStartOfMonth(tradeDt)) / 1000000, 2) AS cumulativeCashout
+    FROM risk_f_mv FINAL ${whereClause}
+    GROUP BY toStartOfMonth(tradeDt)
+    ORDER BY toStartOfMonth(tradeDt)
   `,
 
   recenttrades: (whereClause: string) => `
     SELECT 
-      counterparty,
-      cpSector as sector,
-      SUM(notionalCcy) / 1e6 as notional,
-      MAX(trade_dt) as latest_trade_date
-    FROM risk_view ${whereClause}  
-    GROUP BY counterparty, sector
+      counterparty_name as counterparty,
+      counterparty_sector as sector,
+      SUM(fundingAmount) / 1e6 as notional,
+      MAX(tradeDt) as latest_trade_date
+    FROM risk_f_mv ${whereClause}  
+    GROUP BY counterparty_name, counterparty_sector
     ORDER BY latest_trade_date DESC 
     LIMIT 150
   `,
 
   countrecenttrades: (whereClause: string) => `
-    SELECT COUNT(*) FROM risk_view ${whereClause}
+    SELECT COUNT(*) FROM risk_f_mv ${whereClause}
   `
 };
 
