@@ -1,68 +1,81 @@
+"use client"
+import Link from "next/link"
+import { PanelsTopLeft, Home, CreditCard, Percent, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ModeToggle } from "@/components/mode-toggle"
 
-export default function Home() {
+import Image from "next/image" // Add this import
+import { useTheme } from "next-themes" // Add this import at the top of the file
+import hsbcLogo from "@/public/hsbc.svg";
+import hsbcDarkLogo from "@/public/hsbc-dark.svg" // Add this import
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";  
+
+
+export default function HomePage() {
+  const router = useRouter();
+  const { theme } = useTheme(); // Add this line
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push('/financing/dashboard');
+    }, 1000); // Redirect after 1 seconds
+
+    return () => clearTimeout(timer);
+  }, [router]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <h1>Hello World</h1>
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-           
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col min-h-screen w-full">
+      <header className="flex justify-between items-center py-4 px-4 w-full">
+        <div className="flex items-center">
+         
+        
+        </div>
+        <ModeToggle />
+      </header>
+      <main className="flex-1 w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-8">
+            <Image
+              src={theme === 'dark' ? hsbcDarkLogo : hsbcLogo}
+              alt="GDM Frontview Logo"
+              width={125}
+              height={125} 
+              className="mr-4"
+            />
+            <div className="flex flex-col items-start">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                GDM Frontview
+              </h1>
+              <p className="text-sm text-left font-[family-name:var(--font-geist-mono)] ">
+                intuitive frontend solution
+              </p>
+            </div>
+          </div>
+          <div className="loading-spinner"></div>
+          <p className="mt-4">Loading financing dashboard...</p>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-        
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-         
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-                 Go to nextjs.org →
-        </a>
-      </footer>
+      <style jsx>{`
+        .loading-spinner {
+          border: 4px solid rgba(0, 0, 0, 0.1);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border-left-color: #09f;
+          animation: spin 1s ease infinite;
+          margin: 0 auto;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
-  );
+  )
 }
