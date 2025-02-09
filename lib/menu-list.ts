@@ -33,7 +33,7 @@ type Group = {
 export function getMenuList(pathname: string): Group[] {
   return [
     {
-      groupLabel: "Financing",
+      groupLabel: "",
       menus: [
         {
           href: "/financing/dashboard",
