@@ -8,7 +8,7 @@ import { StatsCard } from "./StatsCard"
 import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
 
 interface Desk {
-  desk: string
+  bu: string
 }
 
 interface StatsData {
@@ -59,10 +59,9 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
   const { data: desks = [], isLoading: desksLoading, isError: desksError } = useQuery<Desk[]>({
     queryKey: ["desk"],
     queryFn: async () => {
-      const response = await fetch("/api/financing/stats?measure=desk")
+      const response = await fetch("/api/financing/risk/distinct?column=bu")
       const data = await response.json()
-      // Return the data directly since it's already in the correct array format
-      return data
+      return data // Keep the original array of objects with 'bu' property
     }
   })
 
@@ -88,22 +87,22 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
 
   return (
     <Tabs 
-      defaultValue={desks.length > 0 ? desks[0].desk : undefined} 
+      defaultValue={desks.length > 0 ? desks[0].bu : undefined} 
       onValueChange={handleDeskChange} 
       className="space-y-4"
     >
       <div className="flex justify-between items-center">
         <TabsList>
           {desks.map((desk, index) => (
-            <TabsTrigger key={`${desk.desk}-${index}`} value={desk.desk}>
-              {desk.desk}
+            <TabsTrigger key={`${desk.bu}-${index}`} value={desk.bu}>
+              {desk.bu}
             </TabsTrigger>
           ))}
         </TabsList>
       </div>
       
       {desks.map((desk) => (
-        <TabsContent key={desk.desk} value={desk.desk} className="space-y-4">
+        <TabsContent key={desk.bu} value={desk.bu} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {STATS_CARDS.map((card, index) => (
               <StatsCard 
