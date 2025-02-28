@@ -86,10 +86,10 @@ export const AnimateChangeInHeight: React.FC<AnimateChangeInHeightProps> = ({
 };
 
 export enum FilterType {
-  STATUS = "Status",
-  ASSIGNEE = "Assignee",
-  LABELS = "Labels",
-  PRIORITY = "Priority",
+  SL1 = "SL1",
+  DESK = "Desk",
+  PORTFOLIO = "Portfolio",
+  REGION = "Region",
   DUE_DATE = "Due date",
   CREATED_DATE = "Created date",
   UPDATED_DATE = "Updated date",
@@ -109,32 +109,33 @@ export enum FilterOperator {
   AFTER = "after",
 }
 
-export enum Status {
-  BACKLOG = "Backlog",
-  TODO = "Todo",
-  IN_PROGRESS = "In Progress",
-  IN_REVIEW = "In Review",
-  DONE = "Done",
-  CANCELLED = "Cancelled",
+export enum SL1 {
+  ABS_CLO = "ABS&CLO",
+  EM = "EM",
+  LOAN = "Loan",
+  PRIVATE_CREDIT = "Private Credit",
+  OTHER = "Other",
 }
 
-export enum Assignee {
-  ANDREW_LUO = "Andrew Luo",
-  NO_ASSIGNEE = "No assignee",
+export enum Desk {
+  CASH_FINANCING_SOL = "Cash Financing Sol",
+  STRUCTURED_COMMODITY_PRODUCTS = "Structured Commodity Products",
+  STRUCTURED_EQUITY_PRODUCTS = "Structured Equity Products",
+  STRUCTURED_INDEX_PRODUCTS = "Structured Index Products",
 }
 
-export enum Labels {
-  BUG = "Bug",
-  FEATURE = "Feature",
-  HOTFIX = "Hotfix",
-  RELEASE = "Release",
+export enum Portfolio {
+  LEVERAGE = "Leverage",
+  EQUITY = "Equity",
+  FIXED_INCOME = "Fixed Income",
+  OTHER = "Other",
 }
 
-export enum Priority {
-  URGENT = "Urgent",
-  HIGH = "High",
-  MEDIUM = "Medium",
-  LOW = "Low",
+export enum Region {
+  EMEA = "EMEA",
+  APAC = "APAC",
+  AMERICAS = "Americas",
+  OTHER = "Other",
 }
 
 export enum DueDate {
@@ -147,7 +148,7 @@ export enum DueDate {
 }
 
 export type FilterOption = {
-  name: FilterType | Status | Assignee | Labels | Priority | DueDate;
+  name: FilterType | SL1 | Desk | Portfolio | Region;
   icon: React.ReactNode | undefined;
   label?: string;
 };
@@ -162,24 +163,24 @@ export type Filter = {
 const FilterIcon = ({
   type,
 }: {
-  type: FilterType | Status | Assignee | Labels | Priority;
+  type: FilterType | SL1 | Desk | Portfolio | Region;
 }) => {
   switch (type) {
-    case Assignee.ANDREW_LUO:
+    case Desk.ANDREW_LUO:
       return (
         <Avatar className="size-3.5 rounded-full text-[9px] text-white">
           <AvatarFallback className="bg-orange-300">AL</AvatarFallback>
         </Avatar>
       );
-    case Assignee.NO_ASSIGNEE:
+    case Desk.NO_ASSIGNEE:
       return <UserCircle className="size-3.5" />;
-    case FilterType.STATUS:
+    case FilterType.SL1:
       return <CircleDashed className="size-3.5" />;
-    case FilterType.ASSIGNEE:
+    case FilterType.DESK:
       return <UserCircle className="size-3.5" />;
-    case FilterType.LABELS:
+    case FilterType.PORTFOLIO:
       return <Tag className="size-3.5" />;
-    case FilterType.PRIORITY:
+    case FilterType.REGION:
       return <SignalHigh className="size-3.5" />;
     case FilterType.DUE_DATE:
       return <Calendar className="size-3.5" />;
@@ -187,33 +188,33 @@ const FilterIcon = ({
       return <CalendarPlus className="size-3.5" />;
     case FilterType.UPDATED_DATE:
       return <CalendarSync className="size-3.5" />;
-    case Status.BACKLOG:
+    case SL1.BACKLOG:
       return <CircleDashed className="size-3.5 text-muted-foreground" />;
-    case Status.TODO:
+    case SL1.TODO:
       return <Circle className="size-3.5 text-primary" />;
-    case Status.IN_PROGRESS:
+    case SL1.IN_PROGRESS:
       return <CircleDotDashed className="size-3.5 text-yellow-400" />;
-    case Status.IN_REVIEW:
+    case SL1.IN_REVIEW:
       return <CircleEllipsis className="size-3.5 text-green-400" />;
-    case Status.DONE:
+    case SL1.DONE:
       return <CircleCheck className="size-3.5 text-blue-400" />;
-    case Status.CANCELLED:
+    case SL1.CANCELLED:
       return <CircleX className="size-3.5 text-muted-foreground" />;
-    case Priority.URGENT:
+    case Region.URGENT:
       return <CircleAlert className="size-3.5" />;
-    case Priority.HIGH:
+    case Region.HIGH:
       return <SignalHigh className="size-3.5" />;
-    case Priority.MEDIUM:
+    case Region.MEDIUM:
       return <SignalMedium className="size-3.5" />;
-    case Priority.LOW:
+    case Region.LOW:
       return <SignalLow className="size-3.5" />;
-    case Labels.BUG:
+    case Portfolio.BUG:
       return <div className="bg-red-400 rounded-full size-2.5" />;
-    case Labels.FEATURE:
+    case Portfolio.FEATURE:
       return <div className="bg-blue-400 rounded-full size-2.5" />;
-    case Labels.HOTFIX:
+    case Portfolio.HOTFIX:
       return <div className="bg-amber-400 rounded-full size-2.5" />;
-    case Labels.RELEASE:
+    case Portfolio.RELEASE:
       return <div className="bg-green-400 rounded-full size-2.5" />;
   }
 };
@@ -221,20 +222,20 @@ const FilterIcon = ({
 export const filterViewOptions: FilterOption[][] = [
   [
     {
-      name: FilterType.STATUS,
-      icon: <FilterIcon type={FilterType.STATUS} />,
+      name: FilterType.SL1,
+      icon: <FilterIcon type={FilterType.SL1} />,
     },
     {
-      name: FilterType.ASSIGNEE,
-      icon: <FilterIcon type={FilterType.ASSIGNEE} />,
+      name: FilterType.DESK,
+      icon: <FilterIcon type={FilterType.DESK} />,
     },
     {
-      name: FilterType.LABELS,
-      icon: <FilterIcon type={FilterType.LABELS} />,
+      name: FilterType.PORTFOLIO,
+      icon: <FilterIcon type={FilterType.PORTFOLIO} />,
     },
     {
-      name: FilterType.PRIORITY,
-      icon: <FilterIcon type={FilterType.PRIORITY} />,
+      name: FilterType.REGION,
+      icon: <FilterIcon type={FilterType.REGION} />,
     },
   ],
   [
@@ -253,32 +254,32 @@ export const filterViewOptions: FilterOption[][] = [
   ],
 ];
 
-export const statusFilterOptions: FilterOption[] = Object.values(Status).map(
+export const sl1FilterOptions: FilterOption[] = Object.values(SL1).map(
   (status) => ({
     name: status,
     icon: <FilterIcon type={status} />,
   })
 );
 
-export const assigneeFilterOptions: FilterOption[] = Object.values(
-  Assignee
-).map((assignee) => ({
-  name: assignee,
-  icon: <FilterIcon type={assignee} />,
+export const deskFilterOptions: FilterOption[] = Object.values(
+  Desk
+).map((desk) => ({
+  name: desk,
+  icon: <FilterIcon type={desk} />,
 }));
 
-export const labelFilterOptions: FilterOption[] = Object.values(Labels).map(
-  (label) => ({
-    name: label,
-    icon: <FilterIcon type={label} />,
+export const portfolioFilterOptions: FilterOption[] = Object.values(Portfolio).map(
+  (portfolio) => ({
+    name: portfolio,
+    icon: <FilterIcon type={portfolio} />,
   })
 );
 
-export const priorityFilterOptions: FilterOption[] = Object.values(
-  Priority
-).map((priority) => ({
-  name: priority,
-  icon: <FilterIcon type={priority} />,
+export const regionFilterOptions: FilterOption[] = Object.values(
+  Region
+).map((region) => ({
+  name: region,
+  icon: <FilterIcon type={region} />,
 }));
 
 export const dateFilterOptions: FilterOption[] = Object.values(DueDate).map(
@@ -289,10 +290,10 @@ export const dateFilterOptions: FilterOption[] = Object.values(DueDate).map(
 );
 
 export const filterViewToFilterOptions: Record<FilterType, FilterOption[]> = {
-  [FilterType.STATUS]: statusFilterOptions,
-  [FilterType.ASSIGNEE]: assigneeFilterOptions,
-  [FilterType.LABELS]: labelFilterOptions,
-  [FilterType.PRIORITY]: priorityFilterOptions,
+  [FilterType.SL1]: sl1FilterOptions,
+  [FilterType.DESK]: deskFilterOptions,
+  [FilterType.PORTFOLIO]: portfolioFilterOptions,
+  [FilterType.REGION]: regionFilterOptions,
   [FilterType.DUE_DATE]: dateFilterOptions,
   [FilterType.CREATED_DATE]: dateFilterOptions,
   [FilterType.UPDATED_DATE]: dateFilterOptions,
@@ -306,15 +307,15 @@ const filterOperators = ({
   filterValues: string[];
 }) => {
   switch (filterType) {
-    case FilterType.STATUS:
-    case FilterType.ASSIGNEE:
-    case FilterType.PRIORITY:
+    case FilterType.SL1:
+    case FilterType.DESK:
+    case FilterType.REGION:
       if (Array.isArray(filterValues) && filterValues.length > 1) {
         return [FilterOperator.IS_ANY_OF, FilterOperator.IS_NOT];
       } else {
         return [FilterOperator.IS, FilterOperator.IS_NOT];
       }
-    case FilterType.LABELS:
+    case FilterType.PORTFOLIO:
       if (Array.isArray(filterValues) && filterValues.length > 1) {
         return [
           FilterOperator.INCLUDE_ANY_OF,
@@ -401,11 +402,11 @@ const FilterValueCombobox = ({
   text-muted-foreground hover:text-primary shrink-0"
       >
         <div className="flex gap-1.5 items-center">
-          {filterType !== FilterType.PRIORITY && (
+          {filterType !== FilterType.REGION && (
             <div
               className={cn(
                 "flex items-center flex-row",
-                filterType === FilterType.LABELS ? "-space-x-1" : "-space-x-1.5"
+                filterType === FilterType.PORTFOLIO ? "-space-x-1" : "-space-x-1.5"
               )}
             >
               <AnimatePresence mode="popLayout">
