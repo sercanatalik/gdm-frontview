@@ -7,9 +7,16 @@ import { useState } from "react"
 import { StatsCard } from "./StatsCard"
 import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
 
+interface FilterCondition {
+  type: string;
+  value: string[];
+  operator: string;
+}
+
 interface Desk {
   bu: string
 }
+
 
 interface StatsData {
   current: number
@@ -45,6 +52,7 @@ const STATS_CARDS = [
 const queryClient = new QueryClient()
 
 export function Stats({ onDeskChange }: { onDeskChange: (desk: string) => void }) {
+  const [filter, setFilter] = useState<FilterCondition[]>([])
   return (
     <QueryClientProvider client={queryClient}>
       <StatsContent onDeskChange={onDeskChange} />
@@ -68,9 +76,25 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ["stats", selectedDesk],
     queryFn: async () => {
-      const response = await fetch(`/api/financing/stats?measure=stats&desk=${selectedDesk}`)
+      const requestBody = {
+        filter: [
+          {
+            type: "bu",
+            value: [selectedDesk],
+            operator: "is"
+          }
+        ]
+      }
+
+      console.log(requestBody)
+      const response = await fetch('/api/financing/risk/stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
       const data = await response.json()
-      console.log(data)
       return data
     },
     enabled: !!selectedDesk
@@ -86,6 +110,7 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
   }
 
   return (
+    <>
     <Tabs 
       defaultValue={desks.length > 0 ? desks[0].bu : undefined} 
       onValueChange={handleDeskChange} 
@@ -117,5 +142,10 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
         </TabsContent>
       ))}
     </Tabs>
+
+    <div>
+      {JSON.stringify(statsData)}
+    </div>
+    </>
   )
 }
