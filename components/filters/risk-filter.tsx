@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ListFilter } from "lucide-react";
-import { nanoid } from "nanoid";
+import { nanoid, random } from "nanoid";
 import * as React from "react";
 import { AnimateChangeInHeight } from "@/components/ui/filters";
 import Filters from "@/components/ui/filters";
@@ -139,18 +139,17 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                     )}
                   </CommandGroup>
                 ) : (
-                  filterViewOptions.map(
-                    (group: FilterOption[], index: number) => (
+                  filterViewOptions.map((group: FilterOption[]) => {
+                    const groupKey = `${group.map(f => f.name).join('-')}-${nanoid()}`;
+                    return (
                       <CommandGroup 
-                        key={`filter-group-${index}`} 
+                        key={`${groupKey}-${nanoid()}`}
                         className="flex flex-col gap-2"
-
                       >
-                      
                         {group.map((filter: FilterOption) => (
                           <CommandItem
                             className="group text-muted-foreground flex gap-2 items-center"
-                            key={filter.name}
+                            key={`${filter.name}-${nanoid()}`}
                             value={filter.name}
                             onSelect={(currentValue) => {
                               setSelectedView(currentValue as FilterType);
@@ -164,10 +163,10 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                             </span>
                           </CommandItem>
                         ))}
-                        {index < filterViewOptions.length - 1 && <CommandSeparator />}
+                        {group !== filterViewOptions[filterViewOptions.length - 1] && <CommandSeparator />}
                       </CommandGroup>
-                    )
-                  )
+                    );
+                  })
                 )}
               </CommandList>
             </Command>
