@@ -8,7 +8,7 @@ import { JsonViewer } from "@/components/json-viewer";
 
 export default function FinancingWorkspace() {
   const [filters, setFilters] = useState<Filter[]>([]);
-  const [results,setResults] = useState<[any]>([]);
+  const [results, setResults] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchRiskData = async () => {
