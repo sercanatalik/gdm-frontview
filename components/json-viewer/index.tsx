@@ -5,7 +5,7 @@ import { Copy, Check } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { JsonNode } from "./json-node"
+import { JsonNode } from "@/components/json-viewer/json-node"
 import type { JsonViewerProps } from "./types"
 
 export function JsonViewer({
