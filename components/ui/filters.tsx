@@ -87,12 +87,12 @@ export const AnimateChangeInHeight: React.FC<AnimateChangeInHeightProps> = ({
 
 export enum FilterType {
   SL1 = "SL1",
-  DESK = "Desk",
-  PORTFOLIO = "Portfolio",
-  REGION = "Region",
-  DUE_DATE = "Due date",
-  CREATED_DATE = "Created date",
-  UPDATED_DATE = "Updated date",
+  DESK = "desk",
+  PORTFOLIO = "portfolio",
+  REGION = "region",
+  // DUE_DATE = "Due date",
+  // CREATED_DATE = "Created date",
+  // UPDATED_DATE = "Updated date",
 }
 
 export enum FilterOperator {

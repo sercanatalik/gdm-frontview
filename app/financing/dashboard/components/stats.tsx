@@ -15,7 +15,7 @@ interface FilterCondition {
 }
 
 interface Desk {
-  bu: string
+  desk: string
 }
 
 
@@ -68,7 +68,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
   const { data: desks = [], isLoading: desksLoading, isError: desksError } = useQuery<Desk[]>({
     queryKey: ["desk"],
     queryFn: async () => {
-      const response = await fetch("/api/financing/risk/distinct?column=bu")
+      const response = await fetch("/api/financing/risk/distinct?column=desk")
       const data = await response.json()
       return data // Keep the original array of objects with 'bu' property
     }
@@ -117,8 +117,8 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
       <div className="flex justify-between items-center">
         <TabsList>
           {desks.map((desk, index) => (
-            <TabsTrigger key={`${desk.bu}-${index}`} value={desk.bu}>
-              {desk.bu}
+            <TabsTrigger key={`${desk.desk}-${index}`} value={desk.desk}>
+              {desk.desk}
             </TabsTrigger>
           ))}
         </TabsList>

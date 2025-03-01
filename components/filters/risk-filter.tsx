@@ -33,7 +33,7 @@ import {
 
 interface RiskFilterProps {
   filters: Filter[];
-  setFilters: (filters: Filter[]) => void;
+  setFilters: React.Dispatch<React.SetStateAction<Filter[]>>;
 }
 
 export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
@@ -105,7 +105,7 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                           key={filter.name}
                           value={filter.name}
                           onSelect={(currentValue) => {
-                            setFilters((prev) => [
+                            setFilters((prev: Filter[]) => [
                               ...prev,
                               {
                                 id: nanoid(),
