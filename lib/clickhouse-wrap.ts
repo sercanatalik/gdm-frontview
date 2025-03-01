@@ -56,8 +56,8 @@ export function buildWhereCondition(filter: FilterCondition[]): string {
       .map(({ type, value, operator }) => {
           const values = value.map(v => `'${v}'`).join(',');
           return operator === 'is not'
-              ? `\`${type}\` NOT IN (${values})`
-              : `\`${type}\` IN (${values})`;
+              ? `${type} NOT IN (${values})`
+              : `${type} IN (${values})`;
       });
 
   return whereConditions.length 

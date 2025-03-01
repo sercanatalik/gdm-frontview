@@ -144,7 +144,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
 
       <div>
         <JsonViewer data={statsData} />
-        {JSON.stringify(statsData)}
+       
       </div>
     </>
   )

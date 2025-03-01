@@ -7,19 +7,14 @@ async function fetchDistinctValues(tableName: string, columnName: string) {
   const client = getClickHouseClient()
 
   try {
-    const query = `SELECT DISTINCT ${columnName} FROM ${tableName}`
+    const query = dateColumns.includes(columnName)
+      ? `SELECT DISTINCT toString(toDate(${columnName})) as ${columnName} FROM ${tableName} FINAL`
+      : `SELECT DISTINCT ${columnName} FROM ${tableName} FINAL`
     const resultSet = await client.query({ query })
     const result = await resultSet.json()
     
-    // Extract distinct values and format dates if needed
-    return result.data.map((row: any) => {
-      const value = row[columnName]
-      if (dateColumns.includes(columnName) && value) {
-        // Format date as yyyy-mm-dd
-        return new Date(value).toISOString().split('T')[0]
-      }
-      return value
-    })
+    // Extract distinct values (no need for date formatting since it's handled in the query)
+    return result.data.map((row: any) => row[columnName])
    
   } catch (error) {
     console.error(`Error fetching table description for ${tableName}:`, error)

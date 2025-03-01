@@ -40,7 +40,7 @@ export default function FinancingMainPage() {
           </div>
           <Stats onDeskChange={handleDeskChange} filters={filters} />
           <div className="flex items-center justify-between">
-            <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} />
+            {/* <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} /> */}
           </div>
         </div>
       </div>
