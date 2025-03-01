@@ -27,6 +27,7 @@ import {
   SignalMedium,
   Tag,
   UserCircle,
+  Calendar,
 } from "lucide-react"
 import { nanoid } from "nanoid"
 import * as React from "react"
@@ -38,6 +39,7 @@ export const FilterTypes = {
   SL1: "SL1",
   DESK: "desk",
   PORTFOLIO: "portfolio",
+  ASOFDATE: "asOfDate",
 }
 
 export const FilterOperators = {
@@ -97,6 +99,7 @@ const iconMapping: Record<string, React.ReactNode> = {
   [FilterTypes.SL1]: <CircleDashed className="size-3.5" />,
   [FilterTypes.DESK]: <UserCircle className="size-3.5" />,
   [FilterTypes.PORTFOLIO]: <Tag className="size-3.5" />,
+  [FilterTypes.ASOFDATE]: <Calendar className="size-3.5" />,
   [SL1Values.ABS_CLO]: <CircleDashed className="size-3.5 text-muted-foreground" />,
   [SL1Values.EM]: <Circle className="size-3.5 text-primary" />,
   [SL1Values.LOAN]: <CircleDotDashed className="size-3.5 text-yellow-400" />,
@@ -147,6 +150,7 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
     [FilterTypes.SL1]: [],
     [FilterTypes.DESK]: [],
     [FilterTypes.PORTFOLIO]: [],
+    [FilterTypes.ASOFDATE]: [],
   })
 
   // Load filter options
@@ -156,6 +160,7 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
         [FilterTypes.SL1]: await fetchFilterOptions(tableName, "SL1"),
         [FilterTypes.DESK]: await fetchFilterOptions(tableName, "desk"),
         [FilterTypes.PORTFOLIO]: await fetchFilterOptions(tableName, "portfolio"),
+        [FilterTypes.ASOFDATE]: await fetchFilterOptions(tableName, "asOfDate"),
       }
 
       // Map icons to options
@@ -190,6 +195,10 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
           name: FilterTypes.PORTFOLIO,
           icon: iconMapping[FilterTypes.PORTFOLIO],
         },
+        {
+          name: FilterTypes.ASOFDATE,
+          icon: iconMapping[FilterTypes.ASOFDATE],
+        },
       ],
       [],
     ],
@@ -214,6 +223,17 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
         FilterOperators.EXCLUDE_ALL_OF,
         FilterOperators.EXCLUDE_IF_ANY_OF,
       ],
+
+    },
+    [FilterTypes.ASOFDATE]: {
+      single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
+      multiple: [
+        FilterOperators.INCLUDE_ANY_OF,
+        FilterOperators.INCLUDE_ALL_OF,
+        FilterOperators.EXCLUDE_ALL_OF,
+        FilterOperators.EXCLUDE_IF_ANY_OF,
+      ],
+      
     },
   }
 
@@ -387,6 +407,10 @@ function FilterTypeGroups({ setSelectedView, commandInputRef }: FilterTypeGroups
       {
         name: FilterTypes.PORTFOLIO,
         icon: iconMapping[FilterTypes.PORTFOLIO],
+      },
+      {
+        name: FilterTypes.ASOFDATE,
+        icon: iconMapping[FilterTypes.ASOFDATE],
       },
     ],
   ]

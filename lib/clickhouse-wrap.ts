@@ -33,7 +33,25 @@ interface FilterCondition {
 
 export function buildWhereCondition(filter: FilterCondition[]): string {
   if (!filter?.length) return '';
-  const conditions = filter
+  
+  // Check if asOfDate is present in the filter
+  const hasAsOfDate = filter.some(f => f.type === 'asOfDate');
+  
+  // Create a copy of the filter array
+  let conditions = [...filter];
+  
+  // If asOfDate is not present, add today's date
+  if (!hasAsOfDate) {
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    conditions.push({
+      type: 'asOfDate',
+      value: [today],
+      operator: 'is'
+    });
+  }
+
+  // Process all conditions
+  const whereConditions = conditions
       .filter(f => f.value?.length > 0)
       .map(({ type, value, operator }) => {
           const values = value.map(v => `'${v}'`).join(',');
@@ -42,7 +60,7 @@ export function buildWhereCondition(filter: FilterCondition[]): string {
               : `\`${type}\` IN (${values})`;
       });
 
-  return conditions.length 
-      ? `WHERE ${conditions.join(' AND ')}`
+  return whereConditions.length 
+      ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 }

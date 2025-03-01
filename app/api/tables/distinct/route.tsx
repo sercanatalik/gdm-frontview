@@ -11,8 +11,15 @@ async function fetchDistinctValues(tableName: string, columnName: string) {
     const resultSet = await client.query({ query })
     const result = await resultSet.json()
     
-    // Extract distinct values into an array
-    return result.data.map((row: any) => row[columnName])
+    // Extract distinct values and format dates if needed
+    return result.data.map((row: any) => {
+      const value = row[columnName]
+      if (dateColumns.includes(columnName) && value) {
+        // Format date as yyyy-mm-dd
+        return new Date(value).toISOString().split('T')[0]
+      }
+      return value
+    })
    
   } catch (error) {
     console.error(`Error fetching table description for ${tableName}:`, error)

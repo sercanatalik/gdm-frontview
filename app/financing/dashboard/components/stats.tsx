@@ -7,6 +7,7 @@ import { useState } from "react"
 import { StatsCard } from "./StatsCard"
 import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
 import type { Filter } from "@/components/ui/filters"
+import { JsonViewer } from "@/components/json-viewer"
 
 interface FilterCondition {
   type: string
@@ -141,7 +142,10 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
         ))}
       </Tabs>
 
-      <div>{JSON.stringify(statsData)}</div>
+      <div>
+        <JsonViewer data={statsData} />
+        {JSON.stringify(statsData)}
+      </div>
     </>
   )
 }

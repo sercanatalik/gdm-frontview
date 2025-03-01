@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             FROM risk_f_mv FINAL
             ${buildWhereCondition(filter)}
         `
-
+    console.log(query)
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",
