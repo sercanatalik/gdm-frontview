@@ -1,3 +1,5 @@
+// Refactor the file to separate concerns and improve organization
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -13,9 +15,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import {
-  Calendar,
-  CalendarPlus,
-  CalendarIcon as CalendarSync,
   Circle,
   CircleAlert,
   CircleCheck,
@@ -34,13 +33,11 @@ import * as React from "react"
 import { AnimateChangeInHeight } from "@/components/ui/filters"
 import Filters, { type Filter, type FilterOption, type FilterConfig } from "@/components/ui/filters"
 
-// Define constants that were previously enums
+// Constants
 export const FilterTypes = {
   SL1: "SL1",
   DESK: "desk",
   PORTFOLIO: "portfolio",
-  // REGION: "region",
- 
 }
 
 export const FilterOperators = {
@@ -95,15 +92,11 @@ export const DateValues = {
   IN_3_MONTHS: "3 months from now",
 }
 
-// Create icon mapping
+// Icon mapping
 const iconMapping: Record<string, React.ReactNode> = {
   [FilterTypes.SL1]: <CircleDashed className="size-3.5" />,
   [FilterTypes.DESK]: <UserCircle className="size-3.5" />,
   [FilterTypes.PORTFOLIO]: <Tag className="size-3.5" />,
-  [FilterTypes.REGION]: <SignalHigh className="size-3.5" />,
-  // [FilterTypes.MATURITY_DATE]: <Calendar className="size-3.5" />,
-  // [FilterTypes.TRADE_DATE]: <CalendarPlus className="size-3.5" />,
-  // [FilterTypes.DTM]: <CalendarSync className="size-3.5" />,
   [SL1Values.ABS_CLO]: <CircleDashed className="size-3.5 text-muted-foreground" />,
   [SL1Values.EM]: <Circle className="size-3.5 text-primary" />,
   [SL1Values.LOAN]: <CircleDotDashed className="size-3.5 text-yellow-400" />,
@@ -119,81 +112,127 @@ const iconMapping: Record<string, React.ReactNode> = {
   [PortfolioValues.OTHER]: <div className="bg-green-400 rounded-full size-2.5" />,
 }
 
-
-const filterOptionsGetter = async (tableName: string, columnName: string): Promise<FilterOption[]> => {
+// Helper functions
+const fetchFilterOptions = async (tableName: string, columnName: string): Promise<FilterOption[]> => {
   try {
-    // Fetch distinct values from the specified table and column
-    const response = await fetch(`/api/tables/distinct?table=${tableName}&column=${columnName}`);
-    const values = await response.json();
-    // Map the values to FilterOption format
+    const response = await fetch(`/api/tables/distinct?table=${tableName}&column=${columnName}`)
+    const values = await response.json()
     return values.map((value: string) => ({
       name: value,
-      icon: iconMapping[value] || undefined, // Use existing icon mapping if available
-    }));
+      icon: iconMapping[value] || undefined,
+    }))
   } catch (error) {
-    console.error(`Error fetching filter options for ${tableName}.${columnName}:`, error);
-    return [];
+    console.error(`Error fetching filter options for ${tableName}.${columnName}:`, error)
+    return []
   }
 }
 
+// Types
 interface RiskFilterProps {
   filters: Filter[]
   setFilters: React.Dispatch<React.SetStateAction<Filter[]>>
-  tableName: string
+  tableName?: string
 }
 
-export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) {
+// Main component
+export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: RiskFilterProps) {
   const [open, setOpen] = React.useState(false)
   const [selectedView, setSelectedView] = React.useState<string | null>(null)
   const [commandInput, setCommandInput] = React.useState("")
   const commandInputRef = React.useRef<HTMLInputElement>(null)
-  
-  const [sl1FilterOptions, setSl1FilterOptions] = React.useState<FilterOption[]>([])
-  const [deskFilterOptions, setDeskFilterOptions] = React.useState<FilterOption[]>([])
-  const [portfolioFilterOptions, setPortfolioFilterOptions] = React.useState<FilterOption[]>([])
-  // const [regionFilterOptions, setRegionFilterOptions] = React.useState<FilterOption[]>([])
 
+  const [filterOptions, setFilterOptions] = React.useState<{
+    [key: string]: FilterOption[]
+  }>({
+    [FilterTypes.SL1]: [],
+    [FilterTypes.DESK]: [],
+    [FilterTypes.PORTFOLIO]: [],
+  })
+
+  // Load filter options
   React.useEffect(() => {
-    const loadSl1Options = async () => {
-      const _sl1FilterOptions = await filterOptionsGetter(tableName, "SL1")
-      const options = _sl1FilterOptions.map((option) => ({
-        name: option.name,
-        icon: iconMapping[option.name],
-      }))
-      setSl1FilterOptions(options)
-      const _deskFilterOptions = await filterOptionsGetter(tableName, "desk")
-      const deskOptions = _deskFilterOptions.map((option) => ({
-        name: option.name,
-        icon: iconMapping[option.name],
-      }))
-      setDeskFilterOptions(deskOptions)
-      const _portfolioFilterOptions = await filterOptionsGetter(tableName, "portfolio")
-      const portfolioOptions = _portfolioFilterOptions.map((option) => ({
-        name: option.name,
-        icon: iconMapping[option.name],
-      }))
-      setPortfolioFilterOptions(portfolioOptions)
-      // const _regionFilterOptions = await filterOptionsGetter(tableName, "vcProduct")
-      // const regionOptions = _regionFilterOptions.map((option) => ({
-      //   name: option.name,
-      //   icon: iconMapping[option.name],
-      // }))
-      // setRegionFilterOptions(regionOptions)
-      
-      
-      
+    const loadFilterOptions = async () => {
+      const options = {
+        [FilterTypes.SL1]: await fetchFilterOptions(tableName, "SL1"),
+        [FilterTypes.DESK]: await fetchFilterOptions(tableName, "desk"),
+        [FilterTypes.PORTFOLIO]: await fetchFilterOptions(tableName, "portfolio"),
+      }
 
-      
-      
+      // Map icons to options
+      Object.keys(options).forEach((key) => {
+        options[key] = options[key].map((option) => ({
+          name: option.name,
+          icon: iconMapping[option.name],
+        }))
+      })
+
+      setFilterOptions(options)
     }
-    loadSl1Options()
+
+    loadFilterOptions()
   }, [tableName])
 
-  const filterViewToFilterOptions: Record<string, FilterOption[]> = {
-    [FilterTypes.SL1]: sl1FilterOptions,
-    [FilterTypes.DESK]: deskFilterOptions,
-    [FilterTypes.PORTFOLIO]: portfolioFilterOptions,
-    // [FilterTypes.REGION]: regionFilterOptions,
+  // Filter configuration
+  const filterConfig: FilterConfig = {
+    filterTypes: FilterTypes,
+    filterOperators: FilterOperators,
+    filterViewOptions: [
+      [
+        {
+          name: FilterTypes.SL1,
+          icon: iconMapping[FilterTypes.SL1],
+        },
+        {
+          name: FilterTypes.DESK,
+          icon: iconMapping[FilterTypes.DESK],
+        },
+        {
+          name: FilterTypes.PORTFOLIO,
+          icon: iconMapping[FilterTypes.PORTFOLIO],
+        },
+      ],
+      [],
+    ],
+    filterViewToFilterOptions: filterOptions,
+  }
+
+  // Operator configuration
+  const operatorConfig = {
+    [FilterTypes.SL1]: {
+      single: [FilterOperators.IS, FilterOperators.IS_NOT],
+      multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+    },
+    [FilterTypes.DESK]: {
+      single: [FilterOperators.IS, FilterOperators.IS_NOT],
+      multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+    },
+    [FilterTypes.PORTFOLIO]: {
+      single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
+      multiple: [
+        FilterOperators.INCLUDE_ANY_OF,
+        FilterOperators.INCLUDE_ALL_OF,
+        FilterOperators.EXCLUDE_ALL_OF,
+        FilterOperators.EXCLUDE_IF_ANY_OF,
+      ],
+    },
+  }
+
+  // Handle adding a new filter
+  const handleAddFilter = (filterType: string, filterValue: string) => {
+    setFilters((prev: Filter[]) => [
+      ...prev,
+      {
+        id: nanoid(),
+        type: filterType,
+        operator: FilterOperators.IS,
+        value: [filterValue],
+      },
+    ])
+    setTimeout(() => {
+      setSelectedView(null)
+      setCommandInput("")
+    }, 200)
+    setOpen(false)
   }
 
   return (
@@ -201,83 +240,12 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
       <Filters
         filters={filters}
         setFilters={setFilters}
-        config={{
-          filterTypes: FilterTypes,
-          filterOperators: FilterOperators,
-          filterViewOptions: [
-            [
-              {
-                name: FilterTypes.SL1,
-                icon: iconMapping[FilterTypes.SL1],
-              },
-              {
-                name: FilterTypes.DESK,
-                icon: iconMapping[FilterTypes.DESK],
-              },
-              {
-                name: FilterTypes.PORTFOLIO,
-                icon: iconMapping[FilterTypes.PORTFOLIO],
-              },
-              // {
-              //   name: FilterTypes.REGION,
-              //   icon: iconMapping[FilterTypes.REGION],
-              // },
-            ],
-            [
-              // {
-              //   name: FilterTypes.MATURITY_DATE,
-              //   icon: iconMapping[FilterTypes.MATURITY_DATE],
-              // },
-              // {
-              //   name: FilterTypes.TRADE_DATE,
-              //   icon: iconMapping[FilterTypes.TRADE_DATE],
-              // },
-              // {
-              //   name: FilterTypes.DTM,
-              //   icon: iconMapping[FilterTypes.DTM],
-              // },
-            ],
-          ],
-          filterViewToFilterOptions,
-        }}
+        config={filterConfig}
         iconMapping={iconMapping}
         dateValues={Object.values(DateValues)}
-        operatorConfig={{
-          [FilterTypes.SL1]: {
-            single: [FilterOperators.IS, FilterOperators.IS_NOT],
-            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-          },
-          [FilterTypes.DESK]: {
-            single: [FilterOperators.IS, FilterOperators.IS_NOT],
-            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-          },
-          // [FilterTypes.REGION]: {
-          //   single: [FilterOperators.IS, FilterOperators.IS_NOT],
-          //   multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-          // },
-          [FilterTypes.PORTFOLIO]: {
-            single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
-            multiple: [
-              FilterOperators.INCLUDE_ANY_OF,
-              FilterOperators.INCLUDE_ALL_OF,
-              FilterOperators.EXCLUDE_ALL_OF,
-              FilterOperators.EXCLUDE_IF_ANY_OF,
-            ],
-          },
-          // [FilterTypes.MATURITY_DATE]: {
-          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
-          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          // },
-          // [FilterTypes.TRADE_DATE]: {
-          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
-          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          // },
-          // [FilterTypes.DTM]: {
-          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
-          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          // },
-        }}
+        operatorConfig={operatorConfig}
       />
+
       {filters.filter((filter) => filter.value?.length > 0).length > 0 && (
         <Button
           variant="outline"
@@ -288,177 +256,163 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
           Clear
         </Button>
       )}
-      <Popover
+
+      <FilterPopover
         open={open}
-        onOpenChange={(open) => {
-          setOpen(open)
-          if (!open) {
-            setTimeout(() => {
-              setSelectedView(null)
-              setCommandInput("")
-            }, 200)
-          }
-        }}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            role="combobox"
-            aria-expanded={open}
-            size="sm"
-            className={cn(
-              "transition group h-8 text-sm items-center rounded-sm flex gap-1.5 items-center",
-              filters.length > 0 && "w-8",
-            )}
-          >
-            <ListFilter className="size-4 shrink-0 transition-all text-muted-foreground group-hover:text-primary" />
-            {!filters.length && "Filter"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
-          <AnimateChangeInHeight>
-            <Command>
-              <CommandInput
-                placeholder={selectedView ? selectedView : "Filter..."}
-                className="h-9"
-                value={commandInput}
-                onInputCapture={(e) => {
-                  setCommandInput(e.currentTarget.value)
-                }}
-                ref={commandInputRef}
-              />
-              <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
-                {selectedView ? (
-                  <CommandGroup className="flex flex-col gap-2" key={selectedView}>
-                    {filterViewToFilterOptions[selectedView].map((filter: FilterOption) => (
-                      <CommandItem
-                        className="group text-muted-foreground flex gap-2 items-center"
-                        key={filter.name}
-                        value={filter.name}
-                        onSelect={(currentValue) => {
-                          setFilters((prev: Filter[]) => [
-                            ...prev,
-                            {
-                              id: nanoid(),
-                              type: selectedView,
-                              operator:
-                                selectedView === FilterTypes.MATURITY_DATE && currentValue !== DateValues.IN_THE_PAST
-                                  ? FilterOperators.BEFORE
-                                  : FilterOperators.IS,
-                              value: [currentValue],
-                            },
-                          ])
-                          setTimeout(() => {
-                            setSelectedView(null)
-                            setCommandInput("")
-                          }, 200)
-                          setOpen(false)
-                        }}
-                      >
-                        {filter.icon}
-                        <span className="text-accent-foreground">{filter.name}</span>
-                        {filter.label && <span className="text-muted-foreground text-xs ml-auto">{filter.label}</span>}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                ) : (
-                  [
-                    [
-                      {
-                        name: FilterTypes.SL1,
-                        icon: iconMapping[FilterTypes.SL1],
-                      },
-                      {
-                        name: FilterTypes.DESK,
-                        icon: iconMapping[FilterTypes.DESK],
-                      },
-                      {
-                        name: FilterTypes.PORTFOLIO,
-                        icon: iconMapping[FilterTypes.PORTFOLIO],
-                      },
-                      // {
-                      //   name: FilterTypes.REGION,
-                      //   icon: iconMapping[FilterTypes.REGION],
-                      // },
-                    ],
-                    [
-                      // {
-                      //   name: FilterTypes.MATURITY_DATE,
-                      //   icon: iconMapping[FilterTypes.MATURITY_DATE],
-                      // },
-                      // {
-                      //   name: FilterTypes.TRADE_DATE,
-                      //   icon: iconMapping[FilterTypes.TRADE_DATE],
-                      // },
-                      // {
-                      //   name: FilterTypes.DTM,
-                      //   icon: iconMapping[FilterTypes.DTM],
-                      // },
-                    ],
-                  ].map((group: FilterOption[], groupIndex) => {
-                    const groupKey = `group-${groupIndex}-${nanoid()}`
-                    return (
-                      <CommandGroup key={groupKey} className="flex flex-col gap-2">
-                        {group.map((filter: FilterOption) => (
-                          <CommandItem
-                            className="group text-muted-foreground flex gap-2 items-center"
-                            key={`${filter.name}-${nanoid()}`}
-                            value={filter.name}
-                            onSelect={(currentValue) => {
-                              setSelectedView(currentValue as string)
-                              setCommandInput("")
-                              commandInputRef.current?.focus()
-                            }}
-                          >
-                            {filter.icon}
-                            <span className="text-accent-foreground">{filter.name}</span>
-                          </CommandItem>
-                        ))}
-                        {groupIndex < [
-                          [
-                            {
-                              name: FilterTypes.SL1,
-                              icon: iconMapping[FilterTypes.SL1],
-                            },
-                            {
-                              name: FilterTypes.DESK,
-                              icon: iconMapping[FilterTypes.DESK],
-                            },
-                            {
-                              name: FilterTypes.PORTFOLIO,
-                              icon: iconMapping[FilterTypes.PORTFOLIO],
-                            },
-                            {
-                              name: FilterTypes.REGION,
-                              icon: iconMapping[FilterTypes.REGION],
-                            },
-                          ],
-                          [
-                            {
-                              name: FilterTypes.MATURITY_DATE,
-                              icon: iconMapping[FilterTypes.MATURITY_DATE],
-                            },
-                            {
-                              name: FilterTypes.TRADE_DATE,
-                              icon: iconMapping[FilterTypes.TRADE_DATE],
-                            },
-                            {
-                              name: FilterTypes.DTM,
-                              icon: iconMapping[FilterTypes.DTM],
-                            },
-                          ],
-                        ].length - 1 && <CommandSeparator />}
-                      </CommandGroup>
-                    )
-                  })
-                )}
-              </CommandList>
-            </Command>
-          </AnimateChangeInHeight>
-        </PopoverContent>
-      </Popover>
+        setOpen={setOpen}
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        commandInput={commandInput}
+        setCommandInput={setCommandInput}
+        commandInputRef={commandInputRef}
+        filterOptions={filterOptions}
+        filters={filters}
+        onAddFilter={handleAddFilter}
+      />
     </div>
+  )
+}
+
+// Filter popover component
+interface FilterPopoverProps {
+  open: boolean
+  setOpen: (open: boolean) => void
+  selectedView: string | null
+  setSelectedView: (view: string | null) => void
+  commandInput: string
+  setCommandInput: (input: string) => void
+  commandInputRef: React.RefObject<HTMLInputElement>
+  filterOptions: Record<string, FilterOption[]>
+  filters: Filter[]
+  onAddFilter: (filterType: string, filterValue: string) => void
+}
+
+function FilterPopover({
+  open,
+  setOpen,
+  selectedView,
+  setSelectedView,
+  commandInput,
+  setCommandInput,
+  commandInputRef,
+  filterOptions,
+  filters,
+  onAddFilter,
+}: FilterPopoverProps) {
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open)
+        if (!open) {
+          setTimeout(() => {
+            setSelectedView(null)
+            setCommandInput("")
+          }, 200)
+        }
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          role="combobox"
+          aria-expanded={open}
+          size="sm"
+          className={cn(
+            "transition group h-8 text-sm items-center rounded-sm flex gap-1.5 items-center",
+            filters.length > 0 && "w-8",
+          )}
+        >
+          <ListFilter className="size-4 shrink-0 transition-all text-muted-foreground group-hover:text-primary" />
+          {!filters.length && "Filter"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <AnimateChangeInHeight>
+          <Command>
+            <CommandInput
+              placeholder={selectedView ? selectedView : "Filter..."}
+              className="h-9"
+              value={commandInput}
+              onInputCapture={(e) => {
+                setCommandInput(e.currentTarget.value)
+              }}
+              ref={commandInputRef}
+            />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              {selectedView ? (
+                <CommandGroup className="flex flex-col gap-2" key={selectedView}>
+                  {filterOptions[selectedView]?.map((filter: FilterOption) => (
+                    <CommandItem
+                      className="group text-muted-foreground flex gap-2 items-center"
+                      key={filter.name}
+                      value={filter.name}
+                      onSelect={(currentValue) => onAddFilter(selectedView, currentValue)}
+                    >
+                      {filter.icon}
+                      <span className="text-accent-foreground">{filter.name}</span>
+                      {filter.label && <span className="text-muted-foreground text-xs ml-auto">{filter.label}</span>}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : (
+                <FilterTypeGroups setSelectedView={setSelectedView} commandInputRef={commandInputRef} />
+              )}
+            </CommandList>
+          </Command>
+        </AnimateChangeInHeight>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// Filter type groups component
+interface FilterTypeGroupsProps {
+  setSelectedView: (view: string) => void
+  commandInputRef: React.RefObject<HTMLInputElement>
+}
+
+function FilterTypeGroups({ setSelectedView, commandInputRef }: FilterTypeGroupsProps) {
+  const filterGroups = [
+    [
+      {
+        name: FilterTypes.SL1,
+        icon: iconMapping[FilterTypes.SL1],
+      },
+      {
+        name: FilterTypes.DESK,
+        icon: iconMapping[FilterTypes.DESK],
+      },
+      {
+        name: FilterTypes.PORTFOLIO,
+        icon: iconMapping[FilterTypes.PORTFOLIO],
+      },
+    ],
+  ]
+
+  return (
+    <>
+      {filterGroups.map((group: FilterOption[], groupIndex) => (
+        <CommandGroup key={`group-${groupIndex}-${nanoid()}`} className="flex flex-col gap-2">
+          {group.map((filter: FilterOption) => (
+            <CommandItem
+              className="group text-muted-foreground flex gap-2 items-center"
+              key={`${filter.name}-${nanoid()}`}
+              value={filter.name}
+              onSelect={(currentValue) => {
+                setSelectedView(currentValue as string)
+                commandInputRef.current?.focus()
+              }}
+            >
+              {filter.icon}
+              <span className="text-accent-foreground">{filter.name}</span>
+            </CommandItem>
+          ))}
+          {groupIndex < filterGroups.length - 1 && <CommandSeparator />}
+        </CommandGroup>
+      ))}
+    </>
   )
 }
 
