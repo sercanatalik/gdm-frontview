@@ -1,46 +1,39 @@
 "use client"
-import Link from "next/link"
-import { PanelsTopLeft, Home, CreditCard, Percent, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 
 import Image from "next/image" // Add this import
 import { useTheme } from "next-themes" // Add this import at the top of the file
-import hsbcLogo from "@/public/hsbc.svg";
+import hsbcLogo from "@/public/hsbc.svg"
 import hsbcDarkLogo from "@/public/hsbc-dark.svg" // Add this import
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";  
-
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
-  const router = useRouter();
-  const { theme } = useTheme(); // Add this line
+  const router = useRouter()
+  const { theme } = useTheme() // Add this line
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push('/financing/dashboard');
-    }, 1000); // Redirect after 1 seconds
+      router.push("/financing/dashboard")
+    }, 1000) // Redirect after 1 seconds
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    return () => clearTimeout(timer)
+  }, [router])
 
   return (
     <div className="flex flex-col min-h-screen w-full">
       <header className="flex justify-between items-center py-4 px-4 w-full">
-        <div className="flex items-center">
-         
-        
-        </div>
+        <div className="flex items-center"></div>
         <ModeToggle />
       </header>
       <main className="flex-1 w-full flex items-center justify-center">
         <div className="text-center">
           <div className="flex items-center justify-center mb-8">
             <Image
-              src={theme === 'dark' ? hsbcDarkLogo : hsbcLogo}
+              src={theme === "dark" ? hsbcDarkLogo : hsbcLogo}
               alt="GDM Frontview Logo"
               width={125}
-              height={125} 
+              height={125}
               className="mr-4"
             />
             <div className="flex flex-col items-start">
@@ -79,3 +72,4 @@ export default function HomePage() {
     </div>
   )
 }
+

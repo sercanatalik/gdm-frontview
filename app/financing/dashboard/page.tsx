@@ -1,30 +1,34 @@
 "use client"
 
-import { ContentLayout } from "@/components/admin-panel/content-layout";
-import { Stats } from "./components/stats";
-import { useState } from "react";
-import { Filter, FilterType, FilterOperator } from "@/components/ui/filters";
-import { RiskFilter } from "@/components/filters/risk-filter";
-import { JsonViewer } from "@/components/json-viewer";
+import { ContentLayout } from "@/components/admin-panel/content-layout"
+import { Stats } from "./components/stats"
+import { useState } from "react"
+import type { Filter } from "@/components/ui/filters"
+import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
+import { JsonViewer } from "@/components/json-viewer"
+
 export default function FinancingMainPage() {
-  const [selectedDesk, setSelectedDesk] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
+  const [filters, setFilters] = useState<Filter[]>([])
 
   const handleDeskChange = (desk: string | null) => {
-    setSelectedDesk(desk);
+    setSelectedDesk(desk)
 
-    setFilters(prev => {
-      const filteredFilters = prev.filter(f => f.type !== FilterType.DESK);
-      if (!desk) return filteredFilters;
+    setFilters((prev) => {
+      const filteredFilters = prev.filter((f) => f.type !== FilterTypes.DESK)
+      if (!desk) return filteredFilters
 
-      return [...filteredFilters, {
-        id: Date.now().toString(),
-        type: FilterType.DESK,
-        operator: FilterOperator.IS,
-        value: [desk]
-      }];
-    });
-  };
+      return [
+        ...filteredFilters,
+        {
+          id: Date.now().toString(),
+          type: FilterTypes.DESK,
+          operator: FilterOperators.IS,
+          value: [desk],
+        },
+      ]
+    })
+  }
 
   return (
     <ContentLayout title="Dashboard">
@@ -36,16 +40,11 @@ export default function FinancingMainPage() {
           </div>
           <Stats onDeskChange={handleDeskChange} filters={filters} />
           <div className="flex items-center justify-between">
-
-            <JsonViewer
-              data={filters}
-              initialExpandLevel={5}
-              showCopyButton={true}
-            />
-
+            <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} />
           </div>
         </div>
       </div>
     </ContentLayout>
-  );
+  )
 }
+

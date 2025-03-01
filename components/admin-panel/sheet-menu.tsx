@@ -1,23 +1,17 @@
 "use client"
-import Link from "next/link";
-import { MenuIcon, PanelsTopLeft } from "lucide-react";
-import { useTheme } from "next-themes";
+import Link from "next/link"
+import { MenuIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 
-import { Button } from "@/components/ui/button";
-import { Menu } from "@/components/admin-panel/menu";
-import {
-  Sheet,
-  SheetHeader,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle
-} from "@/components/ui/sheet";
-import Image from "next/image";
-import hsbcLogo from "@/public/hsbc.svg";
-import hsbcDarkLogo from "@/public/hsbc-dark.svg";
+import { Button } from "@/components/ui/button"
+import { Menu } from "@/components/admin-panel/menu"
+import { Sheet, SheetHeader, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import Image from "next/image"
+import hsbcLogo from "@/public/hsbc.svg"
+import hsbcDarkLogo from "@/public/hsbc-dark.svg"
 
 export function SheetMenu() {
-  const { theme } = useTheme();
+  const { theme } = useTheme()
 
   return (
     <Sheet>
@@ -28,19 +22,15 @@ export function SheetMenu() {
       </SheetTrigger>
       <SheetContent className="sm:w-72 px-3 h-full flex flex-col" side="left">
         <SheetHeader>
-          <Button
-            className="flex justify-center items-center pb-2 pt-1"
-            variant="link"
-            asChild
-          >
+          <Button className="flex justify-center items-center pb-2 pt-1" variant="link" asChild>
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
-                src={theme === 'dark' ? hsbcDarkLogo : hsbcLogo}
+                src={theme === "dark" ? hsbcDarkLogo : hsbcLogo}
                 alt="HSBC Logo"
                 width={24}
                 height={24}
                 className="mr-2"
-              />  
+              />
               <SheetTitle className="font-bold text-lg">GDM Frontview</SheetTitle>
             </Link>
           </Button>
@@ -48,5 +38,6 @@ export function SheetMenu() {
         <Menu isOpen />
       </SheetContent>
     </Sheet>
-  );
+  )
 }
+

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,7 +45,7 @@ function useStreamSimulation(text: string, delay = 50) {
 }
 
 interface ChatboxProps {
-  onClose: () => void;
+  onClose: () => void
 }
 
 const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
@@ -52,22 +54,18 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
   const [input, setInput] = useState("")
   const [chats, setChats] = useState<Record<Assistant, Message[]>>({
     "GDM Pricer": [
-      { role: "assistant", content: "Hello! I'm the GDM Pricer assistant. How can I help you with pricing today?" }
+      { role: "assistant", content: "Hello! I'm the GDM Pricer assistant. How can I help you with pricing today?" },
     ],
     "GDM Financing": [
-      { role: "assistant", content: "Welcome! I'm the GDM Financing assistant. How can I assist you with financing?" }
+      { role: "assistant", content: "Welcome! I'm the GDM Financing assistant. How can I assist you with financing?" },
     ],
     "GDM News": [
-        { role: "assistant", content: "Hello! I'm the GDM News assistant. How can I help you with news today?" }
-      ]
-   
+      { role: "assistant", content: "Hello! I'm the GDM News assistant. How can I help you with news today?" },
+    ],
   })
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
 
-  const { streamedText, isComplete } = useStreamSimulation(
-    streamingMessage ? streamingMessage.content : "",
-    30
-  )
+  const { streamedText, isComplete } = useStreamSimulation(streamingMessage ? streamingMessage.content : "", 30)
 
   const toggleChatbox = () => {
     setIsChatboxOpen(!isChatboxOpen)
@@ -76,9 +74,9 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
   const handleSend = useCallback(() => {
     if (input.trim()) {
       const newMessage: Message = { role: "user", content: input.trim() }
-      setChats(prevChats => ({
+      setChats((prevChats) => ({
         ...prevChats,
-        [currentAssistant]: [...prevChats[currentAssistant], newMessage]
+        [currentAssistant]: [...prevChats[currentAssistant], newMessage],
       }))
       setInput("")
 
@@ -87,7 +85,7 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
         const assistantResponse: Message = {
           role: "assistant",
           content: `This is a simulated streaming response from ${currentAssistant} to "${input.trim()}". It will appear gradually to mimic a real-time response.`,
-          isStreaming: true
+          isStreaming: true,
         }
         setStreamingMessage(assistantResponse)
       }, 500)
@@ -96,9 +94,9 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (isComplete && streamingMessage) {
-      setChats(prevChats => ({
+      setChats((prevChats) => ({
         ...prevChats,
-        [currentAssistant]: [...prevChats[currentAssistant], { ...streamingMessage, isStreaming: false }]
+        [currentAssistant]: [...prevChats[currentAssistant], { ...streamingMessage, isStreaming: false }],
       }))
       setStreamingMessage(null)
     }
@@ -133,7 +131,10 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
               <ScrollArea className="flex-grow pr-4">
                 <div className="space-y-4">
                   {chats[currentAssistant].map((message, index) => (
-                    <div key={index} className={`p-2 rounded-lg ${message.role === 'assistant' ? 'bg-muted' : 'bg-primary text-primary-foreground'}`}>
+                    <div
+                      key={index}
+                      className={`p-2 rounded-lg ${message.role === "assistant" ? "bg-muted" : "bg-primary text-primary-foreground"}`}
+                    >
                       <p className="text-sm">{message.content}</p>
                     </div>
                   ))}
@@ -145,12 +146,12 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
                 </div>
               </ScrollArea>
               <div className="flex items-center">
-                <Input 
-                  placeholder="Type your message..." 
-                  className="flex-grow text-sm py-2" 
+                <Input
+                  placeholder="Type your message..."
+                  className="flex-grow text-sm py-2"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
                 />
                 <Button size="sm" className="ml-2" onClick={handleSend}>
                   <Send className="h-4 w-4" />
@@ -160,10 +161,7 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
           </Card>
         </div>
       ) : (
-        <Button
-          className="fixed bottom-4 right-4 z-50"
-          onClick={toggleChatbox}
-        >
+        <Button className="fixed bottom-4 right-4 z-50" onClick={toggleChatbox}>
           <MessageCircle className="h-4 w-4 mr-2" />
           Open Chat
         </Button>
@@ -173,3 +171,4 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
 }
 
 export default Chatbox
+

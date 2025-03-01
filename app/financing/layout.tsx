@@ -1,21 +1,24 @@
 "use client"
-import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout";
-import { useEffect, useState } from 'react';
+import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout"
+import type React from "react"
+
+import { useEffect, useState } from "react"
 
 export default function FinancingLayout({
-  children
+  children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
-    return null;
+    return null
   }
 
-  return <AdminPanelLayout>{children}</AdminPanelLayout>;
+  return <AdminPanelLayout>{children}</AdminPanelLayout>
 }
+
