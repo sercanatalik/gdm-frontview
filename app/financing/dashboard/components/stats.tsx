@@ -14,10 +14,6 @@ interface FilterCondition {
   operator: string
 }
 
-interface Desk {
-  desk: string
-}
-
 interface StatsData {
   current: number
   change: number
@@ -68,13 +64,18 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
     data: desks = [],
     isLoading: desksLoading,
     isError: desksError,
-  } = useQuery<Desk[]>({
+  } = useQuery<string[]>({
     queryKey: ["desk"],
     queryFn: async () => {
-      const response = await fetch("/api/financing/risk/distinct?column=desk")
+      const response = await fetch("/api/tables/distinct?table=risk_f_mv&column=desk")
       const data = await response.json()
-      return data
-    },
+      const result = data as string[]
+      if (result.length > 0 && !selectedDesk) {
+        setSelectedDesk(result[0])
+        onDeskChange(result[0])
+      }
+      return result
+    }
   })
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -84,7 +85,6 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
         filter: [...filters],
       }
 
-      console.log(requestBody)
       const response = await fetch("/api/financing/risk/stats", {
         method: "POST",
         headers: {
@@ -110,22 +110,22 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
   return (
     <>
       <Tabs
-        defaultValue={desks.length > 0 ? desks[0].desk : undefined}
+        defaultValue={desks.length > 0 ? desks[0] : undefined}
         onValueChange={handleDeskChange}
         className="space-y-4"
       >
         <div className="flex justify-between items-center">
           <TabsList>
             {desks.map((desk, index) => (
-              <TabsTrigger key={`${desk.desk}-${index}`} value={desk.desk}>
-                {desk.desk}
+              <TabsTrigger key={`${desk}-${index}`} value={desk}>
+                {desk}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
 
         {desks.map((desk) => (
-          <TabsContent key={desk.desk} value={desk.desk} className="space-y-4">
+          <TabsContent key={desk} value={desk} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               {STATS_CARDS.map((card, index) => (
                 <StatsCard

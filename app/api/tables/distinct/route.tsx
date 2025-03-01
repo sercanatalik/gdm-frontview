@@ -1,12 +1,7 @@
 import { getClickHouseClient } from "@/lib/clickhouse-wrap"
 import { NextResponse } from "next/server"
 
-interface TableResult {
-  name: string
-  type: string
- 
-}
-
+const dateColumns = ['asOfDate', 'reportDate', 'reportDate']
 
 async function fetchDistinctValues(tableName: string, columnName: string) {
   const client = getClickHouseClient()
