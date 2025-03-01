@@ -39,7 +39,7 @@ export const FilterTypes = {
   SL1: "SL1",
   DESK: "desk",
   PORTFOLIO: "portfolio",
-  REGION: "region",
+  // REGION: "region",
  
 }
 
@@ -125,7 +125,6 @@ const filterOptionsGetter = async (tableName: string, columnName: string): Promi
     // Fetch distinct values from the specified table and column
     const response = await fetch(`/api/tables/distinct?table=${tableName}&column=${columnName}`);
     const values = await response.json();
-    console.log(values)
     // Map the values to FilterOption format
     return values.map((value: string) => ({
       name: value,
@@ -150,6 +149,9 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
   const commandInputRef = React.useRef<HTMLInputElement>(null)
   
   const [sl1FilterOptions, setSl1FilterOptions] = React.useState<FilterOption[]>([])
+  const [deskFilterOptions, setDeskFilterOptions] = React.useState<FilterOption[]>([])
+  const [portfolioFilterOptions, setPortfolioFilterOptions] = React.useState<FilterOption[]>([])
+  // const [regionFilterOptions, setRegionFilterOptions] = React.useState<FilterOption[]>([])
 
   React.useEffect(() => {
     const loadSl1Options = async () => {
@@ -159,24 +161,39 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
         icon: iconMapping[option.name],
       }))
       setSl1FilterOptions(options)
+      const _deskFilterOptions = await filterOptionsGetter(tableName, "desk")
+      const deskOptions = _deskFilterOptions.map((option) => ({
+        name: option.name,
+        icon: iconMapping[option.name],
+      }))
+      setDeskFilterOptions(deskOptions)
+      const _portfolioFilterOptions = await filterOptionsGetter(tableName, "portfolio")
+      const portfolioOptions = _portfolioFilterOptions.map((option) => ({
+        name: option.name,
+        icon: iconMapping[option.name],
+      }))
+      setPortfolioFilterOptions(portfolioOptions)
+      // const _regionFilterOptions = await filterOptionsGetter(tableName, "vcProduct")
+      // const regionOptions = _regionFilterOptions.map((option) => ({
+      //   name: option.name,
+      //   icon: iconMapping[option.name],
+      // }))
+      // setRegionFilterOptions(regionOptions)
+      
+      
+      
+
+      
+      
     }
     loadSl1Options()
   }, [tableName])
 
   const filterViewToFilterOptions: Record<string, FilterOption[]> = {
     [FilterTypes.SL1]: sl1FilterOptions,
-    [FilterTypes.DESK]: Object.values(DeskValues).map((desk) => ({
-      name: desk,
-      icon: iconMapping[desk],
-    })),
-    [FilterTypes.PORTFOLIO]: Object.values(PortfolioValues).map((portfolio) => ({
-      name: portfolio,
-      icon: iconMapping[portfolio],
-    })),
-    [FilterTypes.REGION]: Object.values(RegionValues).map((region) => ({
-      name: region,
-      icon: iconMapping[region],
-    })),
+    [FilterTypes.DESK]: deskFilterOptions,
+    [FilterTypes.PORTFOLIO]: portfolioFilterOptions,
+    // [FilterTypes.REGION]: regionFilterOptions,
   }
 
   return (
@@ -201,24 +218,24 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
                 name: FilterTypes.PORTFOLIO,
                 icon: iconMapping[FilterTypes.PORTFOLIO],
               },
-              {
-                name: FilterTypes.REGION,
-                icon: iconMapping[FilterTypes.REGION],
-              },
+              // {
+              //   name: FilterTypes.REGION,
+              //   icon: iconMapping[FilterTypes.REGION],
+              // },
             ],
             [
-              {
-                name: FilterTypes.MATURITY_DATE,
-                icon: iconMapping[FilterTypes.MATURITY_DATE],
-              },
-              {
-                name: FilterTypes.TRADE_DATE,
-                icon: iconMapping[FilterTypes.TRADE_DATE],
-              },
-              {
-                name: FilterTypes.DTM,
-                icon: iconMapping[FilterTypes.DTM],
-              },
+              // {
+              //   name: FilterTypes.MATURITY_DATE,
+              //   icon: iconMapping[FilterTypes.MATURITY_DATE],
+              // },
+              // {
+              //   name: FilterTypes.TRADE_DATE,
+              //   icon: iconMapping[FilterTypes.TRADE_DATE],
+              // },
+              // {
+              //   name: FilterTypes.DTM,
+              //   icon: iconMapping[FilterTypes.DTM],
+              // },
             ],
           ],
           filterViewToFilterOptions,
@@ -234,10 +251,10 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
             single: [FilterOperators.IS, FilterOperators.IS_NOT],
             multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
           },
-          [FilterTypes.REGION]: {
-            single: [FilterOperators.IS, FilterOperators.IS_NOT],
-            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-          },
+          // [FilterTypes.REGION]: {
+          //   single: [FilterOperators.IS, FilterOperators.IS_NOT],
+          //   multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+          // },
           [FilterTypes.PORTFOLIO]: {
             single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
             multiple: [
@@ -247,18 +264,18 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
               FilterOperators.EXCLUDE_IF_ANY_OF,
             ],
           },
-          [FilterTypes.MATURITY_DATE]: {
-            past: [FilterOperators.IS, FilterOperators.IS_NOT],
-            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          },
-          [FilterTypes.TRADE_DATE]: {
-            past: [FilterOperators.IS, FilterOperators.IS_NOT],
-            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          },
-          [FilterTypes.DTM]: {
-            past: [FilterOperators.IS, FilterOperators.IS_NOT],
-            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-          },
+          // [FilterTypes.MATURITY_DATE]: {
+          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
+          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          // },
+          // [FilterTypes.TRADE_DATE]: {
+          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
+          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          // },
+          // [FilterTypes.DTM]: {
+          //   past: [FilterOperators.IS, FilterOperators.IS_NOT],
+          //   date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          // },
         }}
       />
       {filters.filter((filter) => filter.value?.length > 0).length > 0 && (
@@ -360,24 +377,24 @@ export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) 
                         name: FilterTypes.PORTFOLIO,
                         icon: iconMapping[FilterTypes.PORTFOLIO],
                       },
-                      {
-                        name: FilterTypes.REGION,
-                        icon: iconMapping[FilterTypes.REGION],
-                      },
+                      // {
+                      //   name: FilterTypes.REGION,
+                      //   icon: iconMapping[FilterTypes.REGION],
+                      // },
                     ],
                     [
-                      {
-                        name: FilterTypes.MATURITY_DATE,
-                        icon: iconMapping[FilterTypes.MATURITY_DATE],
-                      },
-                      {
-                        name: FilterTypes.TRADE_DATE,
-                        icon: iconMapping[FilterTypes.TRADE_DATE],
-                      },
-                      {
-                        name: FilterTypes.DTM,
-                        icon: iconMapping[FilterTypes.DTM],
-                      },
+                      // {
+                      //   name: FilterTypes.MATURITY_DATE,
+                      //   icon: iconMapping[FilterTypes.MATURITY_DATE],
+                      // },
+                      // {
+                      //   name: FilterTypes.TRADE_DATE,
+                      //   icon: iconMapping[FilterTypes.TRADE_DATE],
+                      // },
+                      // {
+                      //   name: FilterTypes.DTM,
+                      //   icon: iconMapping[FilterTypes.DTM],
+                      // },
                     ],
                   ].map((group: FilterOption[], groupIndex) => {
                     const groupKey = `group-${groupIndex}-${nanoid()}`

@@ -13,7 +13,6 @@ async function fetchDistinctValues(tableName: string, columnName: string) {
 
   try {
     const query = `SELECT DISTINCT ${columnName} FROM ${tableName}`
-    console.log(query)
     const resultSet = await client.query({ query })
     const result = await resultSet.json()
     
