@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useState } from "react"
 import { StatsCard } from "./StatsCard"
 import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
+import { Filter } from "@/components/ui/filters"
 
 interface FilterCondition {
   type: string;
@@ -51,7 +52,7 @@ const STATS_CARDS = [
 // Create a client
 const queryClient = new QueryClient()
 
-export function Stats({ onDeskChange }: { onDeskChange: (desk: string) => void }) {
+export function Stats({ onDeskChange, filters }: { onDeskChange: (desk: string) => void, filters: Filter[] }) {
   const [filter, setFilter] = useState<FilterCondition[]>([])
   return (
     <QueryClientProvider client={queryClient}>
