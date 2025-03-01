@@ -56,13 +56,13 @@ export function Stats({ onDeskChange, filters }: { onDeskChange: (desk: string) 
   const [filter, setFilter] = useState<FilterCondition[]>([])
   return (
     <QueryClientProvider client={queryClient}>
-      <StatsContent onDeskChange={onDeskChange} />
+      <StatsContent onDeskChange={onDeskChange} filters={filters} />
     </QueryClientProvider>
   )
 }
 
 // Separate component to use the query hook
-function StatsContent({ onDeskChange }: StatsContentProps) {
+function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: Filter[] }) {
   const [selectedDesk, setSelectedDesk] = useState<string>("")
 
   const { data: desks = [], isLoading: desksLoading, isError: desksError } = useQuery<Desk[]>({
@@ -75,15 +75,12 @@ function StatsContent({ onDeskChange }: StatsContentProps) {
   })
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
-    queryKey: ["stats", selectedDesk],
+    queryKey: ["stats", filters],
     queryFn: async () => {
       const requestBody = {
         filter: [
-          {
-            type: "bu",
-            value: [selectedDesk],
-            operator: "is"
-          }
+  
+          ...filters
         ]
       }
 

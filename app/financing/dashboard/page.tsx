@@ -12,11 +12,11 @@ export default function FinancingMainPage() {
 
   const handleDeskChange = (desk: string | null) => {
     setSelectedDesk(desk);
-    
+
     setFilters(prev => {
       const filteredFilters = prev.filter(f => f.type !== FilterType.DESK);
       if (!desk) return filteredFilters;
-      
+
       return [...filteredFilters, {
         id: Date.now().toString(),
         type: FilterType.DESK,
@@ -37,12 +37,12 @@ export default function FinancingMainPage() {
           <Stats onDeskChange={handleDeskChange} filters={filters} />
           <div className="flex items-center justify-between">
 
-          <JsonViewer
-      data={filters}
-      initialExpandLevel={5}
-      showCopyButton={true}
-    />
-           
+            <JsonViewer
+              data={filters}
+              initialExpandLevel={5}
+              showCopyButton={true}
+            />
+
           </div>
         </div>
       </div>
