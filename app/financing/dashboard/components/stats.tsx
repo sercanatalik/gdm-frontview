@@ -126,7 +126,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
       </div>
       
       {desks.map((desk) => (
-        <TabsContent key={desk.bu} value={desk.bu} className="space-y-4">
+        <TabsContent key={desk.desk} value={desk.desk} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {STATS_CARDS.map((card, index) => (
               <StatsCard 

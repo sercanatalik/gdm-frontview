@@ -141,30 +141,31 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                 ) : (
                   filterViewOptions.map(
                     (group: FilterOption[], index: number) => (
-                      <React.Fragment key={index}>
-                        <CommandGroup>
-                          {group.map((filter: FilterOption) => (
-                            <CommandItem
-                              className="group text-muted-foreground flex gap-2 items-center"
-                              key={filter.name}
-                              value={filter.name}
-                              onSelect={(currentValue) => {
-                                setSelectedView(currentValue as FilterType);
-                                setCommandInput("");
-                                commandInputRef.current?.focus();
-                              }}
-                            >
-                              {filter.icon}
-                              <span className="text-accent-foreground">
-                                {filter.name}
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                        {index < filterViewOptions.length - 1 && (
-                          <CommandSeparator />
-                        )}
-                      </React.Fragment>
+                      <CommandGroup 
+                        key={`filter-group-${index}`} 
+                        className="flex flex-col gap-2"
+
+                      >
+                      
+                        {group.map((filter: FilterOption) => (
+                          <CommandItem
+                            className="group text-muted-foreground flex gap-2 items-center"
+                            key={filter.name}
+                            value={filter.name}
+                            onSelect={(currentValue) => {
+                              setSelectedView(currentValue as FilterType);
+                              setCommandInput("");
+                              commandInputRef.current?.focus();
+                            }}
+                          >
+                            {filter.icon}
+                            <span className="text-accent-foreground">
+                              {filter.name}
+                            </span>
+                          </CommandItem>
+                        ))}
+                        {index < filterViewOptions.length - 1 && <CommandSeparator />}
+                      </CommandGroup>
                     )
                   )
                 )}

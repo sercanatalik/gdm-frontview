@@ -9,7 +9,7 @@ interface FilterCondition {
 
 function buildWhereCondition(filter: FilterCondition[]): string {
     if (!filter?.length) return '';
-
+    console.log(filter)
     const conditions = filter
         .filter(f => f.value?.length > 0)
         .map(({ type, value, operator }) => {
