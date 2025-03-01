@@ -97,7 +97,7 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 {selectedView ? (
-                  <CommandGroup>
+                  <CommandGroup className="flex flex-col gap-2" key={selectedView}>
                     {filterViewToFilterOptions[selectedView].map(
                       (filter: FilterOption) => (
                         <CommandItem

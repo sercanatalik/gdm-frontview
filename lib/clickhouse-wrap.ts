@@ -14,6 +14,8 @@ export function getClickHouseClient() {
   return client
 }
 
+
+
 // Optional: Clean up connection when the server shuts down
 process.on('SIGTERM', async () => {
   if (client) {
@@ -21,3 +23,26 @@ process.on('SIGTERM', async () => {
     client = null
   }
 })
+
+
+interface FilterCondition {
+  type: string;
+  value: string[];
+  operator: string;
+}
+
+export function buildWhereCondition(filter: FilterCondition[]): string {
+  if (!filter?.length) return '';
+  const conditions = filter
+      .filter(f => f.value?.length > 0)
+      .map(({ type, value, operator }) => {
+          const values = value.map(v => `'${v}'`).join(',');
+          return operator === 'is not'
+              ? `\`${type}\` NOT IN (${values})`
+              : `\`${type}\` IN (${values})`;
+      });
+
+  return conditions.length 
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+}
