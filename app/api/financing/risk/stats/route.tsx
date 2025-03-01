@@ -33,7 +33,6 @@ export async function POST(req: Request) {
         
         
 
-
         const query = `
             SELECT ${sumExpressions}
             FROM risk_f_mv  
