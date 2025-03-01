@@ -111,7 +111,7 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                                 id: nanoid(),
                                 type: selectedView,
                                 operator:
-                                  selectedView === FilterType.DUE_DATE &&
+                                  selectedView === FilterType.MATURITY_DATE &&
                                   currentValue !== DueDate.IN_THE_PAST
                                     ? FilterOperator.BEFORE
                                     : FilterOperator.IS,

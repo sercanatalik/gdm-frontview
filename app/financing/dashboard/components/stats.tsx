@@ -70,8 +70,9 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
     queryFn: async () => {
       const response = await fetch("/api/financing/risk/distinct?column=desk")
       const data = await response.json()
-      return data // Keep the original array of objects with 'bu' property
-    }
+      return data
+    },
+
   })
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -101,7 +102,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
   if (desksLoading) return <div>Loading desks...</div>
   if (desksError) return <div>Error loading desks</div>
   if (!desks?.length) return <div>No desks available</div>
-
+  
   const handleDeskChange = (desk: string) => {
     setSelectedDesk(desk)
     onDeskChange(desk)
@@ -110,7 +111,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
   return (
     <>
     <Tabs 
-      defaultValue={desks.length > 0 ? desks[0].bu : undefined} 
+      defaultValue={desks.length > 0 ? desks[0].desk : undefined} 
       onValueChange={handleDeskChange} 
       className="space-y-4"
     >

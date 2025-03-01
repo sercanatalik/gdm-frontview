@@ -90,9 +90,10 @@ export enum FilterType {
   DESK = "desk",
   PORTFOLIO = "portfolio",
   REGION = "region",
-  // DUE_DATE = "Due date",
-  // CREATED_DATE = "Created date",
-  // UPDATED_DATE = "Updated date",
+  TRADE_DATE = "tradeDate",
+  MATURITY_DATE = "maturityDate",
+  DTM = "dtm",
+  
 }
 
 export enum FilterOperator {
