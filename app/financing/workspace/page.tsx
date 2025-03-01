@@ -42,7 +42,7 @@ export default function FinancingWorkspace() {
     <ContentLayout title="Workspace">
       <div className="flex-1 space-y-4 p-0 pt-0">
         <div className="flex justify-end">
-          <RiskFilter filters={filters} setFilters={setFilters} />
+          <RiskFilter filters={filters} setFilters={setFilters} tableName="risk_f_mv" />
         </div>
         <div className="flex mx-4">
           <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true}></JsonViewer>

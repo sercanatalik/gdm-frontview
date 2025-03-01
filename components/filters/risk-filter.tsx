@@ -40,9 +40,7 @@ export const FilterTypes = {
   DESK: "desk",
   PORTFOLIO: "portfolio",
   REGION: "region",
-  TRADE_DATE: "tradeDate",
-  MATURITY_DATE: "maturityDate",
-  DTM: "dtm",
+ 
 }
 
 export const FilterOperators = {
@@ -103,9 +101,9 @@ const iconMapping: Record<string, React.ReactNode> = {
   [FilterTypes.DESK]: <UserCircle className="size-3.5" />,
   [FilterTypes.PORTFOLIO]: <Tag className="size-3.5" />,
   [FilterTypes.REGION]: <SignalHigh className="size-3.5" />,
-  [FilterTypes.MATURITY_DATE]: <Calendar className="size-3.5" />,
-  [FilterTypes.TRADE_DATE]: <CalendarPlus className="size-3.5" />,
-  [FilterTypes.DTM]: <CalendarSync className="size-3.5" />,
+  // [FilterTypes.MATURITY_DATE]: <Calendar className="size-3.5" />,
+  // [FilterTypes.TRADE_DATE]: <CalendarPlus className="size-3.5" />,
+  // [FilterTypes.DTM]: <CalendarSync className="size-3.5" />,
   [SL1Values.ABS_CLO]: <CircleDashed className="size-3.5 text-muted-foreground" />,
   [SL1Values.EM]: <Circle className="size-3.5 text-primary" />,
   [SL1Values.LOAN]: <CircleDotDashed className="size-3.5 text-yellow-400" />,
@@ -121,144 +119,147 @@ const iconMapping: Record<string, React.ReactNode> = {
   [PortfolioValues.OTHER]: <div className="bg-green-400 rounded-full size-2.5" />,
 }
 
-// Create filter options
-const sl1FilterOptions: FilterOption[] = Object.values(SL1Values).map((status) => ({
-  name: status,
-  icon: iconMapping[status],
-}))
 
-const deskFilterOptions: FilterOption[] = Object.values(DeskValues).map((desk) => ({
-  name: desk,
-  icon: iconMapping[desk],
-}))
-
-const portfolioFilterOptions: FilterOption[] = Object.values(PortfolioValues).map((portfolio) => ({
-  name: portfolio,
-  icon: iconMapping[portfolio],
-}))
-
-const regionFilterOptions: FilterOption[] = Object.values(RegionValues).map((region) => ({
-  name: region,
-  icon: iconMapping[region],
-}))
-
-const dateFilterOptions: FilterOption[] = Object.values(DateValues).map((date) => ({
-  name: date,
-  icon: undefined,
-}))
-
-// Create filter view options
-const filterViewOptions: FilterOption[][] = [
-  [
-    {
-      name: FilterTypes.SL1,
-      icon: iconMapping[FilterTypes.SL1],
-    },
-    {
-      name: FilterTypes.DESK,
-      icon: iconMapping[FilterTypes.DESK],
-    },
-    {
-      name: FilterTypes.PORTFOLIO,
-      icon: iconMapping[FilterTypes.PORTFOLIO],
-    },
-    {
-      name: FilterTypes.REGION,
-      icon: iconMapping[FilterTypes.REGION],
-    },
-  ],
-  [
-    {
-      name: FilterTypes.MATURITY_DATE,
-      icon: iconMapping[FilterTypes.MATURITY_DATE],
-    },
-    {
-      name: FilterTypes.TRADE_DATE,
-      icon: iconMapping[FilterTypes.TRADE_DATE],
-    },
-    {
-      name: FilterTypes.DTM,
-      icon: iconMapping[FilterTypes.DTM],
-    },
-  ],
-]
-
-// Create filter view to filter options mapping
-const filterViewToFilterOptions: Record<string, FilterOption[]> = {
-  [FilterTypes.SL1]: sl1FilterOptions,
-  [FilterTypes.DESK]: deskFilterOptions,
-  [FilterTypes.PORTFOLIO]: portfolioFilterOptions,
-  [FilterTypes.REGION]: regionFilterOptions,
-  [FilterTypes.MATURITY_DATE]: dateFilterOptions,
-  [FilterTypes.TRADE_DATE]: dateFilterOptions,
-  [FilterTypes.DTM]: dateFilterOptions,
-}
-
-// Create operator config
-const operatorConfig: Record<string, Record<string, string[]>> = {
-  [FilterTypes.SL1]: {
-    single: [FilterOperators.IS, FilterOperators.IS_NOT],
-    multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-  },
-  [FilterTypes.DESK]: {
-    single: [FilterOperators.IS, FilterOperators.IS_NOT],
-    multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-  },
-  [FilterTypes.REGION]: {
-    single: [FilterOperators.IS, FilterOperators.IS_NOT],
-    multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
-  },
-  [FilterTypes.PORTFOLIO]: {
-    single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
-    multiple: [
-      FilterOperators.INCLUDE_ANY_OF,
-      FilterOperators.INCLUDE_ALL_OF,
-      FilterOperators.EXCLUDE_ALL_OF,
-      FilterOperators.EXCLUDE_IF_ANY_OF,
-    ],
-  },
-  [FilterTypes.MATURITY_DATE]: {
-    past: [FilterOperators.IS, FilterOperators.IS_NOT],
-    date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-  },
-  [FilterTypes.TRADE_DATE]: {
-    past: [FilterOperators.IS, FilterOperators.IS_NOT],
-    date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-  },
-  [FilterTypes.DTM]: {
-    past: [FilterOperators.IS, FilterOperators.IS_NOT],
-    date: [FilterOperators.BEFORE, FilterOperators.AFTER],
-  },
-}
-
-// Create filter config
-const filterConfig: FilterConfig = {
-  filterTypes: FilterTypes,
-  filterOperators: FilterOperators,
-  filterViewOptions,
-  filterViewToFilterOptions,
+const filterOptionsGetter = async (tableName: string, columnName: string): Promise<FilterOption[]> => {
+  try {
+    // Fetch distinct values from the specified table and column
+    const response = await fetch(`/api/tables/distinct?table=${tableName}&column=${columnName}`);
+    const values = await response.json();
+    console.log(values)
+    // Map the values to FilterOption format
+    return values.map((value: string) => ({
+      name: value,
+      icon: iconMapping[value] || undefined, // Use existing icon mapping if available
+    }));
+  } catch (error) {
+    console.error(`Error fetching filter options for ${tableName}.${columnName}:`, error);
+    return [];
+  }
 }
 
 interface RiskFilterProps {
   filters: Filter[]
   setFilters: React.Dispatch<React.SetStateAction<Filter[]>>
+  tableName: string
 }
 
-export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
+export function RiskFilter({ filters, setFilters, tableName }: RiskFilterProps) {
   const [open, setOpen] = React.useState(false)
   const [selectedView, setSelectedView] = React.useState<string | null>(null)
   const [commandInput, setCommandInput] = React.useState("")
   const commandInputRef = React.useRef<HTMLInputElement>(null)
+  
+  const [sl1FilterOptions, setSl1FilterOptions] = React.useState<FilterOption[]>([])
+
+  React.useEffect(() => {
+    const loadSl1Options = async () => {
+      const _sl1FilterOptions = await filterOptionsGetter(tableName, "SL1")
+      const options = _sl1FilterOptions.map((option) => ({
+        name: option.name,
+        icon: iconMapping[option.name],
+      }))
+      setSl1FilterOptions(options)
+    }
+    loadSl1Options()
+  }, [tableName])
+
+  const filterViewToFilterOptions: Record<string, FilterOption[]> = {
+    [FilterTypes.SL1]: sl1FilterOptions,
+    [FilterTypes.DESK]: Object.values(DeskValues).map((desk) => ({
+      name: desk,
+      icon: iconMapping[desk],
+    })),
+    [FilterTypes.PORTFOLIO]: Object.values(PortfolioValues).map((portfolio) => ({
+      name: portfolio,
+      icon: iconMapping[portfolio],
+    })),
+    [FilterTypes.REGION]: Object.values(RegionValues).map((region) => ({
+      name: region,
+      icon: iconMapping[region],
+    })),
+  }
 
   return (
     <div className="flex gap-5 flex-wrap items-center">
       <Filters
         filters={filters}
         setFilters={setFilters}
-        config={filterConfig}
+        config={{
+          filterTypes: FilterTypes,
+          filterOperators: FilterOperators,
+          filterViewOptions: [
+            [
+              {
+                name: FilterTypes.SL1,
+                icon: iconMapping[FilterTypes.SL1],
+              },
+              {
+                name: FilterTypes.DESK,
+                icon: iconMapping[FilterTypes.DESK],
+              },
+              {
+                name: FilterTypes.PORTFOLIO,
+                icon: iconMapping[FilterTypes.PORTFOLIO],
+              },
+              {
+                name: FilterTypes.REGION,
+                icon: iconMapping[FilterTypes.REGION],
+              },
+            ],
+            [
+              {
+                name: FilterTypes.MATURITY_DATE,
+                icon: iconMapping[FilterTypes.MATURITY_DATE],
+              },
+              {
+                name: FilterTypes.TRADE_DATE,
+                icon: iconMapping[FilterTypes.TRADE_DATE],
+              },
+              {
+                name: FilterTypes.DTM,
+                icon: iconMapping[FilterTypes.DTM],
+              },
+            ],
+          ],
+          filterViewToFilterOptions,
+        }}
         iconMapping={iconMapping}
         dateValues={Object.values(DateValues)}
-        operatorConfig={operatorConfig}
+        operatorConfig={{
+          [FilterTypes.SL1]: {
+            single: [FilterOperators.IS, FilterOperators.IS_NOT],
+            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+          },
+          [FilterTypes.DESK]: {
+            single: [FilterOperators.IS, FilterOperators.IS_NOT],
+            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+          },
+          [FilterTypes.REGION]: {
+            single: [FilterOperators.IS, FilterOperators.IS_NOT],
+            multiple: [FilterOperators.IS_ANY_OF, FilterOperators.IS_NOT],
+          },
+          [FilterTypes.PORTFOLIO]: {
+            single: [FilterOperators.INCLUDE, FilterOperators.DO_NOT_INCLUDE],
+            multiple: [
+              FilterOperators.INCLUDE_ANY_OF,
+              FilterOperators.INCLUDE_ALL_OF,
+              FilterOperators.EXCLUDE_ALL_OF,
+              FilterOperators.EXCLUDE_IF_ANY_OF,
+            ],
+          },
+          [FilterTypes.MATURITY_DATE]: {
+            past: [FilterOperators.IS, FilterOperators.IS_NOT],
+            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          },
+          [FilterTypes.TRADE_DATE]: {
+            past: [FilterOperators.IS, FilterOperators.IS_NOT],
+            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          },
+          [FilterTypes.DTM]: {
+            past: [FilterOperators.IS, FilterOperators.IS_NOT],
+            date: [FilterOperators.BEFORE, FilterOperators.AFTER],
+          },
+        }}
       />
       {filters.filter((filter) => filter.value?.length > 0).length > 0 && (
         <Button
@@ -345,7 +346,40 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                     ))}
                   </CommandGroup>
                 ) : (
-                  filterViewOptions.map((group: FilterOption[], groupIndex) => {
+                  [
+                    [
+                      {
+                        name: FilterTypes.SL1,
+                        icon: iconMapping[FilterTypes.SL1],
+                      },
+                      {
+                        name: FilterTypes.DESK,
+                        icon: iconMapping[FilterTypes.DESK],
+                      },
+                      {
+                        name: FilterTypes.PORTFOLIO,
+                        icon: iconMapping[FilterTypes.PORTFOLIO],
+                      },
+                      {
+                        name: FilterTypes.REGION,
+                        icon: iconMapping[FilterTypes.REGION],
+                      },
+                    ],
+                    [
+                      {
+                        name: FilterTypes.MATURITY_DATE,
+                        icon: iconMapping[FilterTypes.MATURITY_DATE],
+                      },
+                      {
+                        name: FilterTypes.TRADE_DATE,
+                        icon: iconMapping[FilterTypes.TRADE_DATE],
+                      },
+                      {
+                        name: FilterTypes.DTM,
+                        icon: iconMapping[FilterTypes.DTM],
+                      },
+                    ],
+                  ].map((group: FilterOption[], groupIndex) => {
                     const groupKey = `group-${groupIndex}-${nanoid()}`
                     return (
                       <CommandGroup key={groupKey} className="flex flex-col gap-2">
@@ -364,7 +398,40 @@ export function RiskFilter({ filters, setFilters }: RiskFilterProps) {
                             <span className="text-accent-foreground">{filter.name}</span>
                           </CommandItem>
                         ))}
-                        {groupIndex < filterViewOptions.length - 1 && <CommandSeparator />}
+                        {groupIndex < [
+                          [
+                            {
+                              name: FilterTypes.SL1,
+                              icon: iconMapping[FilterTypes.SL1],
+                            },
+                            {
+                              name: FilterTypes.DESK,
+                              icon: iconMapping[FilterTypes.DESK],
+                            },
+                            {
+                              name: FilterTypes.PORTFOLIO,
+                              icon: iconMapping[FilterTypes.PORTFOLIO],
+                            },
+                            {
+                              name: FilterTypes.REGION,
+                              icon: iconMapping[FilterTypes.REGION],
+                            },
+                          ],
+                          [
+                            {
+                              name: FilterTypes.MATURITY_DATE,
+                              icon: iconMapping[FilterTypes.MATURITY_DATE],
+                            },
+                            {
+                              name: FilterTypes.TRADE_DATE,
+                              icon: iconMapping[FilterTypes.TRADE_DATE],
+                            },
+                            {
+                              name: FilterTypes.DTM,
+                              icon: iconMapping[FilterTypes.DTM],
+                            },
+                          ],
+                        ].length - 1 && <CommandSeparator />}
                       </CommandGroup>
                     )
                   })
