@@ -4,7 +4,8 @@ import { NextResponse } from "next/server"
 export async function POST(req: Request) {
   try {
     const { filter = null } = await req.json()
-
+    
+    
     const fields = ["cashOut", "projectedCashOut", "realisedCashOut", "notional"]
     const sumExpressions = fields.map((field) => `SUM(${field})`).join(", ")
 
