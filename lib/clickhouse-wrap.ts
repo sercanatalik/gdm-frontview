@@ -1,5 +1,6 @@
 import { createClient } from '@clickhouse/client'
 import type { ClickHouseClient } from '@clickhouse/client'
+import { addDays, addWeeks, addMonths, addYears, format } from 'date-fns';
 
 let client: ClickHouseClient | null = null
 
@@ -15,7 +16,6 @@ export function getClickHouseClient() {
 }
 
 
-
 // Optional: Clean up connection when the server shuts down
 process.on('SIGTERM', async () => {
   if (client) {
@@ -24,24 +24,73 @@ process.on('SIGTERM', async () => {
   }
 })
 
-
 interface FilterCondition {
   type: string;
   value: string[];
   operator: string;
 }
 
-export function buildWhereCondition(filter: FilterCondition[]): string {
+
+
+export function convertToExactDate(timeNotation: string, currentDate: Date = new Date()) {
+  // Validate input format
+  if (!/^-?\d+[dwmy]$/.test(timeNotation)) {
+    throw new Error('Invalid format. Please use formats like "-1d", "1d", "2w", "3m", or "4y"');
+  }
+  
+  // Extract the number and unit
+  const isNegative = timeNotation.startsWith('-');
+  const amount = parseInt(timeNotation.replace('-', ''));
+  const unit = timeNotation.slice(-1);
+  
+  // Get current date
+  let futureDate;
+  
+  // Apply the appropriate date-fns function based on the unit
+  // For negative values, multiply amount by -1
+  const adjustedAmount = isNegative ? -amount : amount;
+  
+  switch (unit) {
+    case 'd':
+      futureDate = addDays(currentDate, adjustedAmount);
+      break;
+    case 'w':
+      futureDate = addWeeks(currentDate, adjustedAmount);
+      break;
+    case 'm':
+      futureDate = addMonths(currentDate, adjustedAmount);
+      break;
+    case 'y':
+      futureDate = addYears(currentDate, adjustedAmount);
+      break;
+    default:
+      throw new Error('Unsupported time unit. Use d (days), w (weeks), m (months), or y (years)');
+  }
+  
+  // Format the dates
+  const formattedCurrentDate = format(currentDate, 'yyyy-MM-dd');
+  const formattedFutureDate = format(futureDate, 'yyyy-MM-dd');
+  
+  return {
+    currentDate: formattedCurrentDate,
+    futureDate: formattedFutureDate,
+    fullDateObject: futureDate,
+    description: `${amount} ${unit === 'd' ? 'day' : unit === 'w' ? 'week' : unit === 'm' ? 'month' : 'year'}${amount > 1 ? 's' : ''} from now`
+  };
+}
+
+
+export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: boolean = false): string {
   if (!filter?.length) return '';
   
   // Check if asOfDate is present in the filter
-  const hasAsOfDate = filter.some(f => f.type === 'asOfDate');
-  
+  const hasAsOfDate = filter.some(f => f.type === 'asOfDate');  
+
   // Create a copy of the filter array
   let conditions = [...filter];
   
-  // If asOfDate is not present, add today's date
-  if (!hasAsOfDate) {
+  // If asOfDate is not present and we're not removing asOfDate, add today's date
+  if (!hasAsOfDate && !removeAsOfDate) {
     const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     conditions.push({
       type: 'asOfDate',
@@ -49,10 +98,11 @@ export function buildWhereCondition(filter: FilterCondition[]): string {
       operator: 'is'
     });
   }
-
-  // Process all conditions
+  
+  // Process all conditions, filtering out asOfDate if removeAsOfDate is true
   const whereConditions = conditions
       .filter(f => f.value?.length > 0)
+      .filter(f => !(removeAsOfDate && f.type === 'asOfDate')) // Remove asOfDate conditions if removeAsOfDate is true
       .map(({ type, value, operator }) => {
           const values = value.map(v => `'${v}'`).join(',');
           return operator === 'is not'

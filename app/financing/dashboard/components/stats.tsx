@@ -84,6 +84,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
     queryFn: async () => {
       const requestBody = {
         filter: [...filters],
+        relativeDt: "-1y",
       }
 
       const response = await fetch("/api/financing/risk/stats", {
