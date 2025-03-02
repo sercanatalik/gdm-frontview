@@ -7,7 +7,7 @@ export interface StatsData {
   previous: number
   currentDate: string
   previousDate: string
-  numDays: number
+
 }
 
 export function StatsCard({
@@ -15,11 +15,13 @@ export function StatsCard({
   icon,
   isLoading,
   data,
+  days
 }: {
   label: string
   icon: any
   data: StatsData
   isLoading: boolean
+  days: number
 }) {
   return (
     <Card>
@@ -52,7 +54,7 @@ export function StatsCard({
                 notation: "compact",
                 compactDisplay: "short",
               })}{" "}
-              since {data.numDays} days ago
+              since {days} days ago
             </p>
           </>
         )}

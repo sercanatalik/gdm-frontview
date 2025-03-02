@@ -139,6 +139,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
                   icon={card.icon}
                   isLoading={statsLoading}
                   data={statsData?.[card.key] || DEFAULT_STATS}
+                  days={statsData ? Math.round((new Date(statsData.asOfDate).getTime() - new Date(statsData.closestDate).getTime()) / (1000 * 60 * 60 * 24)) : 0}   
                 />
               ))}
             </div>
