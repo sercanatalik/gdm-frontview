@@ -4,6 +4,7 @@ import { RiskFilter } from "@/components/filters/risk-filter"
 import type { Filter } from "@/components/ui/filters"
 import { useState, useEffect } from "react"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
+import { JsonEditor } from 'json-edit-react'
 import { JsonViewer } from "@/components/json-viewer"
 
 export default function FinancingWorkspace() {
@@ -13,7 +14,7 @@ export default function FinancingWorkspace() {
   useEffect(() => {
     const fetchRiskData = async () => {
       try {
-        const response = await fetch("/api/financing/risk/data", {
+        const response = await fetch("/api/financing/pnl/stats", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -45,12 +46,10 @@ export default function FinancingWorkspace() {
           <RiskFilter filters={filters} setFilters={setFilters} tableName="risk_f_mv" />
         </div>
         <div className="flex mx-4">
-          <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true}></JsonViewer>
-          <JsonViewer
+          <JsonEditor data={filters} ></JsonEditor>
+          <JsonEditor
             data={Array.isArray(results) ? results.slice(0, 10) : results}
-            initialExpandLevel={5}
-            showCopyButton={true}
-          ></JsonViewer>
+          ></JsonEditor>
         </div>
       </div>
     </ContentLayout>

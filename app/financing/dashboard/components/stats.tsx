@@ -9,7 +9,6 @@ import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
 import type { Filter } from "@/components/ui/filters"
 import { JsonEditor } from 'json-edit-react'
 
-
 interface FilterCondition {
   type: string
   value: string[]
@@ -148,8 +147,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
       </Tabs>
 
       <div>
-        <JsonEditor data={statsData} />
-       
+     
       </div>
     </>
   )

@@ -5,7 +5,6 @@ import { Stats } from "./components/stats"
 import { useState } from "react"
 import type { Filter } from "@/components/ui/filters"
 import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
-import { JsonViewer } from "@/components/json-viewer"
 
 export default function FinancingMainPage() {
   const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
