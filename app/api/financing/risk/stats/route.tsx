@@ -92,7 +92,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ...(result as Record<string, unknown>),
       asOfDate: formatDate(asofdate),
-      closestDate: formatDate(new Date(closestDate))
+      closestDate: formatDate(new Date(closestDate)),
+      updatedFilter: JSON.stringify(updatedFilter)
     })
   } catch (error) {
     console.error("Error calculating sums:", error)
