@@ -7,27 +7,28 @@ interface FilterCondition {
   operator: string;
 }
 
-// Helper function to extract and process asOfDate from filter
-function processAsOfDate(filter: FilterCondition[]) {
-  const hasAsOfDate = filter.some(f => f.type === 'asOfDate')
-  const asofdate = hasAsOfDate 
-    ? new Date(filter.find(f => f.type === 'asOfDate')!.value[0])
-    : new Date()
-  
-  // Remove asOfDate from filter if it exists
-  const updatedFilter = hasAsOfDate 
-    ? filter.filter(f => f.type !== 'asOfDate')
-    : filter
+// Constants
+const RISK_TABLE = 'risk_f_mv FINAL'
+const FIELDS = ["cashOut", "projectedCashOut", "realisedCashOut", "notional"] as const
 
+// Helper function to format date to YYYY-MM-DD
+const formatDate = (date: Date): string => date.toISOString().split('T')[0]
+
+// Helper function to extract and process asOfDate from filter
+const processAsOfDate = (filter: FilterCondition[]) => {
+  const asOfDateFilter = filter.find(f => f.type === 'asOfDate')
+  const asofdate = asOfDateFilter ? new Date(asOfDateFilter.value[0]) : new Date()
+  const updatedFilter = filter.filter(f => f.type !== 'asOfDate')
+  
   return { asofdate, updatedFilter }
 }
 
 // Helper function to find closest available date
-async function findClosestDate(filter: FilterCondition[], relativeDate: any) {
+const findClosestDate = async (relativeDate: any): Promise<string> => {
   const query = `
     SELECT asOfDate
-    FROM risk_f_mv FINAL
-    ORDER BY abs(dateDiff('day', asOfDate, toDate('${relativeDate.fullDateObject.toISOString().split('T')[0]}')))
+    FROM ${RISK_TABLE}
+    ORDER BY abs(dateDiff('day', asOfDate, toDate('${formatDate(relativeDate.fullDateObject)}')))
     LIMIT 1
   `
   
@@ -36,21 +37,27 @@ async function findClosestDate(filter: FilterCondition[], relativeDate: any) {
     format: "JSONEachRow",
   })
   
-  const [{ asOfDate }] = await result.json() as { asOfDate: Date }[]
+  const [{ asOfDate }] = await result.json() as { asOfDate: string }[]
   return asOfDate
 }
 
 // Helper function to build sum expressions
-function buildSumExpressions(fields: string[], currentDate: Date | string, relativeDate: string) {
-  const currentSums = fields.map(field => 
-    `SUM(CASE WHEN asOfDate = '${currentDate instanceof Date ? currentDate.toISOString().split('T')[0] : currentDate}' THEN ${field} ELSE 0 END) as current_${field}`
+const buildSumExpressions = (currentDate: Date | string, relativeDate: string) => {
+  const formatDateStr = (date: Date | string) => 
+    date instanceof Date ? formatDate(date) : date
+  
+  const buildExpression = (field: string, dateStr: string, prefix: string) =>
+    `SUM(CASE WHEN asOfDate = '${dateStr}' THEN ${field} ELSE 0 END) as ${prefix}_${field}`
+
+  const currentSums = FIELDS.map(field => 
+    buildExpression(field, formatDateStr(currentDate), 'current')
   ).join(", ")
   
-  const relativeSums = fields.map(field => 
-    `SUM(CASE WHEN asOfDate = '${relativeDate}' THEN ${field} ELSE 0 END) as relative_${field}`
+  const relativeSums = FIELDS.map(field => 
+    buildExpression(field, relativeDate, 'relative')
   ).join(", ")
   
-  const changes = fields.map(field => 
+  const changes = FIELDS.map(field => 
     `current_${field} - relative_${field} as change_${field}`
   ).join(", ")
 
@@ -59,27 +66,25 @@ function buildSumExpressions(fields: string[], currentDate: Date | string, relat
 
 export async function POST(req: Request) {
   try {
-    let { filter = null, relativeDt = null } = await req.json()
+    const { filter = [], relativeDt = null } = await req.json()
     
-    // Process asOfDate
     const { asofdate, updatedFilter } = processAsOfDate(filter)
-    
-    // Get relative date and find closest available date
     const relativeDate = convertToExactDate(relativeDt, asofdate)
-    const closestDate = await findClosestDate(updatedFilter, relativeDate) 
+    const closestDate = await findClosestDate(relativeDate)
     
-    // Build and execute final query
-    const fields = ["cashOut", "projectedCashOut", "realisedCashOut", "notional"]
-    const { currentSums, relativeSums, changes } = buildSumExpressions(fields, asofdate, closestDate)
+    const { currentSums, relativeSums, changes } = buildSumExpressions(asofdate, closestDate)
     
     const query = `
       SELECT 
+        '${formatDate(asofdate)}' as asOfDate,
+        toDate('${closestDate}') as closestDate,
         ${currentSums},
         ${relativeSums},
         ${changes}
-      FROM risk_f_mv FINAL
-      ${buildWhereCondition(updatedFilter,true)}
+      FROM ${RISK_TABLE}
+      ${buildWhereCondition(updatedFilter, true)}
     `
+    
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",
