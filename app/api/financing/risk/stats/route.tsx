@@ -64,6 +64,32 @@ const buildSumExpressions = (currentDate: Date | string, relativeDate: string) =
   return { currentSums, relativeSums, changes }
 }
 
+// Add StatsData interface
+interface StatsData {
+  cashOut: {
+    current: number
+    relative: number
+    change: number
+  }
+  projectedCashOut: {
+    current: number
+    relative: number
+    change: number
+  }
+  realisedCashOut: {
+    current: number
+    relative: number
+    change: number
+  }
+  notional: {
+    current: number
+    relative: number
+    change: number
+  }
+  asOfDate: string
+  closestDate: string
+}
+
 export async function POST(req: Request) {
   try {
     const { filter = [], relativeDt = null } = await req.json()
@@ -89,12 +115,34 @@ export async function POST(req: Request) {
     })
 
     const [result] = await resultSet.json()
-    return NextResponse.json({
-      ...(result as Record<string, unknown>),
+    
+    // Transform the flat result into StatsData structure
+    const statsData: StatsData = {
+      cashOut: {
+        current: (result as any).current_cashOut,
+        relative: (result as any).relative_cashOut,
+        change: (result as any).change_cashOut
+      },
+      projectedCashOut: {
+        current: (result as any).current_projectedCashOut,
+        relative: (result as any).relative_projectedCashOut,
+        change: (result as any).change_projectedCashOut
+      },
+      realisedCashOut: {
+        current: (result as any).current_realisedCashOut,
+        relative: (result as any).relative_realisedCashOut,
+        change: (result as any).change_realisedCashOut
+      },
+      notional: {
+        current: (result as any).current_notional,
+        relative: (result as any).relative_notional,
+        change: (result as any).change_notional
+      },
       asOfDate: formatDate(asofdate),
-      closestDate: formatDate(new Date(closestDate)),
-      updatedFilter: JSON.stringify(updatedFilter)
-    })
+      closestDate: formatDate(new Date(closestDate))
+    }
+
+    return NextResponse.json(statsData)
   } catch (error) {
     console.error("Error calculating sums:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

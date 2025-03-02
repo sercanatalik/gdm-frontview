@@ -7,7 +7,8 @@ import { useState } from "react"
 import { StatsCard } from "./StatsCard"
 import { CreditCard, Wallet, TrendingUp, Users } from "lucide-react"
 import type { Filter } from "@/components/ui/filters"
-import { JsonViewer } from "@/components/json-viewer"
+import { JsonEditor } from 'json-edit-react'
+
 
 interface FilterCondition {
   type: string
@@ -17,11 +18,17 @@ interface FilterCondition {
 
 interface StatsData {
   current: number
+  relative: number
   change: number
-  previous: number
-  currentDate: string
-  previousDate: string
-  numDays: number
+}
+
+interface StatsResponse {
+  cashOut: StatsData
+  projectedCashOut: StatsData
+  realisedCashOut: StatsData
+  notional: StatsData
+  asOfDate: string
+  closestDate: string
 }
 
 interface StatsContentProps {
@@ -30,19 +37,15 @@ interface StatsContentProps {
 
 const DEFAULT_STATS: StatsData = {
   current: 0,
+  relative: 0,
   change: 0,
-  previous: 0,
-  currentDate: new Date().toISOString().split("T")[0],
-  previousDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-  numDays: 30,
 }
 
 const STATS_CARDS = [
   { label: "Cash Out", key: "cashOut", icon: <CreditCard /> },
-  { label: "Collateral Amount", key: "collateralAmount", icon: <Wallet /> },
-  { label: "Daily Accrual", key: "accrualDaily", icon: <TrendingUp /> },
-  { label: "Projected Accrual", key: "accrualProjected", icon: <Users /> },
-  { label: "Realised Accrual", key: "accrualRealised", icon: <TrendingUp /> },
+  { label: "Projected Cash Out", key: "projectedCashOut", icon: <Wallet /> },
+  { label: "Realised Cash Out", key: "realisedCashOut", icon: <TrendingUp /> },
+  { label: "Notional", key: "notional", icon: <Users /> },
 ]
 
 // Create a client
@@ -144,7 +147,7 @@ function StatsContent({ onDeskChange, filters }: StatsContentProps & { filters: 
       </Tabs>
 
       <div>
-        <JsonViewer data={statsData} />
+        <JsonEditor data={statsData} />
        
       </div>
     </>
