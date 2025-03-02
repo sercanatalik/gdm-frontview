@@ -76,8 +76,6 @@ export async function POST(req: Request) {
     
     const query = `
       SELECT 
-        '${formatDate(asofdate)}' as asOfDate,
-        toDate('${closestDate}') as closestDate,
         ${currentSums},
         ${relativeSums},
         ${changes}
@@ -91,7 +89,11 @@ export async function POST(req: Request) {
     })
 
     const [result] = await resultSet.json()
-    return NextResponse.json(result)
+    return NextResponse.json({
+      ...(result as Record<string, unknown>),
+      asOfDate: formatDate(asofdate),
+      closestDate: formatDate(new Date(closestDate))
+    })
   } catch (error) {
     console.error("Error calculating sums:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
