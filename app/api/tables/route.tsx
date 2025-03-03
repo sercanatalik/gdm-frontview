@@ -12,8 +12,11 @@ async function fetchTableData(tableName: string) {
   const client = getClickHouseClient()
 
   try {
-    const query = `DESC TABLE ${tableName}`
-    console.log(query)
+    // Special case for listing all tables
+    const query = tableName === 'db' 
+      ? 'SHOW TABLES FROM default'
+      : `DESC TABLE ${tableName}`
+   
     const resultSet = await client.query({ query })
     const results = await resultSet.json()
 
