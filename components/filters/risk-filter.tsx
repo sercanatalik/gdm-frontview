@@ -28,6 +28,8 @@ import {
   Tag,
   UserCircle,
   Calendar,
+  Trash2,
+  Briefcase,
 } from "lucide-react"
 import { nanoid } from "nanoid"
 import * as React from "react"
@@ -97,7 +99,7 @@ export const DateValues = {
 // Icon mapping
 const iconMapping: Record<string, React.ReactNode> = {
   [FilterTypes.SL1]: <CircleDashed className="size-3.5" />,
-  [FilterTypes.DESK]: <UserCircle className="size-3.5" />,
+  [FilterTypes.DESK]: <Briefcase className="size-3.5" />,
   [FilterTypes.PORTFOLIO]: <Tag className="size-3.5" />,
   [FilterTypes.ASOFDATE]: <Calendar className="size-3.5" />,
   [SL1Values.ABS_CLO]: <CircleDashed className="size-3.5 text-muted-foreground" />,
@@ -270,10 +272,11 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
         <Button
           variant="outline"
           size="sm"
-          className="transition group h-8 text-sm items-center rounded-sm"
+          className="transition h-6 border-none text-xs text-muted-foreground hover:bg-transparent hover:text-red-500"
           onClick={() => setFilters([])}
         >
-          Clear
+          <Trash2 className="size-3 mr-0" />
+          Reset
         </Button>
       )}
 
