@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
+import { Database } from "lucide-react"
 
 interface DatasourceSelectorProps {
   value: string
@@ -49,7 +50,8 @@ export function DatasourceSelector({ value, onValueChange }: DatasourceSelectorP
 
   return (
     <Select value={value} onValueChange={handleValueChange}>
-      <SelectTrigger className="w-[120px] text-sm">
+      <SelectTrigger className="w-[160px] text-sm bg-gray-050 flex items-center gap-2 border-0">
+        <Database className="h-4 w-4" />
         <SelectValue placeholder="Datasource" />
       </SelectTrigger>
       <SelectContent>
