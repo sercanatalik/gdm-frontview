@@ -10,7 +10,7 @@ import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 import { themeBalham } from 'ag-grid-community';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Columns } from "lucide-react"
 import { LicenseManager } from 'ag-grid-enterprise';
 
 import { ModuleRegistry,AllCommunityModule } from 'ag-grid-community'; 
@@ -81,18 +81,26 @@ export default function FinancingWorkspace() {
   return (
     <ContentLayout title="Workspace">
       <div className="flex-1 space-y-1 p-0 pt-0">
-        <div className="flex justify-between items-center">
-      <MultiSelectDraggable
-        options={[
-          { id: 'SL1', label: 'SL1' },
-          { id: 'YTD', label: 'YTD' },
-          { id: 'MTD', label: 'MTD' },
-        ]}
-        value={selectedColumns}
-        onChange={setSelectedColumns}
-       
-      />
+        <div className="flex justify-between items-start ">
           
+        <div className="w-full max-w-sm space-y-0 p-0">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Columns className="h-4 w-4" />
+            </Button>
+            <MultiSelectDraggable
+              options={[
+                { id: 'SL1', label: 'SL1' },
+                { id: 'YTD', label: 'YTD' },
+                { id: 'MTD', label: 'MTD' },
+              ]}
+              value={selectedColumns}
+              onChange={setSelectedColumns}
+              className="text-xs"
+              placeholder="Select grouping columns"
+            />
+          </div>
+        </div>
           <div className="flex items-center gap-2">
             <RiskFilter 
               filters={filters} 

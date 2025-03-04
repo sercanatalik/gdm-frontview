@@ -110,6 +110,7 @@ export function MultiSelectDraggable({
   value,
   onChange,
   placeholder = "Click to select items",
+  helpText = "Click to select items, drag handles to reorder",
   className,
   disabled = false,
 }: MultiSelectDraggableProps) {
@@ -192,7 +193,7 @@ export function MultiSelectDraggable({
           <div
             ref={containerRef}
             className={cn(
-              "relative min-h-[40px] rounded-md bg-background p-1.5 transition-colors",
+              "relative rounded-md bg-background p-2 transition-colors",
               disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50",
             )}
             role={disabled ? undefined : "button"}
@@ -204,7 +205,7 @@ export function MultiSelectDraggable({
             }}
           >
             {selectedItems.length === 0 ? (
-              <div className="flex h-full items-center text-xs text-muted-foreground font-normal">{placeholder}</div>
+              <div className="flex h-full text-muted-foreground font-normal">{placeholder}</div>
             ) : (
               <div
                 ref={scrollContainerRef}
@@ -252,7 +253,6 @@ export function MultiSelectDraggable({
           </Command>
         </PopoverContent>
       </Popover>
-    
     </div>
   )
 }
