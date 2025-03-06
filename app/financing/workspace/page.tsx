@@ -151,7 +151,7 @@ export default function FinancingWorkspace() {
                 options={availableColumns}
                 value={selectedColumns}
                 onChange={setSelectedColumns}
-                className="text-xs"
+                className="text-xs w-full"
                 placeholder="Select grouping columns"
               />
             </div>

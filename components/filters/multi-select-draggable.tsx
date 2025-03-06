@@ -64,41 +64,45 @@ function SortableItem({ id, label, onRemove }: SortableItemProps) {
   }
 
   return (
-    <Badge
+    <div
       ref={setNodeRef}
       style={style}
       className={cn(
         "mr-1 select-none py-1 pl-1.5 pr-1 text-xs whitespace-nowrap font-normal",
         isDragging && "opacity-50",
       )}
-      variant="secondary"
     >
-      <span className="flex items-center gap-1">
+      <Badge
+        variant="secondary"
+        className="flex items-center"
+      >
+        <span className="flex items-center gap-1">
+          <Button
+            {...listeners}
+            {...attributes}
+            variant="ghost"
+            size="sm"
+            className="h-3 w-3 p-0 opacity-50 hover:bg-transparent hover:opacity-100"
+          >
+            <GripVertical className="h-2.5 w-2.5" />
+            <span className="sr-only">Drag to reorder</span>
+          </Button>
+          {label}
+        </span>
         <Button
-          {...listeners}
-          {...attributes}
           variant="ghost"
           size="sm"
-          className="h-3 w-3 p-0 opacity-50 hover:bg-transparent hover:opacity-100"
+          className="ml-1 h-3 w-3 p-0 opacity-50 hover:bg-transparent hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove(id)
+          }}
         >
-          <GripVertical className="h-2.5 w-2.5" />
-          <span className="sr-only">Drag to reorder</span>
+          <X className="h-2.5 w-2.5" />
+          <span className="sr-only">Remove</span>
         </Button>
-        {label}
-      </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="ml-1 h-3 w-3 p-0 opacity-50 hover:bg-transparent hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation()
-          onRemove(id)
-        }}
-      >
-        <X className="h-2.5 w-2.5" />
-        <span className="sr-only">Remove</span>
-      </Button>
-    </Badge>
+      </Badge>
+    </div>
   )
 }
 
@@ -181,7 +185,7 @@ export function MultiSelectDraggable({
   const availableOptions = options.filter((option) => !selectedItems.includes(option.id))
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full ", className)}>
       <Popover
         open={disabled ? false : open}
         onOpenChange={(newOpen) => {
