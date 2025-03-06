@@ -114,3 +114,32 @@ export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: b
       ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 }
+
+
+
+export function generateAgGridRowGrouping(
+  data: any[], 
+  autoGroup: boolean = false
+): {field: string, rowGroup?: boolean, enableRowGroup: boolean, hide?: boolean}[] {  
+  if (!data?.length) return [];
+  
+  return data
+    .filter((col: any) => {
+      // Include String types and other categorical types that make sense for grouping
+      return ['String', 'Enum8', 'Enum16', 'LowCardinality(String)', 'UUID', 'IPv4', 'IPv6', 'Date', 'DateTime','Nullable(String)'].includes(col.type) ||
+        // Also include Date and DateTime types
+        col.type.startsWith('Date') ||
+        // Include numeric types that might represent categories
+        (col.type.includes('Int') && col.name.toLowerCase().includes('id'));
+    })
+    .map((col: any) => {
+      return {
+        field: col.name,
+        enableRowGroup: true,
+        // Only set rowGroup and hide if autoGroup is true
+        ...(autoGroup && { rowGroup: true, hide: true })
+      };
+    });
+}
+
+

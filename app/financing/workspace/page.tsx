@@ -11,18 +11,21 @@ import { themeBalham } from 'ag-grid-community';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Plus, Columns } from "lucide-react"
-import { LicenseManager } from 'ag-grid-enterprise';
+import { generateAgGridRowGrouping } from "@/lib/clickhouse-wrap"
 
-import { ModuleRegistry,AllCommunityModule } from 'ag-grid-community'; 
-import { AllEnterpriseModule } from 'ag-grid-enterprise';
 import { DatasourceSelector } from "@/components/filters/datasource-selector"
-LicenseManager.setLicenseKey('your-license-key-here');
+
+import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise';
+import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule } from 'ag-grid-community';
+
+// Register AG Grid modules once
+ModuleRegistry.registerModules([AllCommunityModule, AllEnterpriseModule, ClientSideRowModelModule]);
+LicenseManager.setLicenseKey('');
 
 // Register all Community and Enterprise features
-ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Register AG Grid license and modules
-LicenseManager.setLicenseKey('your-license-key-here')
+// LicenseManager.setLicenseKey('your-license-key-here')
 
 // Define types
 interface RiskData {
@@ -40,6 +43,45 @@ export default function FinancingWorkspace() {
   const [error, setError] = useState<string | null>(null)
 
   const [selectedColumns, setSelectedColumns] = useState<string[]>([])
+  const [availableColumns, setAvailableColumns] = useState<{id: string, label: string, key?: string}[]>([])
+
+  const [rowGrouping, setRowGrouping] = useState<string[]>([])
+
+  // useEffect(() => {
+  //   setRowGrouping(generateAgGridRowGrouping(selectedColumns))
+  // }, [selectedColumns])
+  
+  useEffect(() => {
+    const fetchColumns = async () => {
+      try {
+        const response = await fetch(`/api/tables?table=${selectedDatasource}`)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch columns: ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        
+        // Get groupable columns with AG Grid format
+        const groupableColumns = generateAgGridRowGrouping(data);
+        
+        // Set available columns for the multi-select
+        setAvailableColumns(groupableColumns.map(col => ({
+          id: col.field,
+          label: col.field,
+          key: col.field
+        })));
+        
+        // Reset selected columns when datasource changes
+        setSelectedColumns([])
+      } catch (error) {
+        console.error("Error fetching columns:", error)
+        setAvailableColumns([])
+      }
+    }
+
+    fetchColumns()
+  }, [selectedDatasource])
+  
   useEffect(() => {
     const fetchRiskData = async () => {
       setIsLoading(true)
@@ -76,6 +118,13 @@ export default function FinancingWorkspace() {
     { headerName: "SL1", field: "SL1" },
     { headerName: "YTD", field: "ytd" },
     { headerName: "MTD", field: "mtd" },
+    
+    ...selectedColumns.map(colId => ({
+      field: colId,
+      rowGroup: true,
+      enableRowGroup: true,
+      hide: true
+    }))
   ]
 
   return (
@@ -89,11 +138,7 @@ export default function FinancingWorkspace() {
               <Columns className="h-4 w-4" />
             </Button>
             <MultiSelectDraggable
-              options={[
-                { id: 'SL1', label: 'SL1' },
-                { id: 'YTD', label: 'YTD' },
-                { id: 'MTD', label: 'MTD' },
-              ]}
+              options={availableColumns}
               value={selectedColumns}
               onChange={setSelectedColumns}
               className="text-xs"
@@ -122,7 +167,7 @@ export default function FinancingWorkspace() {
         )}
         
         <div className="w-full h-[90vh] ag-theme-balham">
-          <AgGridReact
+          < AgGridReact
             rowData={results}
             columnDefs={columnDefs}
             
@@ -133,7 +178,7 @@ export default function FinancingWorkspace() {
               resizable: true,
             }}
           />
-         
+      
         </div>
       </div>
     </ContentLayout>
