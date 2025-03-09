@@ -16,15 +16,18 @@ export async function POST(req: Request) {
         value: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Format: YYYY-MM-DD
       }
     ]
-
-    console.log(dateFilter)
+ 
 
     const query = `
-            SELECT count()
+            SELECT 
+                count() as tradeCount,
+                count(DISTINCT counterparty) as counterpartyCount,
+                count(DISTINCT instrument) as instrumentCount,
+                count(DISTINCT ccy) as currencyCount 
+              
             FROM risk_f_mv  
             ${buildWhereCondition(dateFilter)}
         `
-        console.log(query)
 
     const resultSet = await getClickHouseClient().query({
       query,

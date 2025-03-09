@@ -3,12 +3,12 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { filter = null } = await req.json()
+    const { filter = null, orderBy = null } = await req.json()
 
     const query = `
             SELECT *
             FROM risk_f_mv  
-            ${buildWhereCondition(filter)}
+            ${buildWhereCondition(filter,true,orderBy)}
 
 
         `

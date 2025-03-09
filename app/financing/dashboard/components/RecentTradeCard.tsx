@@ -11,7 +11,7 @@ import {
   import { RecentTrades } from "@/app/financing/dashboard/components/RecentTrades"
   import type { Filter } from "@/components/ui/filters"
   export function RecentTradesCard({ filters }: { filters: Filter[] }) {
-    const [tradeCount, setTradeCount] = useState<number | null>(null)
+    const [tradeCount, setTradeCount] = useState<any | null>(null)
 
     useEffect(() => {
       async function fetchTradeCount() {
@@ -24,7 +24,8 @@ import {
             body: JSON.stringify({ filter: filters })
           })
           const data = await response.json()
-          setTradeCount(data.data)
+          console.log(data)
+          setTradeCount(data[0])
         } catch (error) {
           console.error('Error fetching trade count:', error)
         }
@@ -38,13 +39,20 @@ import {
         <CardHeader>
           <CardTitle>Recent Trades</CardTitle>
           <CardDescription>
-            {tradeCount !== null
-              ? `We made ${tradeCount} trades this month.`
-              : 'Loading trade count...'}
+            {tradeCount !== null ? (
+              <span>
+                This month: <strong>{tradeCount.tradeCount}</strong> trades,{" "}
+                <strong>{tradeCount.counterpartyCount}</strong> counterparties,{" "}
+                <strong>{tradeCount.instrumentCount}</strong> instruments,{" "}
+                <strong>{tradeCount.currencyCount}</strong> currencies
+              </span>
+            ) : (
+              'Loading trade count...'
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RecentTrades />
+          <RecentTrades filters={filters} />
         </CardContent>
       </Card>
     )

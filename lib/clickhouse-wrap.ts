@@ -80,8 +80,8 @@ export function convertToExactDate(timeNotation: string, currentDate: Date = new
 }
 
 
-export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: boolean = false): string {
-  if (!filter?.length) return '';
+export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: boolean = false, orderBy: string = ''): string {
+  if (!filter?.length) return orderBy ? `ORDER BY ${orderBy}` : '';
   // Check if asOfDate is present in the filter
   const hasAsOfDate = filter.some(f => f.type === 'asOfDate');  
 
@@ -115,9 +115,13 @@ export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: b
               : `${type} IN (${values})`;
       });
 
-  return whereConditions.length 
+  const whereClause = whereConditions.length 
       ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
+      
+  return orderBy 
+      ? `${whereClause} ORDER BY ${orderBy}` 
+      : whereClause;
 }
 
 
