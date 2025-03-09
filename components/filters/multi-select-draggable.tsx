@@ -197,7 +197,7 @@ export function MultiSelectDraggable({
           <div
             ref={containerRef}
             className={cn(
-              "relative rounded-md bg-background p-2 transition-colors",
+              "relative rounded-md bg-background p-2 transition-colors w-[500px]",
               disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50",
             )}
             role={disabled ? undefined : "button"}
@@ -233,7 +233,7 @@ export function MultiSelectDraggable({
             )}
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className="w-full p-0" align="start" alignOffset={100} sideOffset={0}>
           <Command>
             <CommandInput placeholder="Search items..." className="text-xs" />
             <CommandEmpty className="text-xs font-normal">No item found.</CommandEmpty>

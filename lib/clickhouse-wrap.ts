@@ -82,7 +82,6 @@ export function convertToExactDate(timeNotation: string, currentDate: Date = new
 
 export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: boolean = false): string {
   if (!filter?.length) return '';
-  
   // Check if asOfDate is present in the filter
   const hasAsOfDate = filter.some(f => f.type === 'asOfDate');  
 
@@ -104,6 +103,12 @@ export function buildWhereCondition(filter: FilterCondition[], removeAsOfDate: b
       .filter(f => f.value?.length > 0)
       .filter(f => !(removeAsOfDate && f.type === 'asOfDate')) // Remove asOfDate conditions if removeAsOfDate is true
       .map(({ type, value, operator }) => {
+          // Handle comparison operators (>=, >, <=, <)
+          if (['>=', '>', '<=', '<'].includes(operator)) {
+              return `${type} ${operator} '${value}'`;
+          }
+          
+          // Handle IN/NOT IN operators (is/is not)
           const values = value.map(v => `'${v}'`).join(',');
           return operator === 'is not'
               ? `${type} NOT IN (${values})`

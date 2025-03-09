@@ -5,6 +5,8 @@ import { Stats } from "./components/stats"
 import { useState } from "react"
 import type { Filter } from "@/components/ui/filters"
 import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
+import { Overview } from "./components/Overview"
+import { RecentTradesCard } from "./components/RecentTradeCard"
 
 export default function FinancingMainPage() {
   const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
@@ -37,10 +39,21 @@ export default function FinancingMainPage() {
             <h2 className="text-3xl font-bold tracking-tight">Financing Frontview</h2>
             <RiskFilter filters={filters} setFilters={setFilters} />
           </div>
+          
           <Stats onDeskChange={handleDeskChange} filters={filters} />
-          <div className="flex items-center justify-between">
-            {/* <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} /> */}
+          
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Overview filters={filters} />
+            </div>
+            <div className="flex-1">
+              <RecentTradesCard filters={filters} />
+            </div>
           </div>
+
+          
+          {/* Uncomment for debugging */}
+          {/* <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} /> */}
         </div>
       </div>
     </ContentLayout>
