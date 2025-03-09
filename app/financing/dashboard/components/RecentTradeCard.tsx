@@ -24,7 +24,6 @@ import {
             body: JSON.stringify({ filter: filters })
           })
           const data = await response.json()
-          console.log(data)
           setTradeCount(data[0])
         } catch (error) {
           console.error('Error fetching trade count:', error)

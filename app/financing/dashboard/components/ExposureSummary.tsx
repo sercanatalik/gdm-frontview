@@ -31,7 +31,7 @@ function getInitials(name: string): string {
     .toUpperCase()
 }
 
-export function CounterpartySummary({ filters }: CounterpartySummaryProps) {
+export function ExposureSummary({ filters }: CounterpartySummaryProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [summaries, setSummaries] = useState<CounterpartySummary[]>([])
 
@@ -47,7 +47,7 @@ export function CounterpartySummary({ filters }: CounterpartySummaryProps) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ filter: filters, groupBy: 'counterparty' }),
+      body: JSON.stringify({ filter: filters, groupBy: 'instrument' }),
     })
       .then(response => {
         if (!response.ok) {
@@ -70,7 +70,7 @@ export function CounterpartySummary({ filters }: CounterpartySummaryProps) {
     <Card className="h-full overflow-hidden">
       <CardHeader>
           <CardTitle>
-            Top Counterparties
+            Top Instruments
           </CardTitle>
       </CardHeader>
       <CardContent className="p-0">

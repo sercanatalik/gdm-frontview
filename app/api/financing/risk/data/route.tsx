@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const query = `
             SELECT *
             FROM risk_f_mv  
-            ${buildWhereCondition(filter,true,orderBy)}
+            ${buildWhereCondition(filter,false,orderBy)}
         `
     const resultSet = await getClickHouseClient().query({
       query,
