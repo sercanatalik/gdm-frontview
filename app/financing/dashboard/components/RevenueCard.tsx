@@ -22,22 +22,28 @@ interface PnlData {
   PPNL: number | null
 }
 
-interface PnlPerformanceProps {
+type ViewMode = "desk" | "portfolio" | "SL1"
 
-}
-
-// Group data by desk or portfolio
-function groupDataBy(
-  data: PnlData[],
-  groupKey: "desk" | "portfolio" | "SL1",
-): {
+interface GroupedData {
   name: string
   YTD: number
   MTD: number
   AOP: number
   ytdProgress: number
   mtdProgress: number
-}[] {
+}
+
+interface Totals {
+  YTD: number
+  MTD: number
+  AOP: number
+}
+
+// Helper functions
+function groupDataBy(
+  data: PnlData[],
+  groupKey: ViewMode,
+): GroupedData[] {
   const grouped = data.reduce(
     (acc, item) => {
       const key = item[groupKey] || "Unknown"
@@ -68,29 +74,199 @@ function groupDataBy(
       MTD: group.MTD,
       AOP: group.AOP,
       ytdProgress: (group.YTD / group.AOP) * 100,
-      mtdProgress: (group.MTD / (group.AOP / 12)) * 100, // Assuming AOP is annual and MTD is compared to 1/12 of AOP
+      mtdProgress: (group.MTD / (group.AOP / 12)) * 100,
     }))
-    .sort((a, b) => b.YTD - a.YTD) // Sort by YTD descending
+    .sort((a, b) => b.YTD - a.YTD)
 }
 
+function calculateTotals(data: PnlData[]): Totals {
+  return data.reduce(
+    (acc, item) => {
+      if (item.YTD) acc.YTD += item.YTD
+      if (item.MTD) acc.MTD += item.MTD
+      if (item.AOP) acc.AOP += item.AOP
+      return acc
+    },
+    { YTD: 0, MTD: 0, AOP: 0 },
+  )
+}
+
+function formatCurrency(value: number): string {
+  return `$${(value / 1000000).toFixed(1)}M`
+}
+
+function formatCurrencyPrecise(value: number): string {
+  return `$${(value / 1000000).toFixed(2)}M`
+}
+
+// Components
+function ProgressBar({ percentage }: { percentage: number }) {
+  return (
+    <div className="relative h-2 w-full overflow-hidden rounded-full bg-foreground/10">
+      <div
+        className="absolute top-0 left-0 h-full rounded-full transition-all duration-500 bg-foreground/60"
+        style={{ width: `${Math.min(percentage, 100)}%` }}
+      />
+    </div>
+  )
+}
+
+function SmallProgressBar({ percentage }: { percentage: number }) {
+  return (
+    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+      <div
+        className={cn(
+          "absolute top-0 left-0 h-full rounded-full transition-all duration-500",
+          percentage >= 100 ? "bg-foreground/80" : "bg-foreground/60",
+        )}
+        style={{ width: `${Math.min(percentage, 100)}%` }}
+      />
+    </div>
+  )
+}
+
+function TotalSummary({ totals, ytdProgress, mtdProgress }: { totals: Totals, ytdProgress: number, mtdProgress: number }) {
+  return (
+    <div className="p-4 bg-muted/10 border-b border-border/30">
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-foreground/10">
+            <DollarSign className="h-4 w-4 text-foreground/70" />
+          </div>
+          <span className="font-medium">Total PnL</span>
+        </div>
+        <div className="text-right">
+          <span className="text-sm font-medium">{formatCurrency(totals.YTD)}</span>
+          <span className="text-xs text-muted-foreground ml-1">/ {formatCurrency(totals.AOP)}</span>
+        </div>
+      </div>
+      <div className="space-y-8">
+        <div>
+          <div className="flex justify-between items-center text-xs mb-1.5">
+            <span className="font-medium">YTD Progress</span>
+            <span className="font-medium">{ytdProgress.toFixed(1)}%</span>
+          </div>
+          <ProgressBar percentage={ytdProgress} />
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center text-xs mb-1.5">
+            <span className="font-medium">MTD Progress</span>
+            <span className="font-medium">{mtdProgress.toFixed(1)}%</span>
+          </div>
+          <ProgressBar percentage={mtdProgress} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GroupItem({ group, isExpanded, onToggle }: { 
+  group: GroupedData, 
+  isExpanded: boolean, 
+  onToggle: () => void 
+}) {
+  return (
+    <div
+      className={cn("transition-colors duration-200", isExpanded ? "bg-muted/20" : "hover:bg-muted/10")}
+    >
+      <div className="p-4 cursor-pointer" onClick={onToggle}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-foreground/10">
+              <PieChart className="h-3 w-3 text-foreground/70" />
+            </div>
+            <Badge
+              variant="outline"
+              className="h-6 text-xs font-normal bg-background/50 backdrop-blur-sm"
+            >
+              {group.name}
+            </Badge>
+            {isExpanded ? (
+              <ChevronUp className="h-3 w-3 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            )}
+          </div>
+          <div className="text-right">
+            <span className="text-sm font-medium">{formatCurrency(group.YTD)}</span>
+            <span className="text-xs text-muted-foreground ml-1">
+              / {formatCurrency(group.AOP)}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3 text-foreground/70" />
+              <span>YTD</span>
+            </div>
+            <span className="font-medium">{group.ytdProgress.toFixed(1)}%</span>
+          </div>
+          <SmallProgressBar percentage={group.ytdProgress} />
+        </div>
+
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-border/30 space-y-2 animate-in fade-in duration-200">
+            <div className="flex justify-between items-center text-xs">
+              <div className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3 text-foreground/70" />
+                <span>MTD</span>
+              </div>
+              <span className="font-medium">{group.mtdProgress.toFixed(1)}%</span>
+            </div>
+            <SmallProgressBar percentage={group.mtdProgress} />
+
+            <div className="grid grid-cols-2 gap-4 mt-3 text-xs">
+              <div className="bg-foreground/5 p-2 rounded-md">
+                <div className="text-muted-foreground mb-1">YTD</div>
+                <div className="font-medium">{formatCurrencyPrecise(group.YTD)}</div>
+              </div>
+              <div className="bg-foreground/5 p-2 rounded-md">
+                <div className="text-muted-foreground mb-1">MTD</div>
+                <div className="font-medium">{formatCurrencyPrecise(group.MTD)}</div>
+              </div>
+              <div className="bg-foreground/5 p-2 rounded-md">
+                <div className="text-muted-foreground mb-1">AOP Target</div>
+                <div className="font-medium">{formatCurrencyPrecise(group.AOP)}</div>
+              </div>
+              <div className="bg-foreground/5 p-2 rounded-md">
+                <div className="text-muted-foreground mb-1">Monthly Target</div>
+                <div className="font-medium">{formatCurrencyPrecise(group.AOP / 12)}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="flex justify-center items-center h-[280px]">
+      <div className="animate-spin h-8 w-8 border-4 border-foreground/20 border-t-foreground/80 rounded-full"></div>
+    </div>
+  )
+}
+
+// Main component
 export function RevenueCard() {
   const [isLoading, setIsLoading] = useState(true)
   const [pnlData, setPnlData] = useState<PnlData[]>([])
-  const [viewMode, setViewMode] = useState<"desk" | "portfolio" | "SL1">("desk")
+  const [viewMode, setViewMode] = useState<ViewMode>("desk")
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
 
-  // Fetch data from API based on filters
   useEffect(() => {
-    setIsLoading(true)
-
     const fetchData = async () => {
       try {
+        setIsLoading(true)
         const response = await fetch('/api/financing/pnl/data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-         
         })
 
         if (!response.ok) {
@@ -101,7 +277,7 @@ export function RevenueCard() {
         setPnlData(data)
       } catch (error) {
         console.error('Error fetching PnL data:', error)
-        setPnlData([]) // Set empty array on error
+        setPnlData([])
       } finally {
         setIsLoading(false)
       }
@@ -111,30 +287,23 @@ export function RevenueCard() {
   }, [])
 
   const groupedData = groupDataBy(pnlData, viewMode)
-
-  // Calculate totals
-  const totals = pnlData.reduce(
-    (acc, item) => {
-      if (item.YTD) acc.YTD += item.YTD
-      if (item.MTD) acc.MTD += item.MTD
-      if (item.AOP) acc.AOP += item.AOP
-      return acc
-    },
-    { YTD: 0, MTD: 0, AOP: 0 },
-  )
-
+  const totals = calculateTotals(pnlData)
   const totalYtdProgress = (totals.YTD / totals.AOP) * 100
   const totalMtdProgress = (totals.MTD / (totals.AOP / 12)) * 100
 
   const toggleExpand = (name: string) => {
-    setExpandedGroups((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]))
+    setExpandedGroups((prev) => 
+      prev.includes(name) 
+        ? prev.filter((item) => item !== name) 
+        : [...prev, name]
+    )
   }
 
   return (
-    <Card >
-      <CardHeader >
+    <Card>
+      <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle >
+          <CardTitle>
             Revenue & PnL Performance
           </CardTitle>
           <Tabs defaultValue="desk" className="w-auto h-7">
@@ -166,151 +335,24 @@ export function RevenueCard() {
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="flex justify-center items-center h-[280px]">
-            <div className="animate-spin h-8 w-8 border-4 border-foreground/20 border-t-foreground/80 rounded-full"></div>
-          </div>
+          <LoadingSpinner />
         ) : (
           <div>
-            {/* Total Summary */}
-            <div className="p-4 bg-muted/10 border-b border-border/30">
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-foreground/10">
-                    <DollarSign className="h-4 w-4 text-foreground/70" />
-                  </div>
-                  <span className="font-medium">Total PnL</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-medium">${(totals.YTD / 1000000).toFixed(1)}M</span>
-                  <span className="text-xs text-muted-foreground ml-1">/ ${(totals.AOP / 1000000).toFixed(1)}M</span>
-                </div>
-              </div>
-              <div className="space-y-8">
-                <div>
-                  <div className="flex justify-between items-center text-xs mb-1.5">
-                    <span className="font-medium">YTD Progress</span>
-                    <span className="font-medium">{totalYtdProgress.toFixed(1)}%</span>
-                  </div>
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-foreground/10">
-                    <div
-                      className="absolute top-0 left-0 h-full rounded-full transition-all duration-500 bg-foreground/60"
-                      style={{ width: `${Math.min(totalYtdProgress, 100)}%` }}
-                    />
-                  </div>
-                </div>
+            <TotalSummary 
+              totals={totals} 
+              ytdProgress={totalYtdProgress} 
+              mtdProgress={totalMtdProgress} 
+            />
 
-                <div>
-                  <div className="flex justify-between items-center text-xs mb-1.5">
-                    <span className="font-medium">MTD Progress</span>
-                    <span className="font-medium">{totalMtdProgress.toFixed(1)}%</span>
-                  </div>
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-foreground/10">
-                    <div
-                      className="absolute top-0 left-0 h-full rounded-full transition-all duration-500 bg-foreground/60"
-                      style={{ width: `${Math.min(totalMtdProgress, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Breakdown by selected view */}
             <div className="divide-y divide-border/30">
-              {groupedData.map((group, index) => {
-                const isExpanded = expandedGroups.includes(group.name)
-                return (
-                  <div
-                    key={index}
-                    className={cn("transition-colors duration-200", isExpanded ? "bg-muted/20" : "hover:bg-muted/10")}
-                  >
-                    <div className="p-4 cursor-pointer" onClick={() => toggleExpand(group.name)}>
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-foreground/10">
-                            <PieChart className="h-3 w-3 text-foreground/70" />
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="h-6 text-xs font-normal bg-background/50 backdrop-blur-sm"
-                          >
-                            {group.name}
-                          </Badge>
-                          {isExpanded ? (
-                            <ChevronUp className="h-3 w-3 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-medium">${(group.YTD / 1000000).toFixed(1)}M</span>
-                          <span className="text-xs text-muted-foreground ml-1">
-                            / ${(group.AOP / 1000000).toFixed(1)}M
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <div className="flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3 text-foreground/70" />
-                            <span>YTD</span>
-                          </div>
-                          <span className="font-medium">{group.ytdProgress.toFixed(1)}%</span>
-                        </div>
-                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-                          <div
-                            className={cn(
-                              "absolute top-0 left-0 h-full rounded-full transition-all duration-500",
-                              group.ytdProgress >= 100 ? "bg-foreground/80" : "bg-foreground/60",
-                            )}
-                            style={{ width: `${Math.min(group.ytdProgress, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-border/30 space-y-2 animate-in fade-in duration-200">
-                          <div className="flex justify-between items-center text-xs">
-                            <div className="flex items-center gap-1">
-                              <TrendingUp className="h-3 w-3 text-foreground/70" />
-                              <span>MTD</span>
-                            </div>
-                            <span className="font-medium">{group.mtdProgress.toFixed(1)}%</span>
-                          </div>
-                          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-                            <div
-                              className={cn(
-                                "absolute top-0 left-0 h-full rounded-full transition-all duration-500",
-                                group.mtdProgress >= 100 ? "bg-foreground/80" : "bg-foreground/60",
-                              )}
-                              style={{ width: `${Math.min(group.mtdProgress, 100)}%` }}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 mt-3 text-xs">
-                            <div className="bg-foreground/5 p-2 rounded-md">
-                              <div className="text-muted-foreground mb-1">YTD</div>
-                              <div className="font-medium">${(group.YTD / 1000000).toFixed(2)}M</div>
-                            </div>
-                            <div className="bg-foreground/5 p-2 rounded-md">
-                              <div className="text-muted-foreground mb-1">MTD</div>
-                              <div className="font-medium">${(group.MTD / 1000000).toFixed(2)}M</div>
-                            </div>
-                            <div className="bg-foreground/5 p-2 rounded-md">
-                              <div className="text-muted-foreground mb-1">AOP Target</div>
-                              <div className="font-medium">${(group.AOP / 1000000).toFixed(2)}M</div>
-                            </div>
-                            <div className="bg-foreground/5 p-2 rounded-md">
-                              <div className="text-muted-foreground mb-1">Monthly Target</div>
-                              <div className="font-medium">${(group.AOP / 12 / 1000000).toFixed(2)}M</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+              {groupedData.map((group, index) => (
+                <GroupItem
+                  key={index}
+                  group={group}
+                  isExpanded={expandedGroups.includes(group.name)}
+                  onToggle={() => toggleExpand(group.name)}
+                />
+              ))}
             </div>
           </div>
         )}
