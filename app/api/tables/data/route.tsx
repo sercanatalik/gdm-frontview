@@ -9,10 +9,8 @@ export async function POST(req: Request) {
             SELECT *
             FROM ${tableName}  
             ${buildWhereCondition(filter,true)}
-
-
         `
-    query)
+
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",
