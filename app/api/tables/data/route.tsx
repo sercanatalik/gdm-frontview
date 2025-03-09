@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
 
         `
-    console.log(query)
+    query)
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",

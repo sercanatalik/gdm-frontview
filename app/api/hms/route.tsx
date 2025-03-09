@@ -13,7 +13,6 @@ async function fetchHMSBookData(distinct?: string | null): Promise<HMSBookResult
     const query = `
             SELECT ${distinct ? `DISTINCT ${distinct}` : "*"} FROM hmsbook_f
             `
-    console.log(query)
     const resultSet = await client.query({ query })
     const results = (await resultSet.json()) as HMSBookResults
 

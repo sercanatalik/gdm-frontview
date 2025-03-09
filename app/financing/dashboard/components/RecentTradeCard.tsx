@@ -35,15 +35,15 @@ import {
     }, [])
 
     return (
-      <Card className="col-span-3">
+      <Card className="col-span-3 h-full">
         <CardHeader>
           <CardTitle>Recent Trades</CardTitle>
           <CardDescription>
             {tradeCount !== null ? (
               <span>
-                This month: <strong>{tradeCount.tradeCount}</strong> trades,{" "}
+                This month's activity: <strong>{tradeCount.tradeCount}</strong> trades across{" "}
                 <strong>{tradeCount.counterpartyCount}</strong> counterparties,{" "}
-                <strong>{tradeCount.instrumentCount}</strong> instruments,{" "}
+                <strong>{tradeCount.instrumentCount}</strong> instruments, and{" "}
                 <strong>{tradeCount.currencyCount}</strong> currencies
               </span>
             ) : (

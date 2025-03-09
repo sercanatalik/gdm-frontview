@@ -33,7 +33,6 @@ export async function POST(req: Request) {
       query,
       format: "JSONEachRow",
     })
-    console.log(query)
     const result = await resultSet.json()
 
     return NextResponse.json(result)

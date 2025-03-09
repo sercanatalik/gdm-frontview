@@ -7,7 +7,7 @@ import type { Filter } from "@/components/ui/filters"
 import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
 import { Overview } from "./components/Overview"
 import { RecentTradesCard } from "./components/RecentTradeCard"
-
+import { CounterpartySummary } from "./components/CounterpartySummary"
 export default function FinancingMainPage() {
   const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filter[]>([])
@@ -49,9 +49,18 @@ export default function FinancingMainPage() {
             <div className="flex-1">
               <RecentTradesCard filters={filters} />
             </div>
+         
           </div>
+          <div className="flex flex-col md:flex-row gap-4">
 
+          <div className="flex-1">
+            <CounterpartySummary filters={filters} />
           
+          </div>
+          <div className="flex-1">
+            <CounterpartySummary filters={filters} />
+          </div>
+          </div>
           {/* Uncomment for debugging */}
           {/* <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} /> */}
         </div>

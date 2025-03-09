@@ -40,7 +40,6 @@ export function DatasourceSelector({ value, onValueChange }: DatasourceSelectorP
       const response = await fetch(`/api/tables?table=${selectedTable}`)
       const columns = await response.json()
       // Handle the columns data as needed
-      console.log('Table columns:', columns)
 
     } catch (error) {
       console.error('Error fetching columns:', error)

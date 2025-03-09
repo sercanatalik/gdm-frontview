@@ -45,14 +45,14 @@ export function Overview({ filters }: { filters: Filter[] }) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[350px]">
+      <div className="flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <Card className="col-span-4">
+    <Card className="col-span-4 h-full">
       <Tabs defaultValue="historical">
         <CardHeader>
           <CardTitle>
