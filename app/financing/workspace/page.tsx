@@ -51,20 +51,14 @@ export default function FinancingWorkspace() {
   const [availableValueColumns, setAvailableValueColumns] = useState<ColumnOption[]>([])
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
 
-  // Properly type the grid reference
   const gridRef = useRef<AgGridReact>(null)
-  
-  // Add this near the top of your component
   const initialColumnState = useRef<any>(null);
 
-  // Add a function to save state to localStorage
+  // Save grid state to localStorage
   const saveGridState = useCallback(() => {
     if (!gridRef.current?.api) return;
     
-    // Get column state from AG Grid
     const columnState = gridRef.current.api.getColumnState();
-    
-    // Create a state object to save
     const stateToSave = {
       selectedDatasource,
       selectedColumns,
@@ -73,28 +67,21 @@ export default function FinancingWorkspace() {
       timestamp: new Date().toISOString()
     };
     
-    // Save to localStorage
-    
-    // Optional: Show a toast or some feedback
+    localStorage.setItem('financingWorkspaceState', JSON.stringify(stateToSave));
     alert('Workspace state saved successfully');
   }, [selectedDatasource, selectedColumns, selectedValueColumns]);
 
-  // Add a function to load state from localStorage
+  // Load grid state from localStorage
   const loadGridState = useCallback(() => {
     const savedState = localStorage.getItem('financingWorkspaceState');
     if (!savedState) return;
     
     try {
       const parsedState = JSON.parse(savedState);
-      
-      // Set the datasource
       setSelectedDatasource(parsedState.selectedDatasource);
-      
-      // Set selected columns
       setSelectedColumns(parsedState.selectedColumns || []);
       setSelectedValueColumns(parsedState.selectedValueColumns || []);
       
-      // Store column state in ref for grid ready event
       if (parsedState.columnState) {
         initialColumnState.current = parsedState.columnState;
       }
@@ -103,7 +90,10 @@ export default function FinancingWorkspace() {
     }
   }, []);
 
-
+  // Load saved state on initial render
+  useEffect(() => {
+    loadGridState();
+  }, [loadGridState]);
 
   // Fetch available columns when datasource changes
   const fetchColumns = useCallback(async () => {
@@ -115,11 +105,9 @@ export default function FinancingWorkspace() {
       
       const data = await response.json()
       
-      // Get groupable columns with AG Grid format
       const groupableColumns = generateAgGridRowGrouping(data)
       const valueColumnsData = generateAgGridValueColumns(data)
       
-      // Set available columns for the multi-select
       setAvailableColumns(groupableColumns.map(col => ({
         id: col.field,
         label: col.field,
@@ -132,7 +120,6 @@ export default function FinancingWorkspace() {
         key: col.field
       })))
 
-      // Set value columns
       setValueColumns(valueColumnsData.map(col => ({
         id: col.field,
         label: col.field,
@@ -143,8 +130,6 @@ export default function FinancingWorkspace() {
         valueFormatter: col.valueFormatter,
       })))
       
-      // Reset selected columns when datasource changes
-      setSelectedColumns([])
     } catch (error) {
       console.error("Error fetching columns:", error)
       setAvailableColumns([])
@@ -152,46 +137,6 @@ export default function FinancingWorkspace() {
     }
   }, [selectedDatasource])
 
-  useEffect(() => {
-    fetchColumns()
-  }, [fetchColumns])
-
-  // Update row groups when selected columns change
-  useEffect(() => {
-    if (!gridRef.current?.api) return;
-    
-    gridRef.current.api.setRowGroupColumns(selectedColumns);
-    gridRef.current.api.autoSizeAllColumns();
-  }, [selectedColumns]);
-  
-  // Update value columns visibility when selectedValueColumns changes
-  useEffect(() => {
-    if (!gridRef.current?.api) return;
-    
-    // Get all column definitions
-    const columnDefs = gridRef.current.api.getColumnDefs();
-    if (!columnDefs) return;
-    
-    // Update column visibility based on selectedValueColumns
-    const updatedColumnDefs = columnDefs.map((colDef: any) => {
-      // If the column is in selectedValueColumns, make it visible
-      if (selectedValueColumns.includes(colDef.field)) {
-        return { ...colDef, hide: false };
-      }
-      // For value columns not selected, hide them
-      if (colDef.enableValue && !colDef.rowGroup) {
-        return { ...colDef, hide: true };
-      }
-      // Keep other columns as they are
-      return colDef;
-    });
-
-    gridRef.current!.api.setGridOption("columnDefs", updatedColumnDefs);
-
-    // Apply the updated column definitions
-    gridRef.current?.api?.autoSizeAllColumns();
-  }, [selectedValueColumns]);
-  
   // Fetch data when filters or datasource changes
   const fetchRiskData = useCallback(async () => {
     setIsLoading(true)
@@ -200,9 +145,7 @@ export default function FinancingWorkspace() {
     try {
       const response = await fetch("/api/tables/data/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filter: filters, tableName: selectedDatasource }),
       })
 
@@ -221,45 +164,79 @@ export default function FinancingWorkspace() {
     }
   }, [filters, selectedDatasource])
 
+  // Effect hooks for data fetching and grid updates
+  useEffect(() => {
+    fetchColumns()
+  }, [fetchColumns])
+
   useEffect(() => {
     fetchRiskData()
   }, [fetchRiskData])
 
+  useEffect(() => {
+    if (!gridRef.current?.api) return;
+    gridRef.current.api.setRowGroupColumns(selectedColumns);
+    gridRef.current.api.autoSizeAllColumns();
+  }, [selectedColumns]);
+  
+  useEffect(() => {
+    if (!gridRef.current?.api) return;
+    
+    const columnDefs = gridRef.current.api.getColumnDefs();
+    if (!columnDefs) return;
+    
+    const updatedColumnDefs = columnDefs.map((colDef: any) => {
+      // If column is in selectedValueColumns, show it
+      if (selectedValueColumns.includes(colDef.field)) {
+        return { ...colDef, hide: false };
+      }
+      // If column is a value column (enableValue=true) and not a row group column, hide it
+      // This ensures columns removed from selectedValueColumns get hidden
+      if (colDef.enableValue && !colDef.rowGroup) {
+        return { ...colDef, hide: true };
+      }
+      // Keep other columns as they are
+      return colDef;
+    });
 
+    gridRef.current.api.setGridOption("columnDefs", updatedColumnDefs);
+    gridRef.current.api.autoSizeAllColumns();
+  }, [selectedValueColumns]);
 
-  // Memoize column definitions to prevent unnecessary re-renders
+  // Format and render cell values
+  const formatCellValue = useCallback((value: any): string => {
+    if (typeof value === 'number') {
+      return Math.round(value).toLocaleString();
+    }
+    return value || '';
+  }, []);
+
+  const renderCell = useCallback((params: any) => {
+    if (typeof params.value !== 'number') {
+      return params.value || '';
+    }
+    
+    const isNegative = params.value < 0;
+    return (
+      <span style={{ color: isNegative ? 'red' : 'inherit' }}>
+        {Math.round(params.value).toLocaleString()}
+      </span>
+    );
+  }, []);
+
+  // Memoized column definitions
   const columnDefs = useMemo(() => {
-    // Create base columns from value columns
     const baseColumns = valueColumns.map(col => ({
       headerName: col.label,
       field: col.id,
       enableValue: true,
       aggFunc: col.aggFunc || 'sum',
       hide: !selectedValueColumns.includes(col.id),
-      valueFormatter: (params: any) => {
-        // Format numbers with zero decimals, leave strings unchanged
-        if (typeof params.value === 'number') {
-          return Math.round(params.value).toLocaleString();
-        }
-        return params.value || '';
-      },
-      cellRenderer: (params: any) => { 
-        // Format as currency and apply red color to negative values
-        if (typeof params.value !== 'number') {
-          return params.value || '';
-        }
-        
-        const isNegative = params.value < 0;
-        return (
-          <span style={{ color: isNegative ? 'red' : 'inherit' }}>
-            {Math.round(params.value).toLocaleString()}
-          </span>
-        );
-      },
+      valueFormatter: (params: any) => formatCellValue(params.value),
+      cellRenderer: renderCell,
       cellDataType: col.cellDataType || 'number',
     }));
     
-    // Add grouping columns
     const groupColumns = selectedColumns.map(colId => ({
       field: colId,
       rowGroup: true,
@@ -267,84 +244,63 @@ export default function FinancingWorkspace() {
       hide: true
     }));
     
-    // Sort the baseColumns to match the order in selectedValueColumns
     const orderedBaseColumns = [...baseColumns].sort((a, b) => {
       const aIndex = selectedValueColumns.indexOf(a.field);
       const bIndex = selectedValueColumns.indexOf(b.field);
       
-      // If column is not in selectedValueColumns, put it at the end
       if (aIndex === -1) return 1;
       if (bIndex === -1) return -1;
       
-      // Otherwise sort by the order in selectedValueColumns
       return aIndex - bIndex;
     });
 
-
-    
     return [...orderedBaseColumns, ...groupColumns];
-    
-  }, [selectedColumns, valueColumns, selectedValueColumns]);
+  }, [selectedColumns, valueColumns, selectedValueColumns, formatCellValue, renderCell]);
 
-  // Memoize default column definitions
+  // Grid event handlers
   const defaultColDef = useMemo(() => ({
     sortable: true,
     filter: true,
     resizable: true,
-  }), [])
+  }), []);
 
-  // Update grid ready handler to apply saved column state
   const onGridReady = useCallback((event: GridReadyEvent) => {
     if (!event.api) return;
     
-    // Apply saved column state if it exists
     if (initialColumnState.current) {
       event.api.applyColumnState({
         state: initialColumnState.current,
         applyOrder: true
       });
     } else {
-      // Default behavior if no saved state
       event.api.resetColumnState();
       event.api.sizeColumnsToFit();
       event.api.autoSizeAllColumns();
     }
   }, []);
 
-  // Row data updated handler
   const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
     if (!params.api) return;
-    
     params.api.sizeColumnsToFit();
   }, []);
 
   const onColumnVisible = useCallback((state: any) => {
-    if (state.column && state.column.colDef && state.column.colDef.enableRowGroup === undefined) {
+    if (state.column?.colDef && state.column.colDef.enableRowGroup === undefined) {
       const fieldName = state.column.colDef.field;
       if (fieldName && !selectedValueColumns.includes(fieldName)) {
         setSelectedValueColumns(prev => [...prev, fieldName]);
       }
     }
-    console.log('Grid state changed:', state);
     gridRef.current?.api?.autoSizeAllColumns();
   }, [selectedValueColumns]);
 
-  const onToolPanelVisible = useCallback((state: any) => {
-    console.log('Tool panel state changed:', state);
-  }, []);
-
-  // Add export to Excel function
   const onExportToExcel = useCallback(() => {
     if (!gridRef.current?.api) return;
     
     const params = {
       fileName: `${selectedDatasource}_export_${new Date().toISOString().split('T')[0]}.xlsx`,
       processCellCallback: (params: any) => {
-        // Format numbers without decimals for Excel
-        if (typeof params.value === 'number') {
-          return Math.round(params.value);
-        }
-        return params.value;
+        return typeof params.value === 'number' ? Math.round(params.value) : params.value;
       }
     };
     
@@ -367,7 +323,7 @@ export default function FinancingWorkspace() {
                 className="text-xs w-full"
                 placeholder="Select grouping columns"
               />
-                <MultiSelectDraggable
+              <MultiSelectDraggable
                 options={availableValueColumns}
                 value={selectedValueColumns}
                 onChange={setSelectedValueColumns}
@@ -377,28 +333,29 @@ export default function FinancingWorkspace() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            
-            
             <RiskFilter 
               filters={filters} 
               setFilters={setFilters} 
               tableName='risk_f_mv' 
             />
-
-
-              <Button 
+            <Button 
               variant="outline"
               size="sm"
               className="transition h-6 border-none text-xs hover:bg-transparent"
               onClick={onExportToExcel}
-            
             >
               <FileSpreadsheet className="h-4 w-4" />
               Export Excel
             </Button>
-            
-      
-            
+            <Button 
+              variant="outline"
+              size="sm"
+              className="transition h-6 border-none text-xs hover:bg-transparent"
+              onClick={saveGridState}
+            >
+              <Save className="h-4 w-4" />
+              Save Layout
+            </Button>
             <DatasourceSelector 
               value={selectedDatasource} 
               onValueChange={setSelectedDatasource} 
@@ -423,7 +380,6 @@ export default function FinancingWorkspace() {
             onRowDataUpdated={onRowDataUpdated}
             onGridReady={onGridReady}
             sideBar={true}
-            // onGridColumnsChanged={onGridColumnsChanged}
             onColumnVisible={onColumnVisible}
           />
         </div>
