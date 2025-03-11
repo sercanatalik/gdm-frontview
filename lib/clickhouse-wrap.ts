@@ -151,4 +151,63 @@ export function generateAgGridRowGrouping(
     });
 }
 
+export function formatAsCurrency(value: number, currency: string = 'USD', locale: string = 'en-US'): string {
+  if (value === null || value === undefined) return '';
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+export function generateAgGridValueColumns(
+  data: any[], 
+  autoValue: boolean = false,
+  currencyFields: string[] = []
+): {field: string, enableValue: boolean, aggFunc?: string, hide?: boolean, valueFormatter?: (params: any) => string, cellDataType: string}[] {
+  if (!data?.length) return [];
+  
+  return data
+    .filter((col: any) => {
+      // Include string types for 'first' aggregation
+      return ['String', 'Enum8', 'Enum16', 'LowCardinality(String)', 'UUID', 'IPv4', 'IPv6', 'Nullable(String)'].includes(col.type) ||
+        // Include numeric types that make sense for value columns
+        ['Int', 'Float', 'Decimal'].includes(col.type) ||
+        col.type.includes('Int') || 
+        col.type.includes('Float') ||
+        col.type.includes('Decimal') ||
+        // Include Date and DateTime types
+        col.type.startsWith('Date') ||
+        // Include numeric types that might represent categories
+        (col.type.includes('Int') && col.name.toLowerCase().includes('id'));
+    })
+    .map((col: any) => {    
+      // Determine if it's a string type
+      const isString = ['String', 'Enum8', 'Enum16', 'LowCardinality(String)', 'UUID', 'IPv4', 'IPv6', 'Nullable(String)'].includes(col.type);
+      
+      // Determine if it's a numeric type
+      const isNumeric = col.type.includes('Int') || 
+                        col.type.includes('Float') || 
+                        col.type.includes('Decimal');
+      
+      
+      return {
+        field: col.name,
+        enableValue: true,
+        // Add appropriate aggFunc based on column type
+        ...(isString && { aggFunc: 'first' }),
+        ...(isNumeric && !isString && { 
+          aggFunc: 'sum',
+    
+        }),
+        // Only set hide if autoValue is true
+        ...(autoValue && { hide: true }),
+        cellDataType: isNumeric ? 'number' : 'string'
+      };
+    }); 
+}
+
+
 

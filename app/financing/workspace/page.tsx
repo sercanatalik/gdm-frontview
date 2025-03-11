@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { AgGridReact } from 'ag-grid-react'
 import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi } from 'ag-grid-community'
 import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise'
@@ -12,7 +12,7 @@ import { DatasourceSelector } from "@/components/filters/datasource-selector"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { Button } from "@/components/ui/button"
 import type { Filter } from "@/components/ui/filters"
-import { generateAgGridRowGrouping } from "@/lib/clickhouse-wrap"
+import { generateAgGridRowGrouping, generateAgGridValueColumns } from "@/lib/clickhouse-wrap"
 
 // Register AG Grid modules once
 ModuleRegistry.registerModules([AllCommunityModule, AllEnterpriseModule, ClientSideRowModelModule])
@@ -30,6 +30,12 @@ interface ColumnOption {
   id: string
   label: string
   key?: string
+  enableValue?: boolean
+  aggFunc?: string
+  valueFormatter?: string | ((params: any) => string)
+  cellDataType?: string
+  valueGetter?: string
+  cellRenderer?: (params: any) => any
 }
 
 export default function FinancingWorkspace() {
@@ -41,95 +47,139 @@ export default function FinancingWorkspace() {
   const [error, setError] = useState<string | null>(null)
   const [selectedColumns, setSelectedColumns] = useState<string[]>([])
   const [availableColumns, setAvailableColumns] = useState<ColumnOption[]>([])
+  const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
+
   const [api, setApi] = useState<GridApi | null>(null)
   
   // Fetch available columns when datasource changes
-  useEffect(() => {
-    const fetchColumns = async () => {
-      try {
-        const response = await fetch(`/api/tables?table=${selectedDatasource}`)
-        if (!response.ok) {
-          throw new Error(`Failed to fetch columns: ${response.statusText}`)
-        }
-        
-        const data = await response.json()
-        
-        // Get groupable columns with AG Grid format
-        const groupableColumns = generateAgGridRowGrouping(data)
-        
-        // Set available columns for the multi-select
-        setAvailableColumns(groupableColumns.map(col => ({
-          id: col.field,
-          label: col.field,
-          key: col.field
-        })))
-        
-        // Reset selected columns when datasource changes
-        setSelectedColumns([])
-      } catch (error) {
-        console.error("Error fetching columns:", error)
-        setAvailableColumns([])
+  const fetchColumns = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/tables?table=${selectedDatasource}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch columns: ${response.statusText}`)
       }
-    }
+      
+      const data = await response.json()
+      
+      // Get groupable columns with AG Grid format
+      const groupableColumns = generateAgGridRowGrouping(data)
+      const valueColumnsData = generateAgGridValueColumns(data)
+      
+      // Set available columns for the multi-select
+      setAvailableColumns(groupableColumns.map(col => ({
+        id: col.field,
+        label: col.field,
+        key: col.field
+      })))
 
-    fetchColumns()
+      // Set value columns
+      setValueColumns(valueColumnsData.map(col => ({
+        id: col.field,
+        label: col.field,
+        key: col.field,
+        enableValue: col.enableValue,
+        aggFunc: col.aggFunc,
+        cellDataType: col.cellDataType,
+        valueFormatter: col.valueFormatter,
+        cellRenderer: col.cellRenderer
+      })))
+      
+      // Reset selected columns when datasource changes
+      setSelectedColumns([])
+    } catch (error) {
+      console.error("Error fetching columns:", error)
+      setAvailableColumns([])
+      setValueColumns([])
+    }
   }, [selectedDatasource])
 
   useEffect(() => {
+    fetchColumns()
+  }, [fetchColumns])
+
+  // Update row groups when selected columns change
+  useEffect(() => {
     if (!api) return;
     
-    // Set row groups
     api.setRowGroupColumns(selectedColumns);
     api.sizeColumnsToFit();
-   
-  }, [selectedColumns]);
+  }, [selectedColumns, api]);
   
   // Fetch data when filters or datasource changes
-  useEffect(() => {
-    const fetchRiskData = async () => {
-      setIsLoading(true)
-      setError(null)
-      
-      try {
-        const response = await fetch("/api/tables/data/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filter: filters, tableName: selectedDatasource }),
-        })
+  const fetchRiskData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch("/api/tables/data/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filter: filters, tableName: selectedDatasource }),
+      })
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`)
-        }
-        
-        const data = await response.json()
-        setResults(data)
-      } catch (error) {
-        console.error("Error fetching risk data:", error)
-        setError(error instanceof Error ? error.message : "An unknown error occurred")
-        setResults([])
-      } finally {
-        setIsLoading(false)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`)
       }
+      
+      const data = await response.json()
+      setResults(data)
+    } catch (error) {
+      console.error("Error fetching risk data:", error)
+      setError(error instanceof Error ? error.message : "An unknown error occurred")
+      setResults([])
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchRiskData()
   }, [filters, selectedDatasource])
 
+  useEffect(() => {
+    fetchRiskData()
+  }, [fetchRiskData])
+
   // Memoize column definitions to prevent unnecessary re-renders
-  const columnDefs = useMemo(() => [
-    { headerName: "SL1", field: "SL1" },
-    { headerName: "YTD", field: "ytd" },
-    { headerName: "MTD", field: "mtd" },
+  const columnDefs = useMemo(() => {
+    // Create base columns from value columns
+    const baseColumns = valueColumns.map(col => ({
+      headerName: col.label,
+      field: col.id,
+      enableValue: true,
+      aggFunc: col.aggFunc,
+      hide: true,
+      valueFormatter: (params: any) => {
+        // Format numbers with zero decimals, leave strings unchanged
+        if (typeof params.value === 'number') {
+          return Math.round(params.value).toLocaleString();
+        }
+        return params.value || '';
+      },
+      cellRenderer: (params: any) => { 
+        // Format as currency and apply red color to negative values
+        if (typeof params.value !== 'number') {
+          return params.value || '';
+        }
+        
+        const isNegative = params.value < 0;
+        return (
+          <span style={{ color: isNegative ? 'red' : 'inherit' }}>
+            {Math.round(params.value).toLocaleString()}
+          </span>
+        );
+      },
+      cellDataType: col.cellDataType,
+    }));
     
-    ...selectedColumns.map(colId => ({
+    // Add grouping columns
+    const groupColumns = selectedColumns.map(colId => ({
       field: colId,
       rowGroup: true,
       enableRowGroup: true,
       hide: true
-    }))
-  ], [selectedColumns])
+    }));
+    
+    return [...baseColumns, ...groupColumns];
+  }, [selectedColumns, valueColumns])
 
   // Memoize default column definitions
   const defaultColDef = useMemo(() => ({
@@ -137,6 +187,19 @@ export default function FinancingWorkspace() {
     filter: true,
     resizable: true,
   }), [])
+
+  // Grid ready handler
+  const onGridReady = useCallback((params: { api: GridApi }) => {
+    setApi(params.api);
+    setTimeout(() => {
+      params.api.autoSizeAllColumns();
+    }, 0);
+  }, [])
+
+  // Row data updated handler
+  const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
+    params.api.autoSizeAllColumns();
+  }, [])
 
   return (
     <ContentLayout title="Workspace">
@@ -182,16 +245,9 @@ export default function FinancingWorkspace() {
             defaultColDef={defaultColDef}
             loading={isLoading}
             animateRows={true}
-            
-            onRowDataUpdated={params => {
-              params.api.autoSizeAllColumns();
-            }}
-            onGridReady={params => {
-              setApi(params.api);
-              setTimeout(() => {
-                params.api.autoSizeAllColumns();
-              }, 0);
-            }}
+            onRowDataUpdated={onRowDataUpdated}
+            onGridReady={onGridReady}
+            sideBar={true}
           />
         </div>
       </div>

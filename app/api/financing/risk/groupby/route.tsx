@@ -15,7 +15,6 @@ export async function POST(req: Request) {
             GROUP BY counterparty
             ORDER BY totalCashOut DESC
         `
-    console.log(query)
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",

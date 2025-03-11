@@ -28,6 +28,7 @@ interface StatsResponse {
   notional: StatsData
   asOfDate: string
   closestDate: string
+  underlyingAmount: StatsData
 }
 
 interface StatsContentProps {
@@ -45,6 +46,7 @@ const STATS_CARDS = [
   { label: "Projected Cash Out", key: "projectedCashOut", icon: <Wallet /> },
   { label: "Realised Cash Out", key: "realisedCashOut", icon: <TrendingUp /> },
   { label: "Notional", key: "notional", icon: <Users /> },
+  { label: "Underlying Amount", key: "underlyingAmount", icon: <Users /> },
 ]
 
 // Create a client
