@@ -10,6 +10,7 @@ interface FilterCondition {
 // Constants
 const RISK_TABLE = 'risk_f_mv FINAL'
 const FIELDS = ["cashOut", "projectedCashOut", "realisedCashOut", "notional"] as const
+type FieldType = typeof FIELDS[number]
 
 // Helper function to format date to YYYY-MM-DD
 const formatDate = (date: Date): string => date.toISOString().split('T')[0]
@@ -64,30 +65,16 @@ const buildSumExpressions = (currentDate: Date | string, relativeDate: string) =
   return { currentSums, relativeSums, changes }
 }
 
-// Add StatsData interface
-interface StatsData {
-  cashOut: {
-    current: number
-    relative: number
-    change: number
-  }
-  projectedCashOut: {
-    current: number
-    relative: number
-    change: number
-  }
-  realisedCashOut: {
-    current: number
-    relative: number
-    change: number
-  }
-  notional: {
-    current: number
-    relative: number
-    change: number
-  }
-  asOfDate: string
-  closestDate: string
+// Dynamic StatsData interface based on fields
+type StatsData = {
+  [key in FieldType]: {
+    current: number;
+    relative: number;
+    change: number;
+  };
+} & {
+  asOfDate: string;
+  closestDate: string;
 }
 
 export async function POST(req: Request) {
@@ -114,33 +101,21 @@ export async function POST(req: Request) {
       format: "JSONEachRow",
     })
 
-    const [result] = await resultSet.json()
+    const [result] = await resultSet.json() as Record<string, number>[]
     
-    // Transform the flat result into StatsData structure
-    const statsData: StatsData = {
-      cashOut: {
-        current: (result as any).current_cashOut,
-        relative: (result as any).relative_cashOut,
-        change: (result as any).change_cashOut
-      },
-      projectedCashOut: {
-        current: (result as any).current_projectedCashOut,
-        relative: (result as any).relative_projectedCashOut,
-        change: (result as any).change_projectedCashOut
-      },
-      realisedCashOut: {
-        current: (result as any).current_realisedCashOut,
-        relative: (result as any).relative_realisedCashOut,
-        change: (result as any).change_realisedCashOut
-      },
-      notional: {
-        current: (result as any).current_notional,
-        relative: (result as any).relative_notional,
-        change: (result as any).change_notional
-      },
-      asOfDate: formatDate(asofdate),
-      closestDate: formatDate(new Date(closestDate))
-    }
+    // Transform the flat result into dynamic StatsData structure
+    const statsData = FIELDS.reduce((acc, field) => {
+      acc[field] = {
+        current: result[`current_${field}`] || 0,
+        relative: result[`relative_${field}`] || 0,
+        change: result[`change_${field}`] || 0
+      }
+      return acc
+    }, {} as StatsData)
+    
+    // Add date information
+    statsData.asOfDate = formatDate(asofdate)
+    statsData.closestDate = formatDate(new Date(closestDate))
 
     return NextResponse.json(statsData)
   } catch (error) {
