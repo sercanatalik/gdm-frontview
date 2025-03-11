@@ -258,7 +258,7 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
   }
 
   return (
-    <div className="flex gap-5 flex-wrap items-center">
+    <div className="flex gap-5 flex-wrap items-center z-50" >
       <Filters
         filters={filters}
         setFilters={setFilters}

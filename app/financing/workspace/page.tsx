@@ -339,14 +339,14 @@ export default function FinancingWorkspace() {
                 options={availableColumns}
                 value={selectedColumns}
                 onChange={setSelectedColumns}
-                className="text-xs w-full"
+                className="text-xs w-[200px]"
                 placeholder="Select grouping columns"
               />
               <MultiSelectDraggable
                 options={availableValueColumns}
                 value={selectedValueColumns}
                 onChange={setSelectedValueColumns}
-                className="text-xs w-full"
+                className="text-xs w-[300px]"
                 placeholder="Select Value columns"
               />
             </div>
@@ -356,6 +356,7 @@ export default function FinancingWorkspace() {
               filters={filters} 
               setFilters={setFilters} 
               tableName='risk_f_mv' 
+           
             />
             <Button 
               variant="outline"
