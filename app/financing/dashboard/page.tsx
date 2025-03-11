@@ -7,8 +7,8 @@ import type { Filter } from "@/components/ui/filters"
 import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
 import { Overview } from "./components/Overview"
 import { RecentTradesCard } from "./components/RecentTradeCard"
-import { CounterpartySummary } from "./components/CounterpartySummary"
 import { ExposureSummary } from "./components/ExposureSummary"
+import { PieSummary } from "./components/PieSummary"
 import { RevenueCard } from "./components/RevenueCard"
 export default function FinancingMainPage() {
   const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
@@ -57,19 +57,20 @@ export default function FinancingMainPage() {
           </div>
           <div className="flex flex-col md:flex-row gap-4">
 
-          <div className="flex-2">
+          <div className="flex-1">
             <ExposureSummary filters={filters} groupBy="SL1" countBy="counterparty" orderBy="totalCashOut DESC" title="Top Instruments" viewAllText="View all instruments" />
           
           </div>
-          <div className="flex-2">
+          <div className="flex-1">
             <ExposureSummary filters={filters} groupBy="counterparty" countBy="instrument" orderBy="totalCashOut DESC" title="Top Counterparties" viewAllText="View all counterparties" />
           </div>
-          <div className="flex-2">
+          <div className="flex-1">
             <ExposureSummary filters={filters} groupBy="vcProduct" countBy="tradeCcy" orderBy="totalCashOut DESC" title="Top Products" viewAllText="View all products" />
           </div>
 
           <div className="flex-1">
-           
+            <PieSummary filters={filters} groupBy="SL1" countBy="counterparty" orderBy="totalCashOut DESC" title="By Collaboration" viewAllText="View all instruments" />
+          
           </div>
          
           </div>

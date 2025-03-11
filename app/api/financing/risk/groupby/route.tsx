@@ -8,8 +8,8 @@ export async function POST(req: Request) {
     const query = `
             SELECT 
                 ${groupBy} as groupBy,
-                sum(cashOut) as totalCashOut,
-                sum(notional) as totalNotional,
+                abs(sum(cashOut)) as totalCashOut,
+                abs(sum(notional)) as totalNotional,
                 count(DISTINCT ${countBy}) as distinctCount
             FROM risk_f_mv  
             ${buildWhereCondition(filter,true)}

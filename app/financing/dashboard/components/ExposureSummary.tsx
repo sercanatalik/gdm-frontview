@@ -77,7 +77,7 @@ export function ExposureSummary({
   }, [filters, groupBy, countBy, orderBy])
 
   return (
-    <Card className="h-full w-[400px] overflow-hidden rounded-lg flex flex-col">
+    <Card className="h-full w-full overflow-hidden rounded-lg flex flex-col">
       <CardHeader>
           <CardTitle>
             {title}
@@ -91,7 +91,7 @@ export function ExposureSummary({
         ) : (
           <div className="flex flex-col h-full">
             <div className="divide-y divide-border flex-grow overflow-auto">
-              {summaries.slice(0, 5).map((summary) => (
+              {summaries.slice(0, 7).map((summary) => (
                 <div
                   key={summary.groupBy}
                   className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
