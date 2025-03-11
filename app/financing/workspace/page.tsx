@@ -263,6 +263,7 @@ export default function FinancingWorkspace() {
       }
     }
     console.log('Grid state changed:', state);
+    gridRef.current?.api?.sizeColumnsToFit();
   }, [selectedValueColumns]);
 
   return (
