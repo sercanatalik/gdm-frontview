@@ -92,8 +92,11 @@ export function RecentTrades({ filters }: RecentTradesProps) {
 
   return (
     <div className="space-y-8">
-      {currentItems.map((trade) => (
-        <TradeItem key={`${trade.counterparty}-${trade.tradeDate}`} trade={trade} />
+      {currentItems.map((trade, index) => (
+        <TradeItem 
+          key={`${trade.counterparty}-${trade.tradeDate}-${index}`} 
+          trade={trade} 
+        />
       ))}
       
       <Pagination className="flex justify-end mt-4">

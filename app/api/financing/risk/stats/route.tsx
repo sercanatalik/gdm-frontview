@@ -9,7 +9,7 @@ interface FilterCondition {
 
 // Constants
 const RISK_TABLE = 'risk_f_mv FINAL'
-const FIELDS = ["cashOut", "projectedCashOut", "realisedCashOut", "notional","underlyingAmount"] as const
+const FIELDS = ["cashOut", "projectedCashOut", "realisedCashOut", "notional"] as const
 
 // Helper function to format date to YYYY-MM-DD
 const formatDate = (date: Date): string => date.toISOString().split('T')[0]
