@@ -34,7 +34,7 @@ export default function FinancingMainPage() {
   }
 
   return (
-    <ContentLayout title="Dashboard">
+    <ContentLayout title="Dashboard" wide={true}>
       <div className="flex-col md:flex">
         <div className="flex-1 space-y-4 p-0">
           <div className="flex justify-between items-center">
