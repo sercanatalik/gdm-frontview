@@ -13,7 +13,7 @@ import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { Button } from "@/components/ui/button"
 import type { Filter } from "@/components/ui/filters"
 import { generateAgGridRowGrouping, generateAgGridValueColumns } from "@/lib/clickhouse-wrap"
-
+import { SaveLayoutButton } from "./SaveLayoutButton"
 // Register AG Grid modules once
 ModuleRegistry.registerModules([AllCommunityModule, AllEnterpriseModule, ClientSideRowModelModule])
 LicenseManager.setLicenseKey('')
@@ -70,6 +70,18 @@ export default function FinancingWorkspace() {
     localStorage.setItem('financingWorkspaceState', JSON.stringify(stateToSave));
     alert('Workspace state saved successfully');
   }, [selectedDatasource, selectedColumns, selectedValueColumns]);
+
+  const resetGridState = useCallback(() => {
+    localStorage.removeItem('financingWorkspaceState');
+    setSelectedDatasource("risk_f_mv");
+    setSelectedColumns([]);
+    setSelectedValueColumns([]);
+   
+    setValueColumns([]);
+  
+    alert('Workspace state reset successfully');
+  }, []);
+
 
   // Load grid state from localStorage
   const loadGridState = useCallback(() => {
@@ -354,15 +366,7 @@ export default function FinancingWorkspace() {
               <FileSpreadsheet className="h-4 w-4" />
               Export Excel
             </Button>
-            <Button 
-              variant="outline"
-              size="sm"
-              className="transition h-6 border-none text-xs hover:bg-transparent"
-              onClick={saveGridState}
-            >
-              <Save className="h-4 w-4" />
-              Save Layout
-            </Button>
+            <SaveLayoutButton onSave={saveGridState} onReset={resetGridState} />
             <DatasourceSelector 
               value={selectedDatasource} 
               onValueChange={setSelectedDatasource} 
