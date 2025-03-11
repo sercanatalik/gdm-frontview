@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AgGridReact } from 'ag-grid-react'
 import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi, GridReadyEvent } from 'ag-grid-community'
 import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise'
-import { Columns, FileSpreadsheet } from "lucide-react"
+import { Columns, FileSpreadsheet, Save } from "lucide-react"
 
 import { RiskFilter } from "@/components/filters/risk-filter"
 import { MultiSelectDraggable } from "@/components/filters/multi-select-draggable"
@@ -54,6 +54,57 @@ export default function FinancingWorkspace() {
   // Properly type the grid reference
   const gridRef = useRef<AgGridReact>(null)
   
+  // Add this near the top of your component
+  const initialColumnState = useRef<any>(null);
+
+  // Add a function to save state to localStorage
+  const saveGridState = useCallback(() => {
+    if (!gridRef.current?.api) return;
+    
+    // Get column state from AG Grid
+    const columnState = gridRef.current.api.getColumnState();
+    
+    // Create a state object to save
+    const stateToSave = {
+      selectedDatasource,
+      selectedColumns,
+      selectedValueColumns,
+      columnState,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Save to localStorage
+    
+    // Optional: Show a toast or some feedback
+    alert('Workspace state saved successfully');
+  }, [selectedDatasource, selectedColumns, selectedValueColumns]);
+
+  // Add a function to load state from localStorage
+  const loadGridState = useCallback(() => {
+    const savedState = localStorage.getItem('financingWorkspaceState');
+    if (!savedState) return;
+    
+    try {
+      const parsedState = JSON.parse(savedState);
+      
+      // Set the datasource
+      setSelectedDatasource(parsedState.selectedDatasource);
+      
+      // Set selected columns
+      setSelectedColumns(parsedState.selectedColumns || []);
+      setSelectedValueColumns(parsedState.selectedValueColumns || []);
+      
+      // Store column state in ref for grid ready event
+      if (parsedState.columnState) {
+        initialColumnState.current = parsedState.columnState;
+      }
+    } catch (error) {
+      console.error('Error loading saved state:', error);
+    }
+  }, []);
+
+
+
   // Fetch available columns when datasource changes
   const fetchColumns = useCallback(async () => {
     try {
@@ -110,7 +161,7 @@ export default function FinancingWorkspace() {
     if (!gridRef.current?.api) return;
     
     gridRef.current.api.setRowGroupColumns(selectedColumns);
-    gridRef.current.api.sizeColumnsToFit();
+    gridRef.current.api.autoSizeAllColumns();
   }, [selectedColumns]);
   
   // Update value columns visibility when selectedValueColumns changes
@@ -138,7 +189,7 @@ export default function FinancingWorkspace() {
     gridRef.current!.api.setGridOption("columnDefs", updatedColumnDefs);
 
     // Apply the updated column definitions
-    gridRef.current?.api?.sizeColumnsToFit();
+    gridRef.current?.api?.autoSizeAllColumns();
   }, [selectedValueColumns]);
   
   // Fetch data when filters or datasource changes
@@ -228,8 +279,11 @@ export default function FinancingWorkspace() {
       // Otherwise sort by the order in selectedValueColumns
       return aIndex - bIndex;
     });
+
+
     
     return [...orderedBaseColumns, ...groupColumns];
+    
   }, [selectedColumns, valueColumns, selectedValueColumns]);
 
   // Memoize default column definitions
@@ -239,13 +293,22 @@ export default function FinancingWorkspace() {
     resizable: true,
   }), [])
 
-  // Grid ready handler
+  // Update grid ready handler to apply saved column state
   const onGridReady = useCallback((event: GridReadyEvent) => {
     if (!event.api) return;
     
-    event.api.resetColumnState();
-    event.api.sizeColumnsToFit();
-    event.api.autoSizeAllColumns();
+    // Apply saved column state if it exists
+    if (initialColumnState.current) {
+      event.api.applyColumnState({
+        state: initialColumnState.current,
+        applyOrder: true
+      });
+    } else {
+      // Default behavior if no saved state
+      event.api.resetColumnState();
+      event.api.sizeColumnsToFit();
+      event.api.autoSizeAllColumns();
+    }
   }, []);
 
   // Row data updated handler
@@ -263,8 +326,12 @@ export default function FinancingWorkspace() {
       }
     }
     console.log('Grid state changed:', state);
-    gridRef.current?.api?.sizeColumnsToFit();
+    gridRef.current?.api?.autoSizeAllColumns();
   }, [selectedValueColumns]);
+
+  const onToolPanelVisible = useCallback((state: any) => {
+    console.log('Tool panel state changed:', state);
+  }, []);
 
   // Add export to Excel function
   const onExportToExcel = useCallback(() => {
@@ -329,6 +396,8 @@ export default function FinancingWorkspace() {
               <FileSpreadsheet className="h-4 w-4" />
               Export Excel
             </Button>
+            
+      
             
             <DatasourceSelector 
               value={selectedDatasource} 
