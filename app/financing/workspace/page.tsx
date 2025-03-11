@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AgGridReact } from 'ag-grid-react'
 import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi, GridReadyEvent } from 'ag-grid-community'
 import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise'
-import { Columns } from "lucide-react"
+import { Columns, FileSpreadsheet } from "lucide-react"
 
 import { RiskFilter } from "@/components/filters/risk-filter"
 import { MultiSelectDraggable } from "@/components/filters/multi-select-draggable"
@@ -235,7 +235,7 @@ export default function FinancingWorkspace() {
   // Memoize default column definitions
   const defaultColDef = useMemo(() => ({
     sortable: true,
-    filter: false,
+    filter: true,
     resizable: true,
   }), [])
 
@@ -266,6 +266,24 @@ export default function FinancingWorkspace() {
     gridRef.current?.api?.sizeColumnsToFit();
   }, [selectedValueColumns]);
 
+  // Add export to Excel function
+  const onExportToExcel = useCallback(() => {
+    if (!gridRef.current?.api) return;
+    
+    const params = {
+      fileName: `${selectedDatasource}_export_${new Date().toISOString().split('T')[0]}.xlsx`,
+      processCellCallback: (params: any) => {
+        // Format numbers without decimals for Excel
+        if (typeof params.value === 'number') {
+          return Math.round(params.value);
+        }
+        return params.value;
+      }
+    };
+    
+    gridRef.current.api.exportDataAsExcel(params);
+  }, [selectedDatasource]);
+
   return (
     <ContentLayout title="Workspace">
       <div className="flex-1 space-y-1 p-0 pt-0">
@@ -292,11 +310,26 @@ export default function FinancingWorkspace() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            
+            
             <RiskFilter 
               filters={filters} 
               setFilters={setFilters} 
               tableName='risk_f_mv' 
             />
+
+
+              <Button 
+              variant="outline"
+              size="sm"
+              className="transition h-6 border-none text-xs hover:bg-transparent"
+              onClick={onExportToExcel}
+            
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Excel
+            </Button>
+            
             <DatasourceSelector 
               value={selectedDatasource} 
               onValueChange={setSelectedDatasource} 
