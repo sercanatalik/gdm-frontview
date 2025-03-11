@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AgGridReact } from 'ag-grid-react'
-import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi } from 'ag-grid-community'
+import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi, GridReadyEvent } from 'ag-grid-community'
 import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise'
 import { Columns } from "lucide-react"
 
@@ -51,7 +51,8 @@ export default function FinancingWorkspace() {
   const [availableValueColumns, setAvailableValueColumns] = useState<ColumnOption[]>([])
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
 
-  const [api, setApi] = useState<GridApi | null>(null)
+  // Properly type the grid reference
+  const gridRef = useRef<AgGridReact>(null)
   
   // Fetch available columns when datasource changes
   const fetchColumns = useCallback(async () => {
@@ -106,11 +107,39 @@ export default function FinancingWorkspace() {
 
   // Update row groups when selected columns change
   useEffect(() => {
-    if (!api) return;
+    if (!gridRef.current?.api) return;
     
-    api.setRowGroupColumns(selectedColumns);
-    api.sizeColumnsToFit();
-  }, [selectedColumns, api]);
+    gridRef.current.api.setRowGroupColumns(selectedColumns);
+    gridRef.current.api.sizeColumnsToFit();
+  }, [selectedColumns]);
+  
+  // Update value columns visibility when selectedValueColumns changes
+  useEffect(() => {
+    if (!gridRef.current?.api) return;
+    
+    // Get all column definitions
+    const columnDefs = gridRef.current.api.getColumnDefs();
+    if (!columnDefs) return;
+    
+    // Update column visibility based on selectedValueColumns
+    const updatedColumnDefs = columnDefs.map((colDef: any) => {
+      // If the column is in selectedValueColumns, make it visible
+      if (selectedValueColumns.includes(colDef.field)) {
+        return { ...colDef, hide: false };
+      }
+      // For value columns not selected, hide them
+      if (colDef.enableValue && !colDef.rowGroup) {
+        return { ...colDef, hide: true };
+      }
+      // Keep other columns as they are
+      return colDef;
+    });
+
+    gridRef.current!.api.setGridOption("columnDefs", updatedColumnDefs);
+
+    // Apply the updated column definitions
+    gridRef.current?.api?.sizeColumnsToFit();
+  }, [selectedValueColumns]);
   
   // Fetch data when filters or datasource changes
   const fetchRiskData = useCallback(async () => {
@@ -146,9 +175,6 @@ export default function FinancingWorkspace() {
   }, [fetchRiskData])
 
 
-  useEffect(() => {
-    console.log(selectedValueColumns)
-  }, [selectedValueColumns])
 
   // Memoize column definitions to prevent unnecessary re-renders
   const columnDefs = useMemo(() => {
@@ -157,8 +183,8 @@ export default function FinancingWorkspace() {
       headerName: col.label,
       field: col.id,
       enableValue: true,
-      aggFunc: col.aggFunc,
-      hide: true,
+      aggFunc: col.aggFunc || 'sum',
+      hide: !selectedValueColumns.includes(col.id),
       valueFormatter: (params: any) => {
         // Format numbers with zero decimals, leave strings unchanged
         if (typeof params.value === 'number') {
@@ -179,7 +205,7 @@ export default function FinancingWorkspace() {
           </span>
         );
       },
-      cellDataType: col.cellDataType,
+      cellDataType: col.cellDataType || 'number',
     }));
     
     // Add grouping columns
@@ -190,28 +216,54 @@ export default function FinancingWorkspace() {
       hide: true
     }));
     
-    return [...baseColumns, ...groupColumns];
-  }, [selectedColumns, valueColumns])
+    // Sort the baseColumns to match the order in selectedValueColumns
+    const orderedBaseColumns = [...baseColumns].sort((a, b) => {
+      const aIndex = selectedValueColumns.indexOf(a.field);
+      const bIndex = selectedValueColumns.indexOf(b.field);
+      
+      // If column is not in selectedValueColumns, put it at the end
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      // Otherwise sort by the order in selectedValueColumns
+      return aIndex - bIndex;
+    });
+    
+    return [...orderedBaseColumns, ...groupColumns];
+  }, [selectedColumns, valueColumns, selectedValueColumns]);
 
   // Memoize default column definitions
   const defaultColDef = useMemo(() => ({
     sortable: true,
-    filter: true,
+    filter: false,
     resizable: true,
   }), [])
 
   // Grid ready handler
-  const onGridReady = useCallback((params: { api: GridApi }) => {
-    setApi(params.api);
-    setTimeout(() => {
-      params.api.autoSizeAllColumns();
-    }, 0);
-  }, [])
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    if (!event.api) return;
+    
+    event.api.resetColumnState();
+    event.api.sizeColumnsToFit();
+    event.api.autoSizeAllColumns();
+  }, []);
 
   // Row data updated handler
   const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
+    if (!params.api) return;
+    
     params.api.sizeColumnsToFit();
-  }, [])
+  }, []);
+
+  const onColumnVisible = useCallback((state: any) => {
+    if (state.column && state.column.colDef && state.column.colDef.enableRowGroup === undefined) {
+      const fieldName = state.column.colDef.field;
+      if (fieldName && !selectedValueColumns.includes(fieldName)) {
+        setSelectedValueColumns(prev => [...prev, fieldName]);
+      }
+    }
+    console.log('Grid state changed:', state);
+  }, [selectedValueColumns]);
 
   return (
     <ContentLayout title="Workspace">
@@ -259,6 +311,7 @@ export default function FinancingWorkspace() {
         
         <div className="w-full h-[90vh] ag-theme-balham">
           <AgGridReact
+            ref={gridRef}
             rowData={results}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
@@ -267,6 +320,8 @@ export default function FinancingWorkspace() {
             onRowDataUpdated={onRowDataUpdated}
             onGridReady={onGridReady}
             sideBar={true}
+            // onGridColumnsChanged={onGridColumnsChanged}
+            onColumnVisible={onColumnVisible}
           />
         </div>
       </div>
