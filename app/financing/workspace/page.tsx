@@ -46,7 +46,9 @@ export default function FinancingWorkspace() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedColumns, setSelectedColumns] = useState<string[]>([])
+  const [selectedValueColumns, setSelectedValueColumns] = useState<string[]>([])
   const [availableColumns, setAvailableColumns] = useState<ColumnOption[]>([])
+  const [availableValueColumns, setAvailableValueColumns] = useState<ColumnOption[]>([])
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
 
   const [api, setApi] = useState<GridApi | null>(null)
@@ -72,6 +74,12 @@ export default function FinancingWorkspace() {
         key: col.field
       })))
 
+      setAvailableValueColumns(valueColumnsData.map(col => ({
+        id: col.field,
+        label: col.field,
+        key: col.field
+      })))
+
       // Set value columns
       setValueColumns(valueColumnsData.map(col => ({
         id: col.field,
@@ -81,7 +89,6 @@ export default function FinancingWorkspace() {
         aggFunc: col.aggFunc,
         cellDataType: col.cellDataType,
         valueFormatter: col.valueFormatter,
-        cellRenderer: col.cellRenderer
       })))
       
       // Reset selected columns when datasource changes
@@ -137,6 +144,11 @@ export default function FinancingWorkspace() {
   useEffect(() => {
     fetchRiskData()
   }, [fetchRiskData])
+
+
+  useEffect(() => {
+    console.log(selectedValueColumns)
+  }, [selectedValueColumns])
 
   // Memoize column definitions to prevent unnecessary re-renders
   const columnDefs = useMemo(() => {
@@ -198,7 +210,7 @@ export default function FinancingWorkspace() {
 
   // Row data updated handler
   const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
-    params.api.autoSizeAllColumns();
+    params.api.sizeColumnsToFit();
   }, [])
 
   return (
@@ -216,6 +228,13 @@ export default function FinancingWorkspace() {
                 onChange={setSelectedColumns}
                 className="text-xs w-full"
                 placeholder="Select grouping columns"
+              />
+                <MultiSelectDraggable
+                options={availableValueColumns}
+                value={selectedValueColumns}
+                onChange={setSelectedValueColumns}
+                className="text-xs w-full"
+                placeholder="Select Value columns"
               />
             </div>
           </div>
