@@ -287,10 +287,17 @@ export default function FinancingWorkspace() {
   const onColumnVisible = useCallback((state: any) => {
     if (state.column?.colDef && state.column.colDef.enableRowGroup === undefined) {
       const fieldName = state.column.colDef.field;
-      if (fieldName && !selectedValueColumns.includes(fieldName)) {
-        setSelectedValueColumns(prev => [...prev, fieldName]);
+      if (fieldName) {
+        if (state.visible && !selectedValueColumns.includes(fieldName)) {
+          // Add to selectedValueColumns when column becomes visible
+          setSelectedValueColumns(prev => [...prev, fieldName]);
+        } else if (!state.visible && selectedValueColumns.includes(fieldName)) {
+          // Remove from selectedValueColumns when column becomes hidden
+          setSelectedValueColumns(prev => prev.filter(col => col !== fieldName));
+        }
       }
     }
+
     gridRef.current?.api?.autoSizeAllColumns();
   }, [selectedValueColumns]);
 
