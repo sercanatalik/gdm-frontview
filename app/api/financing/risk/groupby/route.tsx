@@ -3,18 +3,20 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { filter = null, groupBy = null } = await req.json()
+    const { filter = null, groupBy = null, countBy = null,orderBy = null } = await req.json()
 
     const query = `
             SELECT 
-                counterparty,
+                ${groupBy} as groupBy,
                 sum(cashOut) as totalCashOut,
-                count(DISTINCT instrument) as distinctInstrumentCount
+                sum(notional) as totalNotional,
+                count(DISTINCT ${countBy}) as distinctCount
             FROM risk_f_mv  
             ${buildWhereCondition(filter,true)}
-            GROUP BY counterparty
-            ORDER BY totalCashOut DESC
+            GROUP BY ${groupBy}
+            ORDER BY ${orderBy}
         `
+    console.log(query)
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",

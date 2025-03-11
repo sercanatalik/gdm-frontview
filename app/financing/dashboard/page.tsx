@@ -48,7 +48,7 @@ export default function FinancingMainPage() {
             <div className="flex-1">
               <Overview filters={filters} />
             </div>
-            <div className="flex-1">
+            <div className="flex-2">
             <RecentTradesCard filters={filters} />
           
               
@@ -57,19 +57,35 @@ export default function FinancingMainPage() {
           </div>
           <div className="flex flex-col md:flex-row gap-4">
 
-          <div className="flex-1">
-            <CounterpartySummary filters={filters} />
+          <div className="flex-2">
+            <ExposureSummary filters={filters} groupBy="SL1" countBy="counterparty" orderBy="totalCashOut DESC" title="Top Instruments" viewAllText="View all instruments" />
           
           </div>
+          <div className="flex-2">
+            <ExposureSummary filters={filters} groupBy="counterparty" countBy="instrument" orderBy="totalCashOut DESC" title="Top Counterparties" viewAllText="View all counterparties" />
+          </div>
+          <div className="flex-2">
+            <ExposureSummary filters={filters} groupBy="vcProduct" countBy="tradeCcy" orderBy="totalCashOut DESC" title="Top Products" viewAllText="View all products" />
+          </div>
+
           <div className="flex-1">
-            <ExposureSummary filters={filters} />
+           
           </div>
          
           </div>
-          <RevenueCard  />
 
-          {/* Uncomment for debugging */}
-          {/* <JsonViewer data={filters} initialExpandLevel={5} showCopyButton={true} /> */}
+          <div className="flex flex-col md:flex-row gap-4">
+
+
+          <div className="flex-1">
+          <RevenueCard  />
+          </div>
+
+          <div className="flex-1">
+          <RevenueCard  />
+          </div>
+
+          </div>
         </div>
       </div>
     </ContentLayout>
