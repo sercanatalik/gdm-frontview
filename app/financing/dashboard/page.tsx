@@ -10,6 +10,7 @@ import { RecentTradesCard } from "./components/RecentTradeCard"
 import { ExposureSummary } from "./components/ExposureSummary"
 import { PieSummary } from "./components/PieSummary"
 import { RevenueCard } from "./components/RevenueCard"
+import { RevenueCharts } from "./components/RevenueCharts"
 export default function FinancingMainPage() {
   const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filter[]>([])
@@ -83,7 +84,7 @@ export default function FinancingMainPage() {
           </div>
 
           <div className="flex-1">
-          <RevenueCard  />
+          <RevenueCharts />
           </div>
 
           </div>

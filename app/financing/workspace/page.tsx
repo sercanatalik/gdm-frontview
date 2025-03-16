@@ -120,19 +120,28 @@ export default function FinancingWorkspace() {
       const groupableColumns = generateAgGridRowGrouping(data)
       const valueColumnsData = generateAgGridValueColumns(data)
       
-      setAvailableColumns(groupableColumns.map(col => ({
+      // Ensure unique columns by field name
+      const uniqueGroupableColumns = Array.from(
+        new Map(groupableColumns.map(col => [col.field, col])).values()
+      )
+      
+      const uniqueValueColumnsData = Array.from(
+        new Map(valueColumnsData.map(col => [col.field, col])).values()
+      )
+      
+      setAvailableColumns(uniqueGroupableColumns.map(col => ({
         id: col.field,
         label: col.field,
         key: col.field
       })))
 
-      setAvailableValueColumns(valueColumnsData.map(col => ({
+      setAvailableValueColumns(uniqueValueColumnsData.map(col => ({
         id: col.field,
         label: col.field,
         key: col.field
       })))
 
-      setValueColumns(valueColumnsData.map(col => ({
+      setValueColumns(uniqueValueColumnsData.map(col => ({
         id: col.field,
         label: col.field,
         key: col.field,
@@ -339,14 +348,14 @@ export default function FinancingWorkspace() {
                 options={availableColumns}
                 value={selectedColumns}
                 onChange={setSelectedColumns}
-                className="text-xs w-[200px]"
+                className="text-xs w-[400px]"
                 placeholder="Select grouping columns"
               />
               <MultiSelectDraggable
                 options={availableValueColumns}
                 value={selectedValueColumns}
                 onChange={setSelectedValueColumns}
-                className="text-xs w-[300px]"
+                className="text-xs w-[400px]"
                 placeholder="Select Value columns"
               />
             </div>
