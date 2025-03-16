@@ -143,7 +143,7 @@ export function RevenueCharts({}: RevenueBreakdownProps) {
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
+              innerRadius={50}
               outerRadius={80}
               dataKey="value"
               onMouseEnter={(_, index) => setActiveIndex(index)}
