@@ -4,10 +4,9 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AgGridReact } from 'ag-grid-react'
 import { ModuleRegistry, AllCommunityModule, ClientSideRowModelModule, GridApi, GridReadyEvent } from 'ag-grid-community'
 import { AllEnterpriseModule, LicenseManager } from 'ag-grid-enterprise'
-import { Columns, FileSpreadsheet, Save } from "lucide-react"
+import { FileSpreadsheet } from "lucide-react"
 
 import { RiskFilter } from "@/components/filters/risk-filter"
-import { MultiSelectDraggable } from "@/components/filters/multi-select-draggable"
 import { DatasourceSelector } from "@/components/filters/datasource-selector"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { Button } from "@/components/ui/button"
@@ -45,8 +44,6 @@ export default function FinancingWorkspace() {
   const [selectedDatasource, setSelectedDatasource] = useState<string>("risk_f_mv")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([])
-  const [selectedValueColumns, setSelectedValueColumns] = useState<string[]>([])
   const [availableColumns, setAvailableColumns] = useState<ColumnOption[]>([])
   const [availableValueColumns, setAvailableValueColumns] = useState<ColumnOption[]>([])
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
@@ -61,27 +58,21 @@ export default function FinancingWorkspace() {
     const columnState = gridRef.current.api.getColumnState();
     const stateToSave = {
       selectedDatasource,
-      selectedColumns,
-      selectedValueColumns,
       columnState,
       timestamp: new Date().toISOString()
     };
     
     localStorage.setItem('financingWorkspaceState', JSON.stringify(stateToSave));
     alert('Workspace state saved successfully');
-  }, [selectedDatasource, selectedColumns, selectedValueColumns]);
+  }, [selectedDatasource]);
 
   const resetGridState = useCallback(() => {
     localStorage.removeItem('financingWorkspaceState');
     setSelectedDatasource("risk_f_mv");
-    setSelectedColumns([]);
-    setSelectedValueColumns([]);
-   
     setValueColumns([]);
   
     alert('Workspace state reset successfully');
   }, []);
-
 
   // Load grid state from localStorage
   const loadGridState = useCallback(() => {
@@ -91,8 +82,6 @@ export default function FinancingWorkspace() {
     try {
       const parsedState = JSON.parse(savedState);
       setSelectedDatasource(parsedState.selectedDatasource);
-      setSelectedColumns(parsedState.selectedColumns || []);
-      setSelectedValueColumns(parsedState.selectedValueColumns || []);
       
       if (parsedState.columnState) {
         initialColumnState.current = parsedState.columnState;
@@ -196,33 +185,8 @@ export default function FinancingWorkspace() {
 
   useEffect(() => {
     if (!gridRef.current?.api) return;
-    gridRef.current.api.setRowGroupColumns(selectedColumns);
-    gridRef.current.api.autoSizeAllColumns();
-  }, [selectedColumns]);
-  
-  useEffect(() => {
-    if (!gridRef.current?.api) return;
-    
-    const columnDefs = gridRef.current.api.getColumnDefs();
-    if (!columnDefs) return;
-    
-    const updatedColumnDefs = columnDefs.map((colDef: any) => {
-      // If column is in selectedValueColumns, show it
-      if (selectedValueColumns.includes(colDef.field)) {
-        return { ...colDef, hide: false };
-      }
-      // If column is a value column (enableValue=true) and not a row group column, hide it
-      // This ensures columns removed from selectedValueColumns get hidden
-      if (colDef.enableValue && !colDef.rowGroup) {
-        return { ...colDef, hide: true };
-      }
-      // Keep other columns as they are
-      return colDef;
-    });
-
-    gridRef.current.api.setGridOption("columnDefs", updatedColumnDefs);
-    gridRef.current.api.autoSizeAllColumns();
-  }, [selectedValueColumns]);
+    gridRef.current.api.sizeColumnsToFit();
+  }, []);
 
   // Format and render cell values
   const formatCellValue = useCallback((value: any): string => {
@@ -247,42 +211,26 @@ export default function FinancingWorkspace() {
 
   // Memoized column definitions
   const columnDefs = useMemo(() => {
-    const baseColumns = valueColumns.map(col => ({
+    return valueColumns.map(col => ({
       headerName: col.label,
       field: col.id,
       enableValue: true,
       aggFunc: col.aggFunc || 'sum',
-      hide: !selectedValueColumns.includes(col.id),
+      hide: false,
       valueFormatter: (params: any) => formatCellValue(params.value),
       cellRenderer: renderCell,
       cellDataType: col.cellDataType || 'number',
-    }));
-    
-    const groupColumns = selectedColumns.map(colId => ({
-      field: colId,
-      rowGroup: true,
       enableRowGroup: true,
-      hide: true
     }));
-    
-    const orderedBaseColumns = [...baseColumns].sort((a, b) => {
-      const aIndex = selectedValueColumns.indexOf(a.field);
-      const bIndex = selectedValueColumns.indexOf(b.field);
-      
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
-      
-      return aIndex - bIndex;
-    });
-
-    return [...orderedBaseColumns, ...groupColumns];
-  }, [selectedColumns, valueColumns, selectedValueColumns, formatCellValue, renderCell]);
+  }, [valueColumns, formatCellValue, renderCell]);
 
   // Grid event handlers
   const defaultColDef = useMemo(() => ({
     sortable: true,
     filter: true,
     resizable: true,
+    // rowDrag: true,
+    enableRowGroup: true,
   }), []);
 
   const onGridReady = useCallback((event: GridReadyEvent) => {
@@ -295,32 +243,24 @@ export default function FinancingWorkspace() {
       });
     } else {
       event.api.resetColumnState();
-      event.api.sizeColumnsToFit();
-      event.api.autoSizeAllColumns();
     }
+    
+    // Auto-size all columns
+    event.api.sizeColumnsToFit();
+    setTimeout(() => {
+      event.api.autoSizeAllColumns();
+    }, 100);
   }, []);
 
   const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
     if (!params.api) return;
+    
+    // Auto-size all columns when data updates
     params.api.sizeColumnsToFit();
+    setTimeout(() => {
+      params.api.autoSizeAllColumns();
+    }, 10);
   }, []);
-
-  const onColumnVisible = useCallback((state: any) => {
-    if (state.column?.colDef && state.column.colDef.enableRowGroup === undefined) {
-      const fieldName = state.column.colDef.field;
-      if (fieldName) {
-        if (state.visible && !selectedValueColumns.includes(fieldName)) {
-          // Add to selectedValueColumns when column becomes visible
-          setSelectedValueColumns(prev => [...prev, fieldName]);
-        } else if (!state.visible && selectedValueColumns.includes(fieldName)) {
-          // Remove from selectedValueColumns when column becomes hidden
-          setSelectedValueColumns(prev => prev.filter(col => col !== fieldName));
-        }
-      }
-    }
-
-    gridRef.current?.api?.autoSizeAllColumns();
-  }, [selectedValueColumns]);
 
   const onExportToExcel = useCallback(() => {
     if (!gridRef.current?.api) return;
@@ -340,32 +280,12 @@ export default function FinancingWorkspace() {
       <div className="flex-1 space-y-1 p-0 pt-0">
         <div className="flex justify-between items-start">
           <div className="w-full max-w-sm space-y-0 p-0">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Columns className="h-4 w-4" />
-              </Button>
-              <MultiSelectDraggable
-                options={availableColumns}
-                value={selectedColumns}
-                onChange={setSelectedColumns}
-                className="text-xs w-[400px]"
-                placeholder="Select grouping columns"
-              />
-              <MultiSelectDraggable
-                options={availableValueColumns}
-                value={selectedValueColumns}
-                onChange={setSelectedValueColumns}
-                className="text-xs w-[400px]"
-                placeholder="Select Value columns"
-              />
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <RiskFilter 
               filters={filters} 
               setFilters={setFilters} 
               tableName='risk_f_mv' 
-           
             />
             <Button 
               variant="outline"
@@ -392,6 +312,7 @@ export default function FinancingWorkspace() {
         
         <div className="w-full h-[90vh] ag-theme-balham">
           <AgGridReact
+            rowGroupPanelShow={"always"}
             ref={gridRef}
             rowData={results}
             columnDefs={columnDefs}
@@ -401,7 +322,6 @@ export default function FinancingWorkspace() {
             onRowDataUpdated={onRowDataUpdated}
             onGridReady={onGridReady}
             sideBar={true}
-            onColumnVisible={onColumnVisible}
           />
         </div>
       </div>
