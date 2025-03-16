@@ -3,13 +3,9 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChartIcon, BarChartIcon } from "lucide-react"
-import type { Filter } from "@/components/ui/filters"
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Sector, Tooltip, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
-interface RevenueBreakdownProps {
-  filters: Filter[]
-}
 
 // Mock data for revenue by category
 const revenueByCategory = [
@@ -81,7 +77,7 @@ const renderActiveShape = (props: any) => {
   )
 }
 
-export function RevenueCharts({}: RevenueBreakdownProps) {
+export function RevenueCharts() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0)
   const [activeRegionIndex, setActiveRegionIndex] = useState(0)

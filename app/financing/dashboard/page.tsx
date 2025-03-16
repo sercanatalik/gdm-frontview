@@ -85,7 +85,7 @@ export default function FinancingMainPage() {
 
           <div className="flex-1">
           <RevenueCharts />
-          </div>
+          </div>  
 
           </div>
         </div>
