@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import type { Filter } from "@/components/ui/filters"
 import { generateAgGridRowGrouping, generateAgGridValueColumns } from "@/lib/clickhouse-wrap"
 import { SaveLayoutButton } from "./SaveLayoutButton"
+
 // Register AG Grid modules once
 ModuleRegistry.registerModules([AllCommunityModule, AllEnterpriseModule, ClientSideRowModelModule])
 LicenseManager.setLicenseKey('')
@@ -37,11 +38,20 @@ interface ColumnOption {
   cellRenderer?: (params: any) => any
 }
 
+interface WorkspaceState {
+  selectedDatasource: string
+  columnState: any[]
+  timestamp: string
+}
+
+const LOCAL_STORAGE_KEY = 'financingWorkspaceState'
+const DEFAULT_DATASOURCE = 'risk_f_mv'
+
 export default function FinancingWorkspace() {
   // State management
   const [filters, setFilters] = useState<Filter[]>([])
   const [results, setResults] = useState<RiskData[]>([])
-  const [selectedDatasource, setSelectedDatasource] = useState<string>("risk_f_mv")
+  const [selectedDatasource, setSelectedDatasource] = useState<string>(DEFAULT_DATASOURCE)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [availableColumns, setAvailableColumns] = useState<ColumnOption[]>([])
@@ -49,54 +59,52 @@ export default function FinancingWorkspace() {
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
 
   const gridRef = useRef<AgGridReact>(null)
-  const initialColumnState = useRef<any>(null);
+  const initialColumnState = useRef<any>(null)
 
-  // Save grid state to localStorage
+  // Grid state management
   const saveGridState = useCallback(() => {
-    if (!gridRef.current?.api) return;
+    if (!gridRef.current?.api) return
     
-    const columnState = gridRef.current.api.getColumnState();
-    const stateToSave = {
+    const columnState = gridRef.current.api.getColumnState()
+    const stateToSave: WorkspaceState = {
       selectedDatasource,
       columnState,
       timestamp: new Date().toISOString()
-    };
+    }
     
-    localStorage.setItem('financingWorkspaceState', JSON.stringify(stateToSave));
-    alert('Workspace state saved successfully');
-  }, [selectedDatasource]);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave))
+    alert('Workspace state saved successfully')
+  }, [selectedDatasource])
 
   const resetGridState = useCallback(() => {
-    localStorage.removeItem('financingWorkspaceState');
-    setSelectedDatasource("risk_f_mv");
-    setValueColumns([]);
+    localStorage.removeItem(LOCAL_STORAGE_KEY)
+    setSelectedDatasource(DEFAULT_DATASOURCE)
+    setValueColumns([])
+    
+    if (gridRef.current?.api) {
+      gridRef.current.api.resetColumnState()
+    }
   
-    alert('Workspace state reset successfully');
-  }, []);
+    alert('Workspace state reset successfully')
+  }, [])
 
-  // Load grid state from localStorage
   const loadGridState = useCallback(() => {
-    const savedState = localStorage.getItem('financingWorkspaceState');
-    if (!savedState) return;
+    const savedState = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (!savedState) return
     
     try {
-      const parsedState = JSON.parse(savedState);
-      setSelectedDatasource(parsedState.selectedDatasource);
+      const parsedState = JSON.parse(savedState) as WorkspaceState
+      setSelectedDatasource(parsedState.selectedDatasource)
       
       if (parsedState.columnState) {
-        initialColumnState.current = parsedState.columnState;
+        initialColumnState.current = parsedState.columnState
       }
     } catch (error) {
-      console.error('Error loading saved state:', error);
+      console.error('Error loading saved state:', error)
     }
-  }, []);
+  }, [])
 
-  // Load saved state on initial render
-  useEffect(() => {
-    loadGridState();
-  }, [loadGridState]);
-
-  // Fetch available columns when datasource changes
+  // Data fetching
   const fetchColumns = useCallback(async () => {
     try {
       const response = await fetch(`/api/tables?table=${selectedDatasource}`)
@@ -147,7 +155,6 @@ export default function FinancingWorkspace() {
     }
   }, [selectedDatasource])
 
-  // Fetch data when filters or datasource changes
   const fetchRiskData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
@@ -174,42 +181,28 @@ export default function FinancingWorkspace() {
     }
   }, [filters, selectedDatasource])
 
-  // Effect hooks for data fetching and grid updates
-  useEffect(() => {
-    fetchColumns()
-  }, [fetchColumns])
-
-  useEffect(() => {
-    fetchRiskData()
-  }, [fetchRiskData])
-
-  useEffect(() => {
-    if (!gridRef.current?.api) return;
-    gridRef.current.api.sizeColumnsToFit();
-  }, []);
-
-  // Format and render cell values
+  // Cell rendering and formatting
   const formatCellValue = useCallback((value: any): string => {
     if (typeof value === 'number') {
-      return Math.round(value).toLocaleString();
+      return Math.round(value).toLocaleString()
     }
-    return value || '';
-  }, []);
+    return value || ''
+  }, [])
 
   const renderCell = useCallback((params: any) => {
     if (typeof params.value !== 'number') {
-      return params.value || '';
+      return params.value || ''
     }
     
-    const isNegative = params.value < 0;
+    const isNegative = params.value < 0
     return (
       <span style={{ color: isNegative ? 'red' : 'inherit' }}>
         {Math.round(params.value).toLocaleString()}
       </span>
-    );
-  }, []);
+    )
+  }, [])
 
-  // Memoized column definitions
+  // Grid configuration
   const columnDefs = useMemo(() => {
     return valueColumns.map(col => ({
       headerName: col.label,
@@ -221,59 +214,83 @@ export default function FinancingWorkspace() {
       cellRenderer: renderCell,
       cellDataType: col.cellDataType || 'number',
       enableRowGroup: true,
-    }));
-  }, [valueColumns, formatCellValue, renderCell]);
+    }))
+  }, [valueColumns, formatCellValue, renderCell])
 
-  // Grid event handlers
   const defaultColDef = useMemo(() => ({
     sortable: true,
     filter: true,
     resizable: true,
-    // rowDrag: true,
     enableRowGroup: true,
-  }), []);
+  }), [])
 
+  // Grid event handlers
   const onGridReady = useCallback((event: GridReadyEvent) => {
-    if (!event.api) return;
+    if (!event.api) return
     
     if (initialColumnState.current) {
       event.api.applyColumnState({
         state: initialColumnState.current,
         applyOrder: true
-      });
+      })
     } else {
-      event.api.resetColumnState();
+      event.api.resetColumnState()
     }
     
     // Auto-size all columns
-    event.api.sizeColumnsToFit();
+    event.api.sizeColumnsToFit()
     setTimeout(() => {
-      event.api.autoSizeAllColumns();
-    }, 100);
-  }, []);
+      event.api.autoSizeAllColumns()
+    }, 100)
+  }, [])
 
-  const onRowDataUpdated = useCallback((params: { api: GridApi }) => {
-    if (!params.api) return;
+  const autoSizeColumns = useCallback(() => {
+    if (!gridRef.current?.api) return
     
-    // Auto-size all columns when data updates
-    params.api.sizeColumnsToFit();
+    gridRef.current.api.sizeColumnsToFit()
     setTimeout(() => {
-      params.api.autoSizeAllColumns();
-    }, 10);
-  }, []);
+      gridRef.current.api.autoSizeAllColumns()
+    }, 10)
+  }, [])
+
+  const onRowGroupOpened = useCallback(() => {
+    autoSizeColumns()
+  }, [autoSizeColumns])
+
+  const onRowDataUpdated = useCallback(() => {
+    autoSizeColumns()
+  }, [autoSizeColumns])
 
   const onExportToExcel = useCallback(() => {
-    if (!gridRef.current?.api) return;
+    if (!gridRef.current?.api) return
     
     const params = {
       fileName: `${selectedDatasource}_export_${new Date().toISOString().split('T')[0]}.xlsx`,
       processCellCallback: (params: any) => {
-        return typeof params.value === 'number' ? Math.round(params.value) : params.value;
+        return typeof params.value === 'number' ? Math.round(params.value) : params.value
       }
-    };
+    }
     
-    gridRef.current.api.exportDataAsExcel(params);
-  }, [selectedDatasource]);
+    gridRef.current.api.exportDataAsExcel(params)
+  }, [selectedDatasource])
+
+  // Effects
+  useEffect(() => {
+    loadGridState()
+  }, [loadGridState])
+
+  useEffect(() => {
+    fetchColumns()
+  }, [fetchColumns])
+
+  useEffect(() => {
+    fetchRiskData()
+  }, [fetchRiskData])
+
+  useEffect(() => {
+    if (!gridRef.current?.api) return
+    gridRef.current.api.sizeColumnsToFit()
+  }, [])
 
   return (
     <ContentLayout title="Workspace">
@@ -321,6 +338,7 @@ export default function FinancingWorkspace() {
             animateRows={true}
             onRowDataUpdated={onRowDataUpdated}
             onGridReady={onGridReady}
+            onRowGroupOpened={onRowGroupOpened}
             sideBar={true}
           />
         </div>
