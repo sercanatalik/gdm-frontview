@@ -16,7 +16,17 @@ export async function POST(req: Request) {
       format: "JSONEachRow",
     })
 
-    const result = await resultSet.json()
+    let result = await resultSet.json()
+    
+    // Replace dots with underscores in result keys
+    result = result.map(item => {
+      const newItem: Record<string, unknown> = {}
+      for (const key in item as Record<string, unknown>) {
+        const newKey = key.replace(/\./g, '_')
+        newItem[newKey] = (item as Record<string, unknown>)[key]
+      }
+      return newItem
+    })
 
     return NextResponse.json(result)
   } catch (error) {

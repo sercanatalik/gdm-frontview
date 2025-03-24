@@ -42,7 +42,14 @@ export async function GET(request: Request) {
     }
 
     const results = await fetchTableData(tableName)
-    return NextResponse.json(results)
+    
+    // Replace dots with underscores in table names
+    const processedResults = results.map(result => ({
+      ...result,
+      name: result.name.replace(/\./g, '_')
+    }));
+    
+    return NextResponse.json(processedResults)
   } catch (error) {
     console.error("API Error:", error)
     return NextResponse.json(
