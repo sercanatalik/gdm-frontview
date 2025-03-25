@@ -57,6 +57,7 @@ export default function FinancingWorkspace() {
   const [availableColumns, setAvailableColumns] = useState<ColumnOption[]>([])
   const [availableValueColumns, setAvailableValueColumns] = useState<ColumnOption[]>([])
   const [valueColumns, setValueColumns] = useState<ColumnOption[]>([])
+  const [searchText, setSearchText] = useState<string>('')
 
   const gridRef = useRef<AgGridReact>(null)
   const initialColumnState = useRef<any>(null)
@@ -222,6 +223,10 @@ export default function FinancingWorkspace() {
     filter: true,
     resizable: true,
     enableRowGroup: true,
+    filterParams: {
+      filterOptions: ['contains', 'notContains', 'equals', 'notEqual', 'startsWith', 'endsWith'],
+      defaultOption: 'contains',
+    },
   }), [])
 
   // Grid event handlers
@@ -237,20 +242,41 @@ export default function FinancingWorkspace() {
       event.api.resetColumnState()
     }
     
-    // Auto-size all columns
-    event.api.sizeColumnsToFit()
-    setTimeout(() => {
-      event.api.autoSizeAllColumns()
-    }, 100)
+    // Defer column sizing to avoid blocking the main thread
+    requestAnimationFrame(() => {
+      event.api.sizeColumnsToFit()
+      // Use requestIdleCallback for non-critical operations when browser is idle
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          event.api.autoSizeAllColumns()
+        })
+      } else {
+        // Fallback with longer timeout
+        setTimeout(() => {
+          event.api.autoSizeAllColumns()
+        }, 250)
+      }
+    })
   }, [])
 
   const autoSizeColumns = useCallback(() => {
     if (!gridRef.current?.api) return
     
-    gridRef.current.api.sizeColumnsToFit()
-    setTimeout(() => {
-      gridRef.current.api.autoSizeAllColumns()
-    }, 10)
+    // Defer column sizing to avoid blocking the main thread
+    requestAnimationFrame(() => {
+      gridRef.current?.api?.sizeColumnsToFit()
+      // Use requestIdleCallback for non-critical operations
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          gridRef.current?.api?.autoSizeAllColumns()
+        })
+      } else {
+        // Fallback with longer timeout
+        setTimeout(() => {
+          gridRef.current?.api?.autoSizeAllColumns()
+        }, 250)
+      }
+    })
   }, [])
 
   const onRowGroupOpened = useCallback(() => {
@@ -274,6 +300,39 @@ export default function FinancingWorkspace() {
     gridRef.current.api.exportDataAsExcel(params)
   }, [selectedDatasource])
 
+  // Add search functionality
+  const onSearchTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+    
+    if (!gridRef.current?.api) return;
+    
+    // Force the grid to refresh with our new filter value
+    gridRef.current.api.onFilterChanged();
+  }, []);
+
+  // Create an external filter function
+  const isExternalFilterPresent = useCallback(() => {
+    return searchText !== '';
+  }, [searchText]);
+
+  // Filter function that checks if any cell in the row contains the search text
+  const doesExternalFilterPass = useCallback((node: any) => {
+    if (searchText === '') return true;
+    
+    const searchTextLower = searchText.toLowerCase();
+    const rowData = node.data;
+    
+    // Skip if no data (like group rows)
+    if (!rowData) return false;
+    
+    // Check all fields in the row
+    return Object.keys(rowData).some(key => {
+      const value = rowData[key];
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(searchTextLower);
+    });
+  }, [searchText]);
+
   // Effects
   useEffect(() => {
     loadGridState()
@@ -289,7 +348,10 @@ export default function FinancingWorkspace() {
 
   useEffect(() => {
     if (!gridRef.current?.api) return
-    gridRef.current.api.sizeColumnsToFit()
+    // Defer to avoid blocking the main thread
+    requestAnimationFrame(() => {
+      gridRef.current?.api?.sizeColumnsToFit()
+    })
   }, [])
 
   return (
@@ -297,6 +359,13 @@ export default function FinancingWorkspace() {
       <div className="flex-1 space-y-1 p-0 pt-0">
         <div className="flex justify-between items-start">
           <div className="w-full max-w-sm space-y-0 p-0">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={onSearchTextChange}
+              className="px-3 py-1 border rounded-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div className="flex items-center gap-2">
             <RiskFilter 
@@ -340,6 +409,8 @@ export default function FinancingWorkspace() {
             onGridReady={onGridReady}
             onRowGroupOpened={onRowGroupOpened}
             sideBar={true}
+            isExternalFilterPresent={isExternalFilterPresent}
+            doesExternalFilterPass={doesExternalFilterPass}
           />
         </div>
       </div>
