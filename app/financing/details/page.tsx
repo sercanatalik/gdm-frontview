@@ -6,18 +6,22 @@ import {
   Banknote, 
   BarChart2, 
   DollarSign,
+  Filter,
   Scale,
   TrendingUp 
 } from "lucide-react"
 
 import { StatsCard } from "../dashboard/components/StatsCard"
+import {Overview} from "../dashboard/components/Overview"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
+import {ExposureSummary} from "../dashboard/components/ExposureSummary"
+
 
 interface Filter {
   id: string;
   type: string;
   operator: string;
-  value: string | string[];
+  value: string[];
 }
 
 interface MetricValue {
@@ -107,6 +111,30 @@ const STATS_CARDS = [
   }
 ] as const
 
+const GROUP_TYPE_CONFIG = {
+  instrument: {
+    groupBy: "counterparty",
+    countBy: "tradeId",
+    orderBy: "totalCashOut DESC",
+    title: "Counterparties",
+    viewAllText: "View all Trades"
+  },
+  counterparty: {
+    groupBy: "instrument",
+    countBy: "tradeId",
+    orderBy: "totalCashOut DESC",
+    title: "Collateral",
+    viewAllText: "View all Counterparties"
+  },
+  sl1: {
+    groupBy: "sl1",
+    countBy: "tradeId",
+    orderBy: "totalCashOut DESC",
+    title: "Desk",
+    viewAllText: "View all SL1"
+  }
+} as const
+
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -115,10 +143,15 @@ function generateUUID(): string {
   });
 }
 
+function capitalizeFirstChar(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 export default function DetailsPage() {
   const searchParams = useSearchParams()
   const name = searchParams.get("name") || ""
   const filtersParam = searchParams.get("filters") || "[]"
+  const groupType = searchParams.get("groupType") || ""
   
   const [filters, setFilters] = useState<Filter[]>([])
   const [statsData, setStatsData] = useState<StatsData | null>(null)
@@ -130,7 +163,7 @@ export default function DetailsPage() {
       const parsedFilters = JSON.parse(filtersParam) as Filter[]
       const parentFilter = {
         id: generateUUID(),
-        type: "counterparty",
+        type: groupType,
         operator: "is",
         value: [name]
       }
@@ -179,12 +212,9 @@ export default function DetailsPage() {
   }, [filters])
 
   return (
-    <ContentLayout title= {`${name} Details`}>
-      <div className="flex-1 space-y-1 p-0 pt-0">
-
-
-        
-
+    <ContentLayout title={`${capitalizeFirstChar(groupType)} Details`}>
+      <div className="flex-1 space-y-4 p-5s pt-0">
+        <h1 className="text-2xl font-bold tracking-tight">{name}</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {STATS_CARDS.map((card, index) => {
             const value = statsData?.[card.key]
@@ -200,6 +230,25 @@ export default function DetailsPage() {
             )
           })}
         </div>
+
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="col-span-1">
+            <ExposureSummary 
+              filters={filters} 
+              {...GROUP_TYPE_CONFIG[groupType as keyof typeof GROUP_TYPE_CONFIG]} 
+              ignoreFilter={groupType}
+            />
+            {groupType}
+          </div>
+          <div className="col-span-2">
+            {/* <RecentTradesCard filters={filters} /> */}
+            <Overview filters={filters} /> 
+          </div>
+          <div className="col-span-2">
+            {JSON.stringify(filters)}
+          </div>
+        </div>
+
       </div>
     </ContentLayout>
   

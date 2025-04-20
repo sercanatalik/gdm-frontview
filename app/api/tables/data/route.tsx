@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
     const query = `
             SELECT *
-            FROM ${tableName}  
+            FROM ${tableName}  FINAL
             ${buildWhereCondition(filter,true)}
         `
 
