@@ -238,15 +238,15 @@ export default function DetailsPage() {
               {...GROUP_TYPE_CONFIG[groupType as keyof typeof GROUP_TYPE_CONFIG]} 
               ignoreFilter={groupType}
             />
-            {groupType}
+           
           </div>
           <div className="col-span-2">
             {/* <RecentTradesCard filters={filters} /> */}
             <Overview filters={filters} /> 
           </div>
-          <div className="col-span-2">
+          {/* <div className="col-span-2">
             {JSON.stringify(filters)}
-          </div>
+          </div> */}
         </div>
 
       </div>

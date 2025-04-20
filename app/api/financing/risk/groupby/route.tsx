@@ -16,7 +16,6 @@ export async function POST(req: Request) {
             GROUP BY ${groupBy}
             ORDER BY ${orderBy}
         `
-    console.log(query)
     const resultSet = await getClickHouseClient().query({
       query,
       format: "JSONEachRow",

@@ -137,7 +137,6 @@ export function ExposureSummary({
 
   // Filter out elements where type matches ignoreFilter
   const filteredFilters = filters.filter(filter => filter.type !== ignoreFilter)
-  console.log(filteredFilters)
   // Fetch data from API based on filters
   useEffect(() => {
     // Clear any existing interval
