@@ -8,6 +8,7 @@ import { ArrowUpRight, ArrowDownRight, Building2, ChevronRight } from "lucide-re
 import type { Filter } from "@/components/ui/filters"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface GroupBySummary {
   groupBy: string
@@ -92,45 +93,50 @@ export function ExposureSummary({
           <div className="flex flex-col h-full">
             <div className="divide-y divide-border flex-grow overflow-auto">
               {summaries.slice(0, 7).map((summary) => (
-                <div
+                <Link
                   key={summary.groupBy}
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                  href={`/financing/details?groupType=${groupBy}&name=${encodeURIComponent(summary.groupBy)}&filters=${encodeURIComponent(JSON.stringify(filters))}`}
+                  className="block"
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border border-border">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {getInitials(summary.groupBy)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{summary.groupBy}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
-                          {summary.distinctCount} {countBy}
-                        </Badge>
-                        
+                  <div
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-border">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getInitials(summary.groupBy)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">{summary.groupBy}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
+                            {summary.distinctCount} {countBy}
+                          </Badge>
+                          
+                        </div>
                       </div>
                     </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium leading-none">
+                        $
+                        {(summary.totalCashOut / 1000000).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                        M
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        $
+                        {(summary.totalNotional / 1000000).toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                        M notional
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium leading-none">
-                      $
-                      {(summary.totalCashOut / 1000000).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      M
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      $
-                      {(summary.totalNotional / 1000000).toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                      M notional
-                    </p>
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
