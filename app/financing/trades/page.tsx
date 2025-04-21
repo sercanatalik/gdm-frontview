@@ -6,15 +6,22 @@ import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { DataTable } from "./data-table"
 import { columns, Trade } from "./columns"
 
+interface Filter {
+  id: string
+  type: string
+  operator: string
+  value: string[]
+}
+
 export default function TradesPage() {
   const searchParams = useSearchParams()
-  const groupType = searchParams.get("groupType") || ""
   const name = searchParams.get("name") || ""
   const filtersParam = searchParams.get("filters") || "[]"
+  const groupType = searchParams.get("groupType") || ""
   
-  const [filters, setFilters] = useState([])
+  const [filters, setFilters] = useState<Filter[]>([])
   const [data, setData] = useState<Trade[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
@@ -60,10 +67,19 @@ export default function TradesPage() {
     fetchData()
   }, [filters])
 
+  const handleViewDetails = (row: Trade) => {
+    // Navigate to the details page with the trade ID
+    window.location.href = `/financing/trades/price?id=${encodeURIComponent(row.tradeId)}`
+  }
+
   return (
     <ContentLayout title={`${name} Trades`}>
-      <div className="w-full h-full py-0">
-        <DataTable columns={columns} data={data} />
+      <div className="w-full h-full flex flex-col">
+        <DataTable 
+          columns={columns} 
+          data={data} 
+          onViewDetails={handleViewDetails}
+        />
       </div>
     </ContentLayout>
   )

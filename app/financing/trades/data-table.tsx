@@ -28,11 +28,13 @@ import { Download } from "lucide-react"
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
+  onViewDetails?: (row: TData) => void
 }
 
 export function DataTable<TData>({
   columns,
   data,
+  onViewDetails,
 }: DataTableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("")
   const [sorting, setSorting] = useState<SortingState>([])
@@ -140,11 +142,10 @@ export function DataTable<TData>({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Search all columns..."
-          size="sm"
           value={globalFilter ?? ""}
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
@@ -159,9 +160,9 @@ export function DataTable<TData>({
           Export CSV
         </Button>
       </div>
-      <div className="rounded-md border">
+      <div className="flex-1 rounded-md border overflow-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-background z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -183,6 +184,8 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={onViewDetails ? "cursor-pointer hover:bg-muted/50" : ""}
+                  onClick={() => onViewDetails && onViewDetails(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

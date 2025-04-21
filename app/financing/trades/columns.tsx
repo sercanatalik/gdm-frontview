@@ -55,7 +55,17 @@ export const columns: ColumnDef<Trade>[] = [
     header: "Instrument",
   },
   {
-    accessorKey: "tradeType",
-    header: "Trade Type",
+    accessorKey: "notional",
+    header: "Notional",
   },
+  {
+    accessorKey: "tradeStatus",
+    header: "Trade Status",
+  },
+  {
+    accessorKey: "desk",
+    header: "Desk",
+  },
+ 
+
 ]

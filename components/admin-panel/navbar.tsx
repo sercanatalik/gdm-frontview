@@ -21,7 +21,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ title }: NavbarProps) {
-  const [isChatboxOpen, setIsChatboxOpen] = useState(true)
+  const [isChatboxOpen, setIsChatboxOpen] = useState(false)
 
   const toggleChatbox = () => {
     setIsChatboxOpen(!isChatboxOpen)
