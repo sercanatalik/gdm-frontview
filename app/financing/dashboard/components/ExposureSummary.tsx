@@ -221,14 +221,16 @@ export function ExposureSummary({
       </CardContent>
       {!isLoading && (
         <div className="p-3 bg-muted/10 mt-auto">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full flex items-center justify-center text-xs text-muted-foreground hover:text-primary"
-          >
-            {viewAllText}
-            <ChevronRight className="ml-1 h-3 w-3" />
-          </Button>
+          <Link href={`/financing/trades?groupType=${groupBy}&filters=${encodeURIComponent(JSON.stringify(filters))}`}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full flex items-center justify-center text-xs text-muted-foreground hover:text-primary"
+            >
+              {viewAllText}
+              <ChevronRight className="ml-1 h-3 w-3" />
+            </Button>
+          </Link>
         </div>
       )}
     </Card>

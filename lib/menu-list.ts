@@ -7,7 +7,7 @@ import {
   LayoutGrid,
   LucideIcon,
   Radical,
-  BookOpenText,Workflow,LayoutPanelTop,ShoppingBasket
+  BookOpenText,Workflow,LayoutPanelTop,ShoppingBasket,Ticket
 } from "lucide-react";
 
 type Submenu = {
@@ -48,7 +48,16 @@ export function getMenuList(pathname: string): Group[] {
           active: pathname.includes("/financing/workspace"),
           icon: LayoutPanelTop,
         
+        },
+        {
+          href: "/financing/trades",
+          label: "Trades",
+          active: pathname.includes("/financing/trades"),
+          icon: Ticket,
+        
         }
+        
+
       ]
     },
     // {
