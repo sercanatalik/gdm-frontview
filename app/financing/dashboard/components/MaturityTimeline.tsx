@@ -9,6 +9,7 @@ import { Calendar, Clock, Building2, DollarSign, ChevronRight } from "lucide-rea
 import type { Filter } from "@/components/ui/filters"
 import { cn } from "@/lib/utils"
 import { format, isToday, isTomorrow } from "date-fns"
+import { TradeDetailsModal } from "../../trades/components/trade-details-modal"
 
 interface MaturingTrade {
   id: string
@@ -167,7 +168,18 @@ function getDaysUntilMaturity(date: Date): number {
 export function MaturityTimeline({ filters }: MaturityTimelineProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [trades, setTrades] = useState<MaturingTrade[]>([])
+  const [selectedTrade, setSelectedTrade] = useState<MaturingTrade | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
+  const handleTradeClick = (trade: MaturingTrade) => {
+    setSelectedTrade(trade)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedTrade(null)
+  }
   // Simulate loading and filtering based on the filters prop
   useEffect(() => {
     setIsLoading(true)
@@ -246,11 +258,20 @@ export function MaturityTimeline({ filters }: MaturityTimelineProps) {
                   return (
                     <div
                       key={trade.id}
+                      onClick={() => handleTradeClick(trade)}
                       className={cn(
-                        "relative flex items-start gap-4 p-4 transition-all duration-200",
-                        "hover:bg-muted/10",
-                        isUrgent && "bg-red-50/50 dark:bg-red-950/20",
+                        "relative flex items-start gap-4 p-4 transition-all duration-200 cursor-pointer",
+                        "hover:bg-muted/20 active:bg-muted/30 rounded-md",
+                        isUrgent && "bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50 dark:hover:bg-red-900/30",
                       )}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleTradeClick(trade);
+                        }
+                      }}
                     >
                       {/* Timeline dot */}
                       <div className="relative z-10 flex items-center justify-center">
@@ -337,6 +358,8 @@ export function MaturityTimeline({ filters }: MaturityTimelineProps) {
             </div>
           </>
         )}
+
+<TradeDetailsModal trade={selectedTrade} isOpen={isModalOpen} onClose={handleCloseModal} />
       </CardContent>
     </Card>
   )
