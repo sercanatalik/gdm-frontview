@@ -1,8 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { Loader2 } from "lucide-react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts"
+import { Loader2, Maximize2, Minimize2, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip as TooltipComponent,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog"
 import type { Filter } from "@/components/ui/filters"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,64 +35,170 @@ export function Overview({ filters }: { filters: Filter[] }) {
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [sl1Categories, setSl1Categories] = useState<string[]>([])
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // Process data for the stacked bar chart
   const processChartData = (data: MonthlyData[]) => {
+    console.log('Raw data received for processing:', data)
+    
+    if (!data || data.length === 0) {
+      console.warn('No data provided to processChartData')
+      return []
+    }
+
     const categories = [...new Set(data.map(item => item.SL1))]
+    console.log('Unique categories found:', categories)
     setSl1Categories(categories)
 
     const months = [...new Set(data.map(item => item.month.trim()))]
+    console.log('Unique months found:', months)
     
-    return months.map(month => {
+    const processedData = months.map(month => {
       const monthData: ChartData = { month }
+      
+      // Initialize all categories with 0
       categories.forEach(category => {
-        const item = data.find(d => d.month.trim() === month && d.SL1 === category)
-        monthData[category] = item ? Math.abs(item.cumulative_cashout) : 0
+        monthData[category] = 0
       })
+      
+      // Sum up values for each category in this month
+      const monthItems = data.filter(item => item.month.trim() === month)
+      console.log(`Processing month ${month}, found ${monthItems.length} items`)
+      
+      monthItems.forEach(item => {
+        const currentValue = monthData[item.SL1] as number
+        const newValue = currentValue + (item.monthly_cashout || 0)
+        monthData[item.SL1] = newValue
+        console.log(`  - Category ${item.SL1}: ${currentValue} + ${item.monthly_cashout} = ${newValue}`)
+      })
+      
+      console.log(`Month ${month} data:`, monthData)
       return monthData
     })
+    
+    console.log('Final processed data:', processedData)
+    return processedData
   }
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true)
       try {
+        console.log('Fetching data from API...')
         const response = await fetch('/api/financing/cashoutbymonth', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 
-            filter: filters,
-            breakdown: 'SL1' 
-          }),
+          body: JSON.stringify({ filter: filters, breakdown: 'SL1' })
         })
         if (!response.ok) {
-          throw new Error('Network response was not ok')
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
         const result = await response.json()
+        console.log('API Response:', result)
         setData(result)
-        setChartData(processChartData(result))
+        const processedData = processChartData(result)
+        console.log('Processed Chart Data:', processedData)
+        setChartData(processedData)
       } catch (error) {
-        console.error("Failed to fetch data:", error)
+        console.error('Error fetching data:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchData()
-  }, [filters])
+  }, [])
 
-  // Define a color palette for the SL1 categories
   const getColorForCategory = (index: number) => {
     const colors = [
-      '#e3e8ea',
-      '#bccad0',
-      '#9ba8ae',
-      '#707a7e',
-      '#495054',
+      '#64748B',
+      '#94A3B8',
+      '#A5C0DD',
+      '#C9E4F2',
+      '#E2F0F9',
+      '#F5F9FC',
+      '#64748B',
+      '#94A3B8',
+      '#A5C0DD',
+      '#C9E4F2'
     ]
     return colors[index % colors.length]
+  }
+
+  // Render chart component
+  const renderChart = () => {
+    console.log('Rendering chart with data:', chartData)
+    console.log('Categories:', sl1Categories)
+    
+    if (!chartData || chartData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p>No data available for the chart</p>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="w-full h-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            barGap={0}
+            barCategoryGap="10%"
+          >
+            <XAxis
+              dataKey="month"
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <CartesianGrid 
+              stroke="#f1f5f9" 
+              strokeDasharray="3 3" 
+              vertical={false}
+            />
+            <YAxis
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value: number) => `$${(value / 1000000).toFixed(1)}M`}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#FFFFFF",
+                border: "1px solid #E5E5E5",
+                borderRadius: "4px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontSize: "14px",
+                fontWeight: 400,
+              }}
+              labelStyle={{
+                color: "#333333",
+                fontWeight: 500,
+                marginBottom: "4px",
+              }}
+              formatter={(value: number) => `$${(value / 1000000).toFixed(1)}M`}
+            />
+            <Legend wrapperStyle={{ fontSize: 10 }} />
+            {sl1Categories.map((category, index) => (
+              <Bar
+                key={category}
+                dataKey={category}
+                stackId="a"
+                fill={getColorForCategory(index)}
+                name={category}
+                radius={index === sl1Categories.length - 1 ? [4, 4, 0, 0] : 0}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -93,82 +210,87 @@ export function Overview({ filters }: { filters: Filter[] }) {
   }
 
   return (
-    <Card className="col-span-4 h-full">
-      <Tabs defaultValue="historical">
-        <CardHeader>
-          <CardTitle>
-            <TabsList>
-              <TabsTrigger value="historical">Historical Cashout by SL1</TabsTrigger>
-              <TabsTrigger value="future">Future Cashout</TabsTrigger>
-            </TabsList>
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <TabsContent value="historical">
+    <Card className="col-span-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div>
+          <CardTitle>Overview</CardTitle>
+        </div>
+        <TooltipProvider>
+          <TooltipComponent>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setIsFullscreen(true)}
+              >
+                <Maximize2 className="h-4 w-4" />
+                <span className="sr-only">Maximize</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Maximize view</p>
+            </TooltipContent>
+          </TooltipComponent>
+        </TooltipProvider>
+      </CardHeader>
+      <Tabs defaultValue="historical" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="historical">Historical Cashout by SL1</TabsTrigger>
+          <TabsTrigger value="future">Future Cashout</TabsTrigger>
+        </TabsList>
+        <CardContent className="pl-2">
+          <TabsContent value="historical" className="mt-0">
             <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  barGap={0}
-                  barCategoryGap="10%"
-                >
-                  <XAxis
-                    dataKey="month"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
-                  />
-                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E5E5E5",
-                    borderRadius: "4px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    fontFamily: "system-ui, -apple-system, sans-serif",
-                    fontSize: "14px",
-                    fontWeight: 400,
-                  }}
-                  labelStyle={{
-                    color: "#333333",
-                    fontWeight: 500,
-                    marginBottom: "4px",
-                  }}
-                  formatter={(value: number) => `$${(value / 1000000).toFixed(1)}M`}
-                />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  {sl1Categories.map((category, index) => (
-                    <Bar
-                      key={category}
-                      dataKey={category}
-                      stackId="a"
-                      fill={getColorForCategory(index)}
-                      name={category}
-                      radius={index === sl1Categories.length - 1 ? [4, 4, 0, 0] : 0}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-           
+              {renderChart()}
             </div>
           </TabsContent>
-
-          <TabsContent value="future">
-            <div className="h-[300px] flex items-center justify-center">
+          <TabsContent value="future" className="mt-0">
+            <div className="h-[400px] flex items-center justify-center">
               <p>Future cashout overview content goes here</p>
             </div>
           </TabsContent>
         </CardContent>
       </Tabs>
+
+      {/* Fullscreen Dialog */}
+      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+        <DialogContent className="w-[95vw] h-[90vh] max-w-[95vw] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div>
+              <h2 className="text-lg font-semibold">Overview</h2>
+              <p className="text-sm text-muted-foreground">
+                Fullscreen view of the chart
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreen(false)}
+                className="h-8 w-8"
+              >
+                <Minimize2 className="h-4 w-4" />
+                <span className="sr-only">Minimize</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreen(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 p-4 overflow-hidden">
+            <div className="w-full h-full min-h-0">
+              {renderChart()}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
