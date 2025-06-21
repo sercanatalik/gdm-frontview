@@ -11,19 +11,7 @@ import { cn } from "@/lib/utils"
 import { format, isToday, isTomorrow } from "date-fns"
 import { TradeDetailsModal } from "../../trades/components/trade-details-modal"
 
-interface MaturingTrade {
-  id: string
-  instrumentId: string
-  instrumentName: string
-  instrumentType: string
-  counterparty: string
-  maturityDate: Date
-  notional: number
-  cashOut: number
-  desk: string
-  portfolio: string
-  status: "active" | "pending" | "confirmed"
-}
+import { MaturingTrade } from "@/app/financing/types"
 
 interface MaturityTimelineProps {
   filters: Filter[]
@@ -43,6 +31,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Structured Equity Products",
     portfolio: "Fixed Income",
     status: "confirmed",
+    region: "Americas",
+    trader: "John Smith"
   },
   {
     id: "2",
@@ -56,6 +46,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Cash Financing Sol",
     portfolio: "Leverage",
     status: "active",
+    region: "EMEA",
+    trader: "Sarah Johnson"
   },
   {
     id: "3",
@@ -69,6 +61,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Structured Commodity Products",
     portfolio: "Other",
     status: "pending",
+    region: "APAC",
+    trader: "Michael Chen"
   },
   {
     id: "4",
@@ -82,6 +76,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Structured Index Products",
     portfolio: "Equity",
     status: "confirmed",
+    region: "Americas",
+    trader: "Emily Davis"
   },
   {
     id: "5",
@@ -95,6 +91,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Structured Equity Products",
     portfolio: "Fixed Income",
     status: "active",
+    region: "EMEA",
+    trader: "David Wilson"
   },
   {
     id: "6",
@@ -108,6 +106,8 @@ const mockMaturingTrades: MaturingTrade[] = [
     desk: "Cash Financing Sol",
     portfolio: "Leverage",
     status: "confirmed",
+    region: "APAC",
+    trader: "Lisa Wong"
   },
 ]
 

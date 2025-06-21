@@ -21,21 +21,7 @@ import {
 import { cn } from "@/lib/utils"
 import { format, isToday, isTomorrow } from "date-fns"
 
-interface MaturingTrade {
-  id: string
-  instrumentId: string
-  instrumentName: string
-  instrumentType: string
-  counterparty: string
-  maturityDate: Date
-  notional: number
-  cashOut: number
-  desk: string
-  portfolio: string
-  status: "active" | "pending" | "confirmed"
-  region: string
-  trader: string
-}
+import { MaturingTrade } from "@/app/financing/types"
 
 interface TradeDetailsModalProps {
   trade: MaturingTrade | null
