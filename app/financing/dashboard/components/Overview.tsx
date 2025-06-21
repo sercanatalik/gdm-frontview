@@ -114,12 +114,12 @@ export function Overview({ filters }: { filters: Filter[] }) {
 
   const getColorForCategory = (index: number) => {
     const colors = [
-      '#F5F9FC',
-      '#E2F0F9',
-      '#C9E4F2',
-      '#A5C0DD',
-      '#94A3B8',
-      '#64748B'
+      theme === 'dark' ? '#64748B' : '#F5F9FC',
+      theme === 'dark' ? '#94A3B8' : '#E2F0F9',
+      theme === 'dark' ? '#A5C0DD' : '#C9E4F2',
+      theme === 'dark' ? '#C9E4F2' : '#94A3B8',
+      theme === 'dark' ? '#E2F0F9' : '#64748B',
+      theme === 'dark' ? '#F5F9FC' : '#A5C0DD'
     ]
     return colors[index % colors.length]
   }
@@ -154,7 +154,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
               axisLine={false}
             />
             <CartesianGrid 
-              stroke={theme === 'dark' ? '#FFFFFF' : '#000000'} 
+              strokeOpacity={0.8}
               strokeDasharray="3 3" 
               vertical={false}
             />
