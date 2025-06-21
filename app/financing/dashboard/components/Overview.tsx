@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts"
 import { Loader2, Maximize2, Minimize2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
   const [data, setData] = useState<MonthlyData[]>([])
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { theme } = useTheme()
   const [sl1Categories, setSl1Categories] = useState<string[]>([])
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -112,16 +114,12 @@ export function Overview({ filters }: { filters: Filter[] }) {
 
   const getColorForCategory = (index: number) => {
     const colors = [
-      '#64748B',
-      '#94A3B8',
-      '#A5C0DD',
-      '#C9E4F2',
-      '#E2F0F9',
       '#F5F9FC',
-      '#64748B',
-      '#94A3B8',
+      '#E2F0F9',
+      '#C9E4F2',
       '#A5C0DD',
-      '#C9E4F2'
+      '#94A3B8',
+      '#64748B'
     ]
     return colors[index % colors.length]
   }
@@ -156,7 +154,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
               axisLine={false}
             />
             <CartesianGrid 
-              stroke="#f1f5f9" 
+              stroke={theme === 'dark' ? '#FFFFFF' : '#000000'} 
               strokeDasharray="3 3" 
               vertical={false}
             />
@@ -213,7 +211,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
     <Card className="col-span-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle>Overview</CardTitle>
+          <CardTitle></CardTitle>
         </div>
         <TooltipProvider>
           <TooltipComponent>
@@ -258,30 +256,12 @@ export function Overview({ filters }: { filters: Filter[] }) {
         <DialogContent className="w-[95vw] h-[90vh] max-w-[95vw] max-h-[90vh] flex flex-col p-0 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b">
             <div>
-              <h2 className="text-lg font-semibold">Overview</h2>
-              <p className="text-sm text-muted-foreground">
-                Fullscreen view of the chart
-              </p>
+            
+             Cashout by SL1
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreen(false)}
-                className="h-8 w-8"
-              >
-                <Minimize2 className="h-4 w-4" />
-                <span className="sr-only">Minimize</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreen(false)}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
+    
+        
             </div>
           </div>
           <div className="flex-1 p-4 overflow-hidden">
