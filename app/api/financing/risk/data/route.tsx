@@ -1,26 +1,26 @@
-import { getClickHouseClient, buildWhereCondition } from "@/lib/clickhouse-wrap"
-import { NextResponse } from "next/server"
+import { buildWhereCondition } from "@/lib/clickhouse-wrap"
+import { handleApiResponse } from "@/lib/api-utils"
 
-export async function POST(req: Request) {
-  try {
-    const { filter = null, orderBy = null } = await req.json()
-
-    const query = `
-            SELECT *
-            FROM risk_f_mv  
-            ${buildWhereCondition(filter,false,orderBy)}
-        `
-    const resultSet = await getClickHouseClient().query({
-      query,
-      format: "JSONEachRow",
-    })
-
-    const result = await resultSet.json()
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error("Error calculating sums:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
+interface RiskDataResponse {
+  // Define the structure of your risk data here
+  // Example fields - adjust according to your actual data structure
+  id: string;
+  asOfDate: string;
+  cashOut: number;
+  // Add other fields as needed
 }
 
+export async function POST(req: Request) {
+  const { filter = null, orderBy = null } = await req.json()
+
+  const query = `
+    SELECT *
+    FROM risk_f_mv  
+    ${buildWhereCondition(filter, false, orderBy)}
+  `
+
+  return handleApiResponse<RiskDataResponse>(query, {
+    useCache: true,
+    ttl: 300 // Cache for 5 minutes
+  })
+}

@@ -1,5 +1,6 @@
-import { getClickHouseClient, buildWhereCondition, convertToExactDate } from "@/lib/clickhouse-wrap"
-import { NextResponse } from "next/server"
+import { buildWhereCondition, convertToExactDate } from "@/lib/clickhouse-wrap"
+import { NextResponse } from 'next/server';
+import { handleApiResponse } from '@/lib/api-utils';
 
 interface FilterCondition {
   type: string;
@@ -25,102 +26,122 @@ const processAsOfDate = (filter: FilterCondition[]) => {
 }
 
 // Helper function to find closest available date
-const findClosestDate = async (relativeDate: any): Promise<string> => {
+const findClosestDate = async (relativeDate: string): Promise<string> => {
   const query = `
     SELECT asOfDate
     FROM ${RISK_TABLE}
-    ORDER BY abs(dateDiff('day', asOfDate, toDate('${formatDate(relativeDate.fullDateObject)}')))
+    WHERE asOfDate <= '${relativeDate}'
+    ORDER BY asOfDate DESC
     LIMIT 1
   `
   
-  const result = await getClickHouseClient().query({
-    query,
-    format: "JSONEachRow",
+  interface ClosestDateResult {
+    asOfDate: string;
+  }
+  
+  const result = await handleApiResponse<ClosestDateResult>(query, {
+    useCache: true,
+    ttl: 300
   })
   
-  const [{ asOfDate }] = await result.json() as { asOfDate: string }[]
-  return asOfDate
+  if (Array.isArray(result) && result.length > 0) {
+    return result[0].asOfDate
+  }
+  return relativeDate
 }
 
 // Helper function to build sum expressions
 const buildSumExpressions = (currentDate: Date | string, relativeDate: string) => {
-  const formatDateStr = (date: Date | string) => 
-    date instanceof Date ? formatDate(date) : date
+  const currentDateStr = typeof currentDate === 'string' ? currentDate : formatDate(currentDate)
   
-  const buildExpression = (field: string, dateStr: string, prefix: string) =>
-    `SUM(CASE WHEN asOfDate = '${dateStr}' THEN ${field} ELSE 0 END) as ${prefix}_${field}`
-
-  const currentSums = FIELDS.map(field => 
-    buildExpression(field, formatDateStr(currentDate), 'current')
-  ).join(", ")
-  
-  const relativeSums = FIELDS.map(field => 
-    buildExpression(field, relativeDate, 'relative')
-  ).join(", ")
-  
-  const changes = FIELDS.map(field => 
-    `current_${field} - relative_${field} as change_${field}`
-  ).join(", ")
-
-  return { currentSums, relativeSums, changes }
+  return FIELDS.map(field => `
+    sum(if(asOfDate = '${currentDateStr}', ${field}, 0)) as current_${field},
+    sum(if(asOfDate = '${relativeDate}', ${field}, 0)) as relative_${field}
+  `).join(',')
 }
 
 // Dynamic StatsData interface based on fields
 type StatsData = {
-  [key in FieldType]: {
-    current: number;
-    relative: number;
-    change: number;
-  };
-} & {
-  asOfDate: string;
-  closestDate: string;
+  [K in FieldType as `${K}Data`]: {
+    current: number
+    relative: number
+    change: number
+    asOfDate: string
+    closestDate: string
+  }
+}
+
+interface StatsResponse extends Record<string, unknown> {
+  [key: `current_${string}`]: number;
+  [key: `relative_${string}`]: number;
 }
 
 export async function POST(req: Request) {
   try {
-    const { filter = [], relativeDt = null } = await req.json()
+    const { filter = [] } = await req.json()
     
-    const { asofdate, updatedFilter } = processAsOfDate(filter)
-    const relativeDate = convertToExactDate(relativeDt, asofdate)
-    const closestDate = await findClosestDate(relativeDate)
+    // Process asOfDate from filter and get current date
+    const { asofdate, updatedFilter } = processAsOfDate(filter as FilterCondition[])
+    const currentDate = formatDate(asofdate)
     
-    const { currentSums, relativeSums, changes } = buildSumExpressions(asofdate, closestDate)
+    // Calculate relative date (30 days ago)
+    const relativeDate = new Date(asofdate)
+    relativeDate.setDate(relativeDate.getDate() - 30)
+    const relativeDateStr = formatDate(relativeDate)
+    
+    // Find closest available dates
+    const [closestCurrentDate, closestRelativeDate] = await Promise.all([
+      findClosestDate(currentDate),
+      findClosestDate(relativeDateStr)
+    ])
+    
+    // Build the query
+    const sumExpressions = buildSumExpressions(closestCurrentDate, closestRelativeDate)
+    const whereClause = buildWhereCondition(updatedFilter, false)
     
     const query = `
-      SELECT 
-        ${currentSums},
-        ${relativeSums},
-        ${changes}
+      SELECT
+        ${sumExpressions}
       FROM ${RISK_TABLE}
-      ${buildWhereCondition(updatedFilter, true)}
+      WHERE asOfDate IN ('${closestCurrentDate}', '${closestRelativeDate}')
+      ${whereClause ? 'AND ' + whereClause.replace('WHERE ', '') : ''}
     `
     
-    const resultSet = await getClickHouseClient().query({
-      query,
-      format: "JSONEachRow",
+    
+    // Execute query with caching
+    const result = await handleApiResponse<StatsResponse>(query, {
+      useCache: true,
+      ttl: 300 // Cache for 5 minutes
     })
-
-    const [result] = await resultSet.json() as Record<string, number>[]
     
-    // Transform the flat result into dynamic StatsData structure
-    const statsData = FIELDS.reduce((acc, field) => {
-      acc[field] = {
-        current: result[`current_${field}`] || 0,
-        relative: result[`relative_${field}`] || 0,
-        change: result[`change_${field}`] || 0
+    const data = (Array.isArray(result) && result[0]) || {}
+    
+    // Process results
+    const response: Partial<StatsData> = {}
+    
+    FIELDS.forEach(field => {
+      const current = data[`current_${field}`] || 0
+      const relative = data[`relative_${field}`] || 0
+      const change = relative !== 0 ? ((current - relative) / Math.abs(relative)) * 100 : 0
+      
+      response[`${field}Data`] = {
+        current,
+        relative,
+        change,
+        asOfDate: closestCurrentDate,
+        closestDate: closestRelativeDate
       }
-      return acc
-    }, {} as StatsData)
+    })
     
-    // Add date information
-    statsData.asOfDate = formatDate(asofdate)
-    statsData.closestDate = formatDate(new Date(closestDate))
-
-    return NextResponse.json(statsData)
+    return NextResponse.json(response)
   } catch (error) {
-    console.error("Error calculating sums:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error calculating stats:", error)
+    return NextResponse.json(
+      { 
+        error: "Failed to calculate risk statistics", 
+        details: error instanceof Error ? error.message : String(error) 
+      },
+      { status: 500 }
+    )
   }
 }
-

@@ -1,23 +1,22 @@
-import { getClickHouseClient, buildWhereCondition } from "@/lib/clickhouse-wrap"
-import { NextResponse } from "next/server"
+import { handleApiResponse } from "@/lib/api-utils"
 
-export async function POST(req: Request) {
-  try {
-
-    const query = `
-            SELECT *
-            FROM pnl_eod  
-        `
-    const resultSet = await getClickHouseClient().query({
-      query,
-      format: "JSONEachRow",
-    })
-    const result = await resultSet.json()
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error("Error calculating sums:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
+interface PnLDataResponse {
+  // Define the structure of your PnL data here
+  // Example fields - adjust according to your actual data structure
+  asOfDate: string;
+  pnl: number;
+  // Add other fields as needed
 }
 
+export async function POST() {
+  const query = `
+    SELECT *
+    FROM pnl_eod  
+    ORDER BY asOfDate DESC
+  `
+
+  return handleApiResponse<PnLDataResponse>(query, {
+    useCache: true,
+    ttl: 300 // Cache for 5 minutes
+  })
+}
