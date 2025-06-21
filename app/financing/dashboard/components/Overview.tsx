@@ -74,7 +74,13 @@ export function Overview({ filters }: { filters: Filter[] }) {
 
   // Define a color palette for the SL1 categories
   const getColorForCategory = (index: number) => {
-    const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+    const colors = [
+      '#e3e8ea',
+      '#bccad0',
+      '#9ba8ae',
+      '#707a7e',
+      '#495054',
+    ]
     return colors[index % colors.length]
   }
 
@@ -122,11 +128,24 @@ export function Overview({ filters }: { filters: Filter[] }) {
                     axisLine={false}
                     tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
                   />
-                  <Tooltip 
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Cumulative Cashout']}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
+                 <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid #E5E5E5",
+                    borderRadius: "4px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 400,
+                  }}
+                  labelStyle={{
+                    color: "#333333",
+                    fontWeight: 500,
+                    marginBottom: "4px",
+                  }}
+                  formatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
                   {sl1Categories.map((category, index) => (
                     <Bar
                       key={category}
@@ -139,17 +158,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
                   ))}
                 </BarChart>
               </ResponsiveContainer>
-              <div className="flex flex-wrap justify-center gap-4 mt-2">
-                {sl1Categories.map((category, index) => (
-                  <div key={category} className="flex items-center">
-                    <div 
-                      className="w-3 h-3 rounded-full mr-1" 
-                      style={{ backgroundColor: getColorForCategory(index) }}
-                    />
-                    <span className="text-xs">{category}</span>
-                  </div>
-                ))}
-              </div>
+           
             </div>
           </TabsContent>
 
