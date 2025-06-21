@@ -143,7 +143,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
                     fontWeight: 500,
                     marginBottom: "4px",
                   }}
-                  formatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                  formatter={(value: number) => `$${(value / 1000000).toFixed(1)}M`}
                 />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
                   {sl1Categories.map((category, index) => (
