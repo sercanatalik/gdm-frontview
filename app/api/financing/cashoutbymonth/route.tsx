@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { filter = null,breakdown = 'desk' } = await req.json()
+    const { filter = null,breakdown = 'SL1' } = await req.json()
     let breakdownClause =  breakdown ? `, ${breakdown}` : ''
     let breakdownPartition = breakdown ? `PARTITION BY ${breakdown}` : ''
     const query = `

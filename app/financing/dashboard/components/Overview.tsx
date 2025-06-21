@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import { Loader2 } from "lucide-react"
 import type { Filter } from "@/components/ui/filters"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,13 +9,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface MonthlyData {
   month: string
+  SL1: string
   cumulative_cashout: number
   monthly_cashout: number
 }
 
+interface ChartData {
+  month: string
+  [key: string]: number | string
+}
+
 export function Overview({ filters }: { filters: Filter[] }) {
   const [data, setData] = useState<MonthlyData[]>([])
+  const [chartData, setChartData] = useState<ChartData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [sl1Categories, setSl1Categories] = useState<string[]>([])
+
+  // Process data for the stacked bar chart
+  const processChartData = (data: MonthlyData[]) => {
+    const categories = [...new Set(data.map(item => item.SL1))]
+    setSl1Categories(categories)
+
+    const months = [...new Set(data.map(item => item.month.trim()))]
+    
+    return months.map(month => {
+      const monthData: ChartData = { month }
+      categories.forEach(category => {
+        const item = data.find(d => d.month.trim() === month && d.SL1 === category)
+        monthData[category] = item ? Math.abs(item.cumulative_cashout) : 0
+      })
+      return monthData
+    })
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,13 +51,17 @@ export function Overview({ filters }: { filters: Filter[] }) {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ filter: filters }),
+          body: JSON.stringify({ 
+            filter: filters,
+            breakdown: 'SL1' 
+          }),
         })
         if (!response.ok) {
           throw new Error('Network response was not ok')
         }
         const result = await response.json()
         setData(result)
+        setChartData(processChartData(result))
       } catch (error) {
         console.error("Failed to fetch data:", error)
       } finally {
@@ -43,9 +72,15 @@ export function Overview({ filters }: { filters: Filter[] }) {
     fetchData()
   }, [filters])
 
+  // Define a color palette for the SL1 categories
+  const getColorForCategory = (index: number) => {
+    const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+    return colors[index % colors.length]
+  }
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
@@ -57,7 +92,7 @@ export function Overview({ filters }: { filters: Filter[] }) {
         <CardHeader>
           <CardTitle>
             <TabsList>
-              <TabsTrigger value="historical">Historical Cashout</TabsTrigger>
+              <TabsTrigger value="historical">Historical Cashout by SL1</TabsTrigger>
               <TabsTrigger value="future">Future Cashout</TabsTrigger>
             </TabsList>
           </CardTitle>
@@ -65,30 +100,57 @@ export function Overview({ filters }: { filters: Filter[] }) {
         
         <CardContent>
           <TabsContent value="historical">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data}>
-                <XAxis
-                  dataKey="month"
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
-                />
-                <Bar
-                  dataKey="monthly_cashout"
-                  fill="currentColor"
-                  radius={[4, 4, 0, 0]}
-                  className="fill-primary"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  barGap={0}
+                  barCategoryGap="10%"
+                >
+                  <XAxis
+                    dataKey="month"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Cumulative Cashout']}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  {sl1Categories.map((category, index) => (
+                    <Bar
+                      key={category}
+                      dataKey={category}
+                      stackId="a"
+                      fill={getColorForCategory(index)}
+                      name={category}
+                      radius={index === sl1Categories.length - 1 ? [4, 4, 0, 0] : 0}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap justify-center gap-4 mt-2">
+                {sl1Categories.map((category, index) => (
+                  <div key={category} className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-1" 
+                      style={{ backgroundColor: getColorForCategory(index) }}
+                    />
+                    <span className="text-xs">{category}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="future">
