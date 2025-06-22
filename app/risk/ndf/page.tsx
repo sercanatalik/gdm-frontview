@@ -49,44 +49,41 @@ export default function NDFPage() {
     }
   }
 
-  // Column Definitions
+  // Column Definitions - Showing only fixingDt, ccy, paymentDt, and notional
   const columnDefs = useMemo(() => [
     { 
       field: 'fixingDt', 
       headerName: 'Fixing Date',
+    //   valueFormatter: (params: any) => safeDateFormat(params.value),
+      filter: 'agDateColumnFilter',
+      sortable: true,
+      width: 150
+    },
+    { 
+      field: 'ccy', 
+      headerName: 'Currency',
+      filter: true, 
+      sortable: true,
+      width: 120
+    },
+    { 
+      field: 'paymentDt', 
+      headerName: 'Payment Date',
       valueFormatter: (params: any) => safeDateFormat(params.value),
       filter: 'agDateColumnFilter',
       sortable: true,
-      enableRowGroup: true,
-      rowGroup: true,
-      comparator: (valueA: string, valueB: string) => {
-        const dateA = valueA ? new Date(valueA).getTime() : 0
-        const dateB = valueB ? new Date(valueB).getTime() : 0
-        return dateA - dateB
-      }
+      width: 150
     },
     { 
       field: 'notional', 
       headerName: 'Notional',
-      valueFormatter: (params: any) => params.value?.toLocaleString() || '',
+      valueFormatter: (params: any) => params.value?.toLocaleString() || '0',
       filter: 'agNumberColumnFilter',
       sortable: true,
       aggFunc: 'sum',
-    },
-    { field: 'ccy', headerName: 'CCY', filter: true, sortable: true },
-    { field: 'hmsBook', headerName: 'HMS Book', filter: true, sortable: true },
-    { field: 'region', headerName: 'Region', filter: true, sortable: true },
-    { 
-      field: 'updatedAt', 
-      headerName: 'Last Updated',
-      valueFormatter: (params: any) => safeDateFormat(params.value, 'yyyy-MM-dd HH:mm:ss'),
-      filter: 'agDateColumnFilter',
-      sortable: true,
-      comparator: (valueA: string, valueB: string) => {
-        const dateA = valueA ? new Date(valueA).getTime() : 0
-        const dateB = valueB ? new Date(valueB).getTime() : 0
-        return dateA - dateB
-      }
+      width: 150,
+      cellStyle: { textAlign: 'right' },
+      type: 'numericColumn'
     }
   ], [])
 
@@ -164,9 +161,7 @@ export default function NDFPage() {
             loading={isLoading}
             animateRows={true}
             onGridReady={onGridReady}
-            suppressExcelExport={true}
-            suppressCsvExport={false}
-    
+          
             enableCellTextSelection={true}
             pagination={true}
             paginationPageSize={100}
