@@ -16,10 +16,12 @@ export async function POST(req: Request) {
             ${buildWhereCondition(filter,true)}
         `
     
-    const result = await handleApiResponse<Record<string, unknown>>(query, {
+    const response = await handleApiResponse<any>(query, {
       useCache: true,
       ttl: 300 // Cache for 5 minutes
     })
+    
+    const result = await response.json()
     
     // Replace dots with underscores in result keys
     const processedResult = result.map(item => {
