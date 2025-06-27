@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useStore } from "@tanstack/react-store"
+import { store, fetchPnlData, setViewMode, toggleExpandGroup } from "@/app/store"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -247,51 +249,16 @@ function LoadingSpinner() {
 
 // Main component
 export function PnlCard() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [pnlData, setPnlData] = useState<PnlData[]>([])
-  const [viewMode, setViewMode] = useState<ViewMode>("desk")
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const { isLoading, pnlData, viewMode, expandedGroups } = useStore(store)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch('/api/financing/pnl/stats', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch PnL data')
-        }
-
-        const data = await response.json()
-        setPnlData(data)
-      } catch (error) {
-        console.error('Error fetching PnL data:', error)
-        setPnlData([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
+    fetchPnlData()
   }, [])
 
   const groupedData = groupDataBy(pnlData, viewMode)
   const totals = calculateTotals(pnlData)
   const totalYtdProgress = (totals.YTD / totals.AOP) * 100
   const totalMtdProgress = (totals.MTD / (totals.AOP / 12)) * 100
-
-  const toggleExpand = (name: string) => {
-    setExpandedGroups((prev) => 
-      prev.includes(name) 
-        ? prev.filter((item) => item !== name) 
-        : [...prev, name]
-    )
-  }
 
   return (
     <Card>
@@ -344,7 +311,7 @@ export function PnlCard() {
                   key={index}
                   group={group}
                   isExpanded={expandedGroups.includes(group.name)}
-                  onToggle={() => toggleExpand(group.name)}
+                  onToggle={() => toggleExpandGroup(group.name)}
                 />
               ))}
             </div>

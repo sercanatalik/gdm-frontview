@@ -2,9 +2,10 @@
 
 import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { Stats } from "./components/stats"
-import { useState } from "react"
+import { useStore } from "@tanstack/react-store"
+import { store, setSelectedDesk, setFilters } from "@/app/store"
 import type { Filter } from "@/components/ui/filters"
-import { RiskFilter, FilterTypes, FilterOperators } from "@/components/filters/risk-filter"
+import { RiskFilter } from "@/components/filters/risk-filter"
 import { Overview } from "./components/Overview"
 import { RecentTradesCard } from "./components/RecentTradeCard"
 import { ExposureSummary } from "./components/ExposureSummary"
@@ -13,27 +14,7 @@ import { RevenueCard } from "./components/RevenueCard"
 import { MaturityTimeline } from "./components/MaturityTimeline"
 
 export default function FinancingMainPage() {
-  const [selectedDesk, setSelectedDesk] = useState<string | null>(null)
-  const [filters, setFilters] = useState<Filter[]>([])
-
-  const handleDeskChange = (desk: string | null) => {
-    setSelectedDesk(desk)
-
-    setFilters((prev) => {
-      const filteredFilters = prev.filter((f) => f.type !== FilterTypes.DESK)
-      if (!desk) return filteredFilters
-
-      return [
-        ...filteredFilters,
-        {
-          id: Date.now().toString(),
-          type: FilterTypes.DESK,
-          operator: FilterOperators.IS,
-          value: [desk],
-        },
-      ]
-    })
-  }
+  const { filters } = useStore(store)
 
   return (
     <ContentLayout title="Dashboard">
@@ -44,7 +25,7 @@ export default function FinancingMainPage() {
             <RiskFilter filters={filters} setFilters={setFilters} />
           </div>
           
-          <Stats onDeskChange={handleDeskChange} filters={filters} />
+          <Stats onDeskChange={setSelectedDesk} filters={filters} />
           
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">

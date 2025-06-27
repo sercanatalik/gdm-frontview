@@ -135,7 +135,7 @@ const fetchFilterOptions = async (tableName: string, columnName: string): Promis
 // Types
 interface RiskFilterProps {
   filters: Filter[]
-  setFilters: React.Dispatch<React.SetStateAction<Filter[]>>
+  setFilters: (filters: Filter[]) => void
   tableName?: string
 }
 
@@ -241,8 +241,8 @@ export function RiskFilter({ filters, setFilters, tableName = "risk_f_mv" }: Ris
 
   // Handle adding a new filter
   const handleAddFilter = (filterType: string, filterValue: string) => {
-    setFilters((prev: Filter[]) => [
-      ...prev,
+    setFilters([
+      ...filters,
       {
         id: nanoid(),
         type: filterType,

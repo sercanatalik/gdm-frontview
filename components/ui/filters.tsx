@@ -363,7 +363,7 @@ const FilterValueDateCombobox = ({
 
 interface FiltersProps {
   filters: Filter[]
-  setFilters: Dispatch<SetStateAction<Filter[]>>
+  setFilters: (filters: Filter[]) => void
   config: FilterConfig
   iconMapping: Record<string, React.ReactNode>
   dateValues: string[]
@@ -395,7 +395,7 @@ export default function Filters({
               operatorConfig={operatorConfig}
               dateValues={dateValues}
               setOperator={(operator) => {
-                setFilters((prev) => prev.map((f) => (f.id === filter.id ? { ...f, operator } : f)))
+                setFilters(filters.map((f) => (f.id === filter.id ? { ...f, operator } : f)))
               }}
             />
             {filter.type.includes("DATE") ? (
@@ -404,7 +404,7 @@ export default function Filters({
                 filterValues={filter.value}
                 filterViewToFilterOptions={config.filterViewToFilterOptions}
                 setFilterValues={(filterValues) => {
-                  setFilters((prev) => prev.map((f) => (f.id === filter.id ? { ...f, value: filterValues } : f)))
+                  setFilters(filters.map((f) => (f.id === filter.id ? { ...f, value: filterValues } : f)))
                 }}
               />
             ) : (
@@ -414,7 +414,7 @@ export default function Filters({
                 filterViewToFilterOptions={config.filterViewToFilterOptions}
                 iconMapping={iconMapping}
                 setFilterValues={(filterValues) => {
-                  setFilters((prev) => prev.map((f) => (f.id === filter.id ? { ...f, value: filterValues } : f)))
+                  setFilters(filters.map((f) => (f.id === filter.id ? { ...f, value: filterValues } : f)))
                 }}
               />
             )}
@@ -422,7 +422,7 @@ export default function Filters({
               variant="ghost"
               size="icon"
               onClick={() => {
-                setFilters((prev) => prev.filter((f) => f.id !== filter.id))
+                setFilters(filters.filter((f) => f.id !== filter.id))
               }}
               className="bg-muted rounded-l-none rounded-r-sm h-6 w-6 text-muted-foreground hover:text-primary hover:bg-muted/50 transition shrink-0"
             >
